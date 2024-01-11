@@ -589,7 +589,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		// * because they're only referenced
 
 		const attributes = [
-			(block.height) ? `data-height=${block.height}` : '',
+			(block.size) ? `data-size=${block.size}` : '',
 			(block.shape) ? `data-shape=${block.shape}` : '',
 			(block.filter) ? `data-filter=${block.filter}` : '',
 			(block.hover.length > 0) ? `data-hover=${block.hover.join(' ')}` : '', // array!
