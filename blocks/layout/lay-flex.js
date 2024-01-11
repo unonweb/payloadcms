@@ -18,7 +18,7 @@ const blocksAvailable = [
 	mapLeafletBlock,
 ]
 
-const columnOptions = {
+/* const columnOptions = {
 	type: 'collapsible',
 	label: {
 		en: 'Spalten Optionen',
@@ -43,7 +43,7 @@ const columnOptions = {
 					defaultValue: 'center',
 					required: true,
 					admin: {
-						width: '50%',
+						width: '25%',
 						description: {
 							en: 'Default setting for all columns',
 							de: 'Voreinstellung für alle Spalten'
@@ -75,7 +75,7 @@ const columnOptions = {
 					defaultValue: 'start',
 					required: true,
 					admin: {
-						width: '50%',
+						width: '25%',
 					},
 					options: [
 						{
@@ -99,7 +99,7 @@ const columnOptions = {
 			],
 		}
 	]
-}
+} */
 
 export default function createColumnsFlex() {
 	const block = {
@@ -257,16 +257,16 @@ export default function createColumnsFlex() {
 								type: 'number',
 								name: 'gap',
 								label: {
-									en: 'Gap between the content blocks',
-									de: 'Abstand zwischen den Inhaltsblöcken'
+									en: 'Gap',
+									de: 'Abstand'
 								},
 								defaultValue: 5,
 								required: true,
 								admin: {
 									width: '25%',
 									description: {
-										en: 'in % of the available space',
-										de: 'in % des verfügbaren Raums'
+										en: '... between the content blocks (in % of the available space)',
+										de: '... zwischen den Inhaltsblöcken (in % des verfügbaren Raums)'
 									}
 								},
 								min: 2,
