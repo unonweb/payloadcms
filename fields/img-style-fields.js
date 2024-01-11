@@ -26,6 +26,13 @@ const imgStyleOptions = [
 					en: 'Rounded Corners'
 				}
 			},
+			{
+				value: 'polygon',
+				label: {
+					de: 'Polygon',
+					en: 'Polygon'
+				}
+			},
 		]
 	},
 	// --- filter
