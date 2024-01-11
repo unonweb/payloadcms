@@ -8,7 +8,6 @@ import editingModeField from '../fields/editingMode';
 
 /* BLOCKS */
 import createColumnsFlex from '../blocks/layout/lay-flex';
-import createColumnsFixed from '../blocks/layout/lay-fixed';
 import createIncludePostsBlock from '../blocks/include-posts'
 
 /* NODE */
