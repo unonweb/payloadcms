@@ -40,18 +40,6 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 		// lib & separate c-element files
 		const pathsLibFilesJS = page.assets.head.filter(fn => fn.endsWith('.js'))
 		const pathsLibFilesCSS = page.assets.head.filter(fn => fn.endsWith('.css')) // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
-		// c-element bundles:
-		const webPathSiteBundleJS = `${webPathCElements}/bundle-celements.js`
-		const webPathSiteBundleCSS = `${webPathCElements}/bundle-celements.css`
-		const fsPathSiteBundleJS = `${fsPathCElements}/bundle-celements.js`
-		const fsPathSiteBundleCSS = `${fsPathCElements}/bundle-celements.css`
-		if (!await canAccess(fsPathSiteBundleCSS) || !await canAccess(fsPathSiteBundleJS)) {
-			log(`Can't access "bundle-celements.css" or "bundle-celements.js"`, user, __filename, 4)
-			/* const child = execFile('node', ['/srv/web/resources/custom-elements/prod/bundle-sync.mjs', site.domainShort], (error, stdout, stderr) => {
-				if (error) throw error
-				log(stdout, user, __filename, 7)
-			}) */
-		}
 
 		/* // fonts.css
 		if (!await canAccess(`${fsPathAssets}/fonts.css`)) {
@@ -88,7 +76,6 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 					: ''
 				}
 
-				<!--- PROD --->
 				${(mode === 'prod' && pathsLibFilesJS.length > 0)
 					// in dev mode the js deps are included from 'https://resources.unonweb.local/custom-elements/prod/'
 					? pathsLibFilesJS.map(path => /* html */`<script type="module" src="${path}"></script>`).join(' ')
@@ -96,22 +83,22 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 				}
 				${(mode === 'prod')
 					? /* html */`
+							<!--- PROD ASSETS --->
 							<link href="${webPathAssets}/site.css" rel="stylesheet" type="text/css">
 							<style>${await readFile(`${fsPathAssets}/user.css`, 'utf-8')}</style>
 							<style>${await readFile(`${fsPathAssets}/fonts.css`, 'utf-8')}</style>
-							<script src=${webPathSiteBundleJS} type="module"></script>
-							<link href="${webPathSiteBundleCSS}" rel="stylesheet" type="text/css">`
+							<script src=${`${webPathCElements}/bundle-celements.js`} type="module"></script>
+							<link href="${`${webPathCElements}/bundle-celements.css`}" rel="stylesheet" type="text/css">`
 							// inline "user.css" (will not be cached)
 							// inline "font.css" (will not be cached)
 							// link 'bundle.js' 
 							// link 'bundle.css'
 					: ''
-				}	
-
-				<!--- DEV --->
+				}
 
 				${(mode === 'dev')
 					? /* html */`
+							<!--- DEV ASSETS --->
 							<link rel="stylesheet" type="text/css" href="${webPathAssets}/site.css">
 							<link rel="stylesheet" type="text/css" href="${webPathAssets}/user.css">
 							<link rel="stylesheet" type="text/css" href="${webPathAssets}/fonts.css">` // link
