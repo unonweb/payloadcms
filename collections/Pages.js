@@ -90,18 +90,20 @@ export const Pages = {
 					console.time(`<7>[time] [pages] "${args.req.context.timeID}"`)
 
 					if (args.req.user && args.req.user.sites.length === 1) {
+						// applies only if user has only one site <-- interim solution
+						const siteID = args.req.user.sites[0].id ?? args.req.user.sites[0]
 
 						args.req.context.images = await getCol('images', args.req.user.shortName, {
 							depth: 0,
-							where: { sites: { contain: args.req.user.sites[0].id } }
+							where: { sites: { contain: siteID } }
 						})
 						args.req.context.documents = await getCol('documents', args.req.user.shortName, {
 							depth: 0,
-							where: { sites: { contain: args.req.user.sites[0].id } }
+							where: { sites: { contain: siteID } }
 						})
 						args.req.context.pages = await getCol('pages', args.req.user.shortName, {
 							depth: 0,
-							where: { site: { equals: args.req.user.sites[0].id } },
+							where: { site: { equals: siteID } },
 						})
 					}
 				}
@@ -624,7 +626,91 @@ export const Pages = {
 									}
 								]
 							}
-						}
+						},
+						// --- ADMIN [tab-3] ---
+						{
+							type: 'collapsible',
+							label: 'Admin',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							fields: [
+								// --- page.html
+								{
+									type: 'group',
+									name: 'html',
+									access: {
+										update: isAdmin,
+									},
+									fields: [
+										// --- page.html.header
+										{
+											type: 'code',
+											name: 'header',
+											localized: true,
+											admin: {
+												language: 'html',
+											},
+										},
+										// --- page.html.head
+										{
+											type: 'code',
+											name: 'head',
+											localized: true,
+											admin: {
+												language: 'html',
+											},
+										},
+										// --- page.html.main
+										{
+											type: 'code',
+											name: 'main',
+											localized: true,
+											admin: {
+												language: 'html',
+											},
+										},
+										// --- page.html.nav
+										{
+											type: 'code',
+											name: 'nav',
+											localized: true,
+											admin: {
+												language: 'html',
+											},
+										},
+									]
+								},
+								// --- page.assets
+								{
+									type: 'group',
+									name: 'assets',
+									access: {
+										update: isAdmin,
+									},
+									fields: [
+										// --- page.assets.imgs
+										{
+											type: 'json',
+											name: 'imgs',
+											defaultValue: [],
+										},
+										// --- page.assets.docs
+										{
+											type: 'json',
+											name: 'docs',
+											defaultValue: [],
+										},
+										// --- page.assets.head
+										{
+											type: 'json',
+											name: 'head',
+											defaultValue: [],
+										},
+									]
+								}
+							]
+						},
 					]
 				},
 				// --- ELEMENTS [tab-2]
@@ -822,7 +908,7 @@ export const Pages = {
 									],
 								}, */
 								// --- page.main.showTitleOnPage
-								{
+								/* {
 									type: 'checkbox',
 									name: 'showTitleOnPage',
 									label: {
@@ -831,7 +917,7 @@ export const Pages = {
 									},
 									defaultValue: false,
 									localized: false,
-								},
+								}, */
 							],
 						},
 						// --- page.main.blocks
@@ -850,86 +936,6 @@ export const Pages = {
 								createIncludePostsBlock(),
 							],
 						},
-					]
-				},
-				// --- ADMIN [tab-3] ---
-				{
-					label: 'Admin',
-					fields: [
-						// --- page.html
-						{
-							type: 'group',
-							name: 'html',
-							access: {
-								update: isAdmin,
-							},
-							fields: [
-								// --- page.html.header
-								{
-									type: 'code',
-									name: 'header',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-								// --- page.html.head
-								{
-									type: 'code',
-									name: 'head',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-								// --- page.html.main
-								{
-									type: 'code',
-									name: 'main',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-								// --- page.html.nav
-								{
-									type: 'code',
-									name: 'nav',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-							]
-						},
-						// --- page.assets
-						{
-							type: 'group',
-							name: 'assets',
-							access: {
-								update: isAdmin,
-							},
-							fields: [
-								// --- page.assets.imgs
-								{
-									type: 'json',
-									name: 'imgs',
-									defaultValue: [],
-								},
-								// --- page.assets.docs
-								{
-									type: 'json',
-									name: 'docs',
-									defaultValue: [],
-								},
-								// --- page.assets.head
-								{
-									type: 'json',
-									name: 'head',
-									defaultValue: [],
-								},
-							]
-						}
 					]
 				},
 			]
