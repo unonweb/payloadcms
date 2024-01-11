@@ -25,7 +25,8 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 	}
 
 	const mode = getAppMode()
-	const origin = site.paths.web.origin[mode]
+	let origin = site.paths.web.origin[mode]
+	origin = (origin.endsWith('/')) ? origin.slice(0, -1) : origin // cut off trailing '/'
 	const theme = site?.domainShort ?? ''
 	const pathWebAssets = '/assets'
 	const pathWebImgs = '/assets/imgs'
@@ -107,13 +108,12 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 						return renderUnLangSwitch(block);
 
 					// --- IMAGE ---
+					case 'img':
+						return renderUnImg(block);
 					case 'img-slides':
 						return renderUnImgSlides(block);
 					case 'img-gallery':
 						return renderUnImgGallery(block);
-					case 'img':
-					case 'image-featured':
-						return renderUnImg(block);
 
 					// --- DEFAULT ---
 					default:
@@ -614,7 +614,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 					const linkedDoc = pages.find(p => p.id === block.link.rel.value && p.locale === locale) ?? pages.find(p => p.id === block.link.rel.value)
 					const slug = (linkedDoc.isHome) ? `/${locale}/` : `${locale}/${linkedDoc.slug}/`
 					html = /* html */`
-						<a href="${origin}${slug}">
+						<a href="${origin}/${slug}">
 							<un-img ${attributes}>${renderImageset(block.rel)}</un-img>
 						</a>
 					`;
