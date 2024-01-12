@@ -32,6 +32,10 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 				type: 'group',
 				name: 'link',
 				label: ' ',
+				admin: {
+					hideGutter: true,
+					className: 'hide-group-label'
+				},
 				fields: [
 					// --- autoTitle
 					{

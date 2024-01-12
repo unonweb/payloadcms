@@ -104,7 +104,7 @@ export default buildConfig({
 				},
 			}
 		},
-		//css: path.resolve(__dirname, 'src/custom.css'),
+		css: path.resolve(__dirname, 'custom.css'),
 		meta: {
 			titleSuffix: '- unonweb',
 			//favicon: '/assets/soy-32.png',
