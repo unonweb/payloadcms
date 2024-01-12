@@ -121,7 +121,7 @@ export default function createColumnsFlex() {
 				name: 'layout',
 				label: 'Layout',
 				admin: {
-					width: '25%',
+					width: '100%',
 					description: {
 						de: 'Das Spalten-Layout für den Hauptteil der Seite. Es können bis zu 3 Spalten erzeugt werden. Die tatsächliche Darstellung hängt jedoch von der Bildschirmgröße des Endgeräts ab.',
 						en: 'The column layout for the main part of the page. Up to 3 columns may be generated. The resulting layout however will be dependend of the screen size.'

@@ -79,7 +79,7 @@ export default function createRichTextBlock() {
 				]
 			},
 			// --- [style options]
-			{
+			/* {
 				type: 'collapsible',
 				label: {
 					en: 'Style Options',
@@ -87,10 +87,10 @@ export default function createRichTextBlock() {
 				},
 				admin: {
 					initCollapsed: true,
-					condition: (data) => (data.editingMode === 'style') ? true : false
+					condition: (data) => (data.editingMode === 'style') ? true : false,
 				},
 				fields: []
-			},
+			}, */
 			// --- [experimental options]
 			{
 				type: 'collapsible',
