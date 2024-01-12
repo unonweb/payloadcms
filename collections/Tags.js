@@ -126,6 +126,20 @@ export const Tags = {
 			defaultValue: ({ user }) => user.id,
 			admin: {
 				condition: (data, siblingData, { user }) => user.roles.includes('admin'),
+			},
+		},
+		// --- tag.createdByName
+		{
+			type: 'text',
+			name: 'createdByName',
+			label: {
+				de: 'Erstellt von Benutzer',
+				en: 'Created by User'
+			},
+			defaultValue: ({ user }) => (user) ? `${user.firstName} ${user.lastName}` : '',
+			admin: {
+				readOnly: true,
+				hidden: true,
 			}
 		}
 		/* // --- tag.relPages
