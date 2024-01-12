@@ -1,6 +1,3 @@
-import log from '../customLog'
-import CustomError from '../customError'
-import getAppMode from './_getAppMode'
 import {
 	IS_BOLD,
 	IS_ITALIC,
@@ -10,6 +7,11 @@ import {
 	IS_SUBSCRIPT,
 	IS_SUPERSCRIPT,
 } from './_lexicalNodeFormat';
+import log from '../customLog'
+import CustomError from '../customError'
+import getAppMode from './_getAppMode'
+import getDoc from './getDoc';
+
 
 export default function iterateBlocks(doc, { user = '', locale = '', blocks = [], images = [], site = {}, pages = [], documents = [] } = {}) {
 	// called for each page that is to be rendered
@@ -797,18 +799,22 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 							let linkedDoc = {}
 							switch (node.fields.doc.relationTo) {
 								case 'pages':
-									linkedDoc = pages.find(page => page.id === node.fields.doc.value.id)
+									linkedDoc = pages.find(page => page.id === node.fields.doc.value)
 									href = linkedDoc.url
 									break;
+								case 'posts':
+										// linkedDoc = await getDoc('posts', node.fields.doc.value, user, { depth: 0, locale: locale }) <-- FIX!
+										log('Link to posts in rich-text not implemented yet', user, __filename, 5)
+										break;
 								case 'documents':
-									linkedDoc = documents.find(doc => doc.id === node.fields.doc.value.id)
+									linkedDoc = documents.find(doc => doc.id === node.fields.doc.value)
 									if (linkedDoc?.filename) {
 										docFiles.push(linkedDoc.filename)
 										href = `${pathWebDocs}/${linkedDoc.filename}`
 									}
 									break
 								case 'images':
-									linkedDoc = images.find(img => img.id === node.fields.doc.value.id)
+									linkedDoc = images.find(img => img.id === node.fields.doc.value)
 									if (linkedDoc?.filename) {
 										imgFiles.push(linkedDoc.filename)
 										href = `${pathWebImgs}/${linkedDoc.filename}`
