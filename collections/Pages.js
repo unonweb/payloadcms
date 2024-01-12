@@ -60,7 +60,7 @@ export const Pages = {
 			de: 'Pages',
 			en: 'Pages'
 		},
-		enableRichTextRelationship: true,
+		enableRichTextRelationship: false, // <-- IMP: enable
 		enableRichTextLink: true,
 		hideAPIURL: true,
 		/* livePreview: {
