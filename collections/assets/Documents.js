@@ -7,7 +7,7 @@ import setFilenameToMd5 from '../../hooks/setFilenameToMd5.js';
 
 export const Documents = {
 	slug: 'documents',
-	labels: {
+	/* labels: {
 		singular: {
 			de: 'Dokument',
 			en: 'Document'
@@ -16,7 +16,7 @@ export const Documents = {
 			de: 'Dokumente',
 			en: 'Documents'
 		},
-	},
+	}, */
 	upload: {
 		staticURL: '/documents',
 		staticDir: '../upload/documents', // cwd is src
