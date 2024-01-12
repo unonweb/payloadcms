@@ -924,16 +924,21 @@ export const Pages = {
 						{
 							type: 'blocks',
 							name: 'blocks',
-							label: 'Layout / Posts',
+							label: 'Layout',
 							labels: {
-								singular: 'Layout / Post',
-								plural: 'Layouts / Posts',
+								singular: 'Layout',
+								plural: 'Layouts',
 							},
 							blocks: [
 								//layoutFlex,
 								createColumnsFlex(),
 								//createColumnsFixed(),
-								createIncludePostsBlock(),
+								//createIncludePostsBlock(),
+							],
+							defaultValue: [
+								{
+									blockType: 'columns-flex'
+								}
 							],
 						},
 					]

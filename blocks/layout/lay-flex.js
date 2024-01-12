@@ -6,6 +6,7 @@ import { imgSlidesBlock } from '../img-slideshow'
 import { socialMediaIcons } from '../social-media-icons'
 import createTextBlock from '../text-block'
 import createTextAreaBlock from '../textarea'
+import createIncludePostsBlock from '../include-posts'
 
 const blocksAvailable = [
 	createRichTextBlock(),
@@ -16,6 +17,7 @@ const blocksAvailable = [
 	imgSlidesBlock,
 	socialMediaIcons,
 	mapLeafletBlock,
+	createIncludePostsBlock()
 ]
 
 /* const columnOptions = {
