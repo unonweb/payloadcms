@@ -797,18 +797,18 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 							let linkedDoc = {}
 							switch (node.fields.doc.relationTo) {
 								case 'pages':
-									linkedDoc = pages.find(item => item.id === node.fields.doc.value.id)
+									linkedDoc = pages.find(page => page.id === node.fields.doc.value.id)
 									href = linkedDoc.url
 									break;
 								case 'documents':
-									linkedDoc = documents.find(item => item.id === node.fields.doc.value.id)
+									linkedDoc = documents.find(doc => doc.id === node.fields.doc.value.id)
 									if (linkedDoc?.filename) {
 										docFiles.push(linkedDoc.filename)
 										href = `${pathWebDocs}/${linkedDoc.filename}`
 									}
 									break
 								case 'images':
-									linkedDoc = images.find(item => item.id === node.fields.doc.value.id)
+									linkedDoc = images.find(img => img.id === node.fields.doc.value.id)
 									if (linkedDoc?.filename) {
 										imgFiles.push(linkedDoc.filename)
 										href = `${pathWebImgs}/${linkedDoc.filename}`
