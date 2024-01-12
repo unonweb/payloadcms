@@ -1,9 +1,10 @@
+import * as React from "react";
+
 /* ACCESS */
 import { isAdmin } from '../../access/isAdmin.js';
 import { isLoggedIn } from "../../access/isLoggedIn.js";
 
 /* HOOKS & HELPERS */
-import * as React from "react";
 import log from '../../customLog.js';
 import getUserSites from '../../hooks/getUserSites.js';
 import getRelatedDoc from '../../hooks/getRelatedDoc.js';
@@ -40,7 +41,7 @@ export const Fonts = {
 		defaultColumns: ['title', 'family', 'variant'],
 		description: () => {
 			return (
-				<span>Only WOFF2 format is accepted <br></br> <u><a href="https://www.fontsquirrel.com/" target="_blank">Get Fonts</a></u> <br></br> <u><a href="https://www.fontsquirrel.com/tools/webfont-generator" target="_blank">Convert fonts to WOFF2</a></u></span>
+				<span>Es wird nur das WOFF2-Format akzeptiert<br></br> <u><a href="https://www.fontsquirrel.com/" target="_blank">Schriftarten herunterladen</a></u> <br></br> <u><a href="https://www.fontsquirrel.com/tools/webfont-generator" target="_blank">Schriftarten in WOFF2 konvertieren</a></u></span>
 			)
 		}
 	},
