@@ -146,6 +146,7 @@ export const Posts = {
 				try {
 					const user = req?.user?.shortName ?? 'internal'
 					log('--- afterChange ---', user, __filename, 7)
+					const mode = getAppMode()
 
 					context.site ??= await getRelatedDoc('sites', doc.site, user)
 					const site = context.site
