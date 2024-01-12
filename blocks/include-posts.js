@@ -69,7 +69,7 @@ export default function createIncludePostsBlock() {
 								},
 								hasMany: true,
 								admin: {
-									width: '30%',
+									width: '100%',
 									isClearable: true,
 								},
 								options: [
@@ -170,7 +170,7 @@ export default function createIncludePostsBlock() {
 							}, */
 						] // end of row
 					},
-					// --- isCollapsible
+					// --- meta.isCollapsible
 					{
 						type: 'checkbox',
 						name: 'isCollapsible',
@@ -183,7 +183,7 @@ export default function createIncludePostsBlock() {
 							condition: (data) => (data.editingMode === 'layout') ? true : false
 						},
 					},
-					// --- initState
+					// --- meta.initState
 					{
 						type: 'radio',
 						name: 'initState',
@@ -299,7 +299,7 @@ export default function createIncludePostsBlock() {
 					},
 				]
 			},
-			// --- group ui
+			// --- ui
 			{
 				type: 'group',
 				name: 'ui',
@@ -357,7 +357,7 @@ export default function createIncludePostsBlock() {
 								}
 							},
 						],
-						defaultValue: ['tags', 'sortorder'],
+						defaultValue: [],
 					},
 				]
 			},
