@@ -31,8 +31,8 @@ import getAppMode from '../../hooks/_getAppMode';
 export const Posts = {
 	slug: 'posts',
 	admin: {
-		enableRichTextRelationship: true, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
-		enableRichTextLink: true,
+		enableRichTextRelationship: false, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
+		enableRichTextLink: false,
 		useAsTitle: 'title',
 		defaultColumns: [
 			'title',
