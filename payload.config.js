@@ -122,19 +122,23 @@ export default buildConfig({
 		}, */
 	},
 	collections: [
-		// upload
-		Images,
-		Documents,
+		/* Pages */
 		Pages, // everything downwards will not be linkable from richText fields
-		Fonts,
-		_FontFamilies,
+		/* dynamic content */
 		Posts,
 		Events,
 		Products,
-		Tags, // <-- TRY: link to these categories in rt-fields
+		Tags,
+		/* elements */
 		Headers,
 		Footers,
 		Navs,
+		/* upload */
+		Images,
+		Documents,
+		Fonts,
+		_FontFamilies,
+		/* admin */
 		Sites,
 		Users,
 		//Libraries
