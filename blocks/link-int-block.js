@@ -54,8 +54,8 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 								type: 'relationship',
 								name: 'rel',
 								label: {
-									en: 'Link destination',
-									de: 'Link Ziel'
+									en: 'Destination',
+									de: 'Ziel'
 								},
 								relationTo: ['pages'],
 								required: true,
