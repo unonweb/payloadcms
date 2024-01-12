@@ -14,35 +14,35 @@ const editingModeField = {
 		{
 			label: {
 				en: 'Content Focus',
-				de: 'Fokus: Inhalt'
+				de: 'Inhalt'
 			},
 			value: 'content'
 		},
 		{
 			label: {
-				en: 'Functional Options',
-				de: 'Funktionelle Optionen'
+				en: 'Functional',
+				de: 'Funktional'
 			},
 			value: 'functional'
 		},
 		{
 			label: {
-				en: 'Style Options',
-				de: 'Style Optionen'
+				en: 'Style',
+				de: 'Style'
 			},
 			value: 'style'
 		},
 		{
 			label: {
-				en: 'Layout Options',
-				de: 'Layout Optionen'
+				en: 'Layout',
+				de: 'Layout'
 			},
 			value: 'layout'
 		},
 		{
 			label: {
-				en: 'Experimental Options',
-				de: 'Experimentelle Optionen'
+				en: 'Experimental',
+				de: 'Experimentell'
 			},
 			value: 'experimental'
 		},

@@ -91,7 +91,7 @@ export default function createImgBlock({ } = {}) {
 			{
 				type: 'collapsible',
 				label: {
-					de: 'Funktionelle Optionen',
+					de: 'Funktionale Optionen',
 					en: 'Functional Options'
 				},
 				admin: {
