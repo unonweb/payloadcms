@@ -3,6 +3,7 @@ import cpAssets from './_cpAssets'
 import getAppMode from './_getAppMode'
 import getRelatedDoc from './getRelatedDoc'
 import log from '../customLog'
+import mailError from '../mailError'
 
 export default async function pageElementAfterChange(col = '', { req, doc, previousDoc, operation, context }) {
 	try {
@@ -50,7 +51,7 @@ export default async function pageElementAfterChange(col = '', { req, doc, previ
 						data: {
 							updatedBy: `${col}-${Date.now()}`
 						},
-						locale: req.locale, // <-- ATT! Changes in menus have to saved for each locale separately
+						locale: loc,
 						context: context,
 					})
 
