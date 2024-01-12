@@ -326,6 +326,10 @@ export const Images = {
 		{
 			type: 'text',
 			name: 'createdByName',
+			label: {
+				de: 'Erstellt von Benutzer',
+				en: 'Created by User'
+			},
 			defaultValue: ({ user }) => (user) ? `${user.firstName} ${user.lastName}` : '',
 			admin: {
 				readOnly: true,
