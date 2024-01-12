@@ -55,16 +55,16 @@ export default async function pageElementAfterChange(col = '', { req, doc, previ
 						context: context,
 					})
 
-					if (result.docs.length === 0) {
-						log(`no doc found with "${colSingular}=${doc.id}"`, user, __filename, 5)
-					}
-			
 					for (const doc of result.docs) {
 						log(`updated "${doc.slug}"`, user, __filename, 7)	
 					}
 			
 					for (const error of result.errors) {
-						throw new Error(`${error.message} (while updating "${doc.id}")`)
+						throw new Error(`${error.message} (while updating "${error.id}")`)
+					}
+
+					if (result.docs.length === 0) {
+						log(`no doc found with "${colSingular}=${doc.id}"`, user, __filename, 5)
 					}
 				}
 			}
