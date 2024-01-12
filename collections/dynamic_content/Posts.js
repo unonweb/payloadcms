@@ -295,11 +295,7 @@ export const Posts = {
 							index: true,
 							required: true,
 							maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
-							defaultValue: ({ user }) => { // If user is not admin, set the site by default to the first site that they have access to
-								if (!user.roles.includes('admin') && user.sites?.[0]) {
-									return user.sites[0]
-								}
-							}
+							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
 						},
 						// --- post.tags
 						{

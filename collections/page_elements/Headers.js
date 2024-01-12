@@ -149,11 +149,7 @@ export const Headers = {
 							required: true,
 							// If user is not admin, set the site by default
 							// to the first site that they have access to
-							defaultValue: ({ user }) => {
-								if (!user.roles.includes('admin') && user.sites?.[0]) {
-									return user.sites[0];
-								}
-							}
+							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
 						},
 						// --- header.title
 						{

@@ -43,11 +43,7 @@ export const Tags = {
 			maxDepth: 0,
 			// If user is not admin, set the site by default
 			// to the first site that they have access to
-			defaultValue: ({ user }) => {
-				if (!user.roles.includes('admin') && user.sites?.[0]) {
-					return user.sites[0];
-				}
-			},
+			defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
 			admin: {
 				condition: (data, siblingData, { user }) => (siblingData.allSites === true) ? false : true,
 			}
@@ -59,13 +55,7 @@ export const Tags = {
 			label: 'Make available on all sites',
 			defaultValue: false,
 			admin: {
-				condition: (data, siblingData, { user }) => {
-					if (user && user?.roles?.includes('admin')) {
-						return true
-					} else {
-						return false
-					}
-				},
+				condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 			}
 		},
 		// --- tag.relatedCollection
@@ -125,7 +115,7 @@ export const Tags = {
 			hasMany: false,
 			defaultValue: ({ user }) => user.id,
 			admin: {
-				condition: (data, siblingData, { user }) => user.roles.includes('admin'),
+				condition: (data, siblingData, { user }) => user && user.roles.includes('admin'),
 			},
 		},
 		// --- tag.createdByName

@@ -59,7 +59,7 @@ export const Documents = {
 			relationTo: 'sites',
 			required: true,
 			hasMany: true,
-			defaultValue: ({ user }) => (!user?.roles?.includes('admin') && user?.sites?.[0]) ? user.sites[0] : [],
+			defaultValue: ({ user }) => (user && !user?.roles?.includes('admin') && user?.sites?.[0]) ? user.sites[0] : [],
 		},
 		// --- document.title
 		{

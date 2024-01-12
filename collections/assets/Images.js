@@ -179,7 +179,7 @@ export const Images = {
 			hasMany: true,
 			maxDepth: 0,
 			//defaultValue: ({ user }) => (user?.sites) ? user.sites[0] : [],
-			defaultValue: ({ user }) => (!user?.roles?.includes('admin') && user?.sites?.[0]) ? user.sites[0] : [],
+			defaultValue: ({ user }) => (user && !user?.roles?.includes('admin') && user?.sites?.[0]) ? user.sites[0] : [],
 			admin: {
 				condition: (data, siblingData, { user }) => (siblingData.allSites === true) ? false : true,
 			}
@@ -191,13 +191,7 @@ export const Images = {
 			label: 'Make available on all sites',
 			defaultValue: false,
 			admin: {
-				condition: (data, siblingData, { user }) => {
-					if (user && user?.roles?.includes('admin')) {
-						return true
-					} else {
-						return false
-					}
-				},
+				condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 			}
 		},
 		//--- img.alt
