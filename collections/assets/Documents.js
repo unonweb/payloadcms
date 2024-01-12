@@ -33,7 +33,11 @@ export const Documents = {
 		enableRichTextRelationship: true,
 		enableRichTextLink: true,
 		useAsTitle: 'title',
-		defaultColumns: ['title']
+		defaultColumns: ['title'],
+		description: {
+			de: 'Es werden PDF-Daten zum Upload akzeptiert.',
+			en: 'Only PDF-files are accepted.'
+		}
 	},
 	hooks: {
 		// --- beforeOperation

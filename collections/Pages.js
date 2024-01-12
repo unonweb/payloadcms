@@ -48,8 +48,8 @@ export const Pages = {
 		],
 		listSearchableFields: ['title'], // make sure you index each of these fields so your admin queries can remain performant.
 		description: {
-			de: 'Erstelle neue (Sub-)Seiten.',
-			en: 'Create new (sub)-pages.'
+			de: 'Hier können neue (Sub-)Seiten erstellt werden. Damit diese im Menü der Website auftauchen, müssen sie in unter "Elemente" > "Navigation" verlinkt werden.',
+			en: `Here, you may create new (sub)-pages. After creation, go to "Elements" > "Navigation" in order to link them to your page navgiation.`
 		},
 		group: {
 			de: 'Pages',
