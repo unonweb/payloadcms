@@ -106,12 +106,12 @@ export default function createColumnsFlex() {
 		slug: 'columns-flex',
 		labels: {
 			singular: {
-				en: 'Columns layout',
-				de: 'Spalten-Layout'
+				en: 'Layout',
+				de: 'Layout'
 			},
 			plural: {
-				en: 'Columns layouts',
-				de: 'Spalten-Layouts'
+				en: 'Layouts',
+				de: 'Layouts'
 			}
 		},
 		fields: [
