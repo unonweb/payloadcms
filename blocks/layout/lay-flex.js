@@ -122,6 +122,10 @@ export default function createColumnsFlex() {
 				label: 'Layout',
 				admin: {
 					width: '25%',
+					description: {
+						de: 'Das Spalten-Layout für den Hauptteil der Seite. Es können bis zu 3 Spalten erzeugt werden. Die tatsächliche Darstellung hängt jedoch von der Bildschirmgröße des Endgeräts ab.',
+						en: 'The column layout for the main part of the page. Up to 3 columns may be generated. The resulting layout however will be dependend of the screen size.'
+					}
 				},
 				defaultValue: '100',
 				//options: [ '100', '5050', '3366', '6633', '7525', '2575', '333333' ] /* Option values should be strings that do not contain hyphens or special characters due to GraphQL enumeration naming constraints. Underscores are allowed. If you determine you need your option values to be non-strings or contain special characters, they will be formatted accordingly before being used as a GraphQL enum. */
