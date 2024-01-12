@@ -1,3 +1,5 @@
+import * as React from "react";
+
 /* ACCESS */
 import isAdminOrHasSiteAccess from '../access/isAdminOrHasSiteAccess';
 import { isLoggedIn } from '../access/isLoggedIn';
@@ -47,9 +49,12 @@ export const Pages = {
 			'isHome'
 		],
 		listSearchableFields: ['title'], // make sure you index each of these fields so your admin queries can remain performant.
-		description: {
-			de: 'Hier können neue (Sub-)Seiten erstellt werden. Damit diese im Menü der Website auftauchen, müssen sie in unter "Elemente" > "Navigation" verlinkt werden.',
-			en: `Here, you may create new (sub)-pages. After creation, go to "Elements" > "Navigation" in order to link them to your page navgiation.`
+		description: () => {
+			//`Here, you may create new (sub)-pages. After creation, go to "Elements" > "Navigation" in order to link them to your page navgiation.`
+			// <code>Elemente</code> &#10141; <code>Navigation</code>
+			return (
+				<span>Hier können neue (Sub-)Seiten erstellt werden.<br></br>Damit diese im Menü der Website auftauchen, müssen sie in unter <u><a href="/admin/collections/navs" target="_self">Navigation</a></u> verlinkt werden.</span>
+			)
 		},
 		group: {
 			de: 'Pages',
