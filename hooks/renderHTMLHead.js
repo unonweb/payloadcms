@@ -38,8 +38,8 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 		/* prod */
 
 		// lib & separate c-element files
-		const pathsLibFilesJS = page.assets.head.filter(fn => fn.endsWith('.js'))
-		const pathsLibFilesCSS = page.assets.head.filter(fn => fn.endsWith('.css')) // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
+		const pathsLibFilesJS = (page.assets.head?.length > 0) ? page.assets.head.filter(fn => fn.endsWith('.js')) : []
+		const pathsLibFilesCSS = (page.assets.head?.length > 0) ? page.assets.head.filter(fn => fn.endsWith('.css')) : [] // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
 
 		/* // fonts.css
 		if (!await canAccess(`${fsPathAssets}/fonts.css`)) {

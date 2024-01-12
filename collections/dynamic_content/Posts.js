@@ -86,44 +86,55 @@ export const Posts = {
 							// data contains the current values
 							// originalDoc contains the previous values
 							// seems to work with bulk operations, too
-
-							/* iterate blocks */
-							const images = await getCol('images', user, {
-								depth: 0,
-								where: {
-									sites: { contain: site.id }
-								}
-							})
-
-							const documents = await getCol('documents', user, {
-								depth: 0,
-								where: {
-									sites: { contain: site.id }
-								}
-							})
-
-							const pages = await getCol('pages', user, {
-								depth: 0,
-								where: {
-									site: { equals: site.id }
-								}
-							})
-
-							const { html, imgFiles, docFiles } = iterateBlocks(data, {
-								user: user,
-								locale: req.locale, // <-- ATT! Really?
-								blocks: data.blocks,
-								site: site,
-								images: images.docs, // collection data
-								documents: documents.docs, // collection data
-								pages: pages.docs, // collection data
-							})
-
-							data.html.main = html // update post.html.main
-							data.assets.imgs = imgFiles // update post.assets.imgs
-							data.assets.docs = docFiles // update post.assets.docs
-
 						}
+
+						/* iterate blocks */
+						const images = await getCol('images', user, {
+							depth: 0,
+							where: {
+								sites: { contain: site.id }
+							}
+						})
+
+						const documents = await getCol('documents', user, {
+							depth: 0,
+							where: {
+								sites: { contain: site.id }
+							}
+						})
+
+						const pages = await getCol('pages', user, {
+							depth: 0,
+							where: {
+								site: { equals: site.id }
+							}
+						})
+
+						const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, {
+							user: user,
+							locale: req.locale, // <-- ATT! Really?
+							blocks: data.blocks,
+							site: site,
+							images: images.docs, // collection data
+							documents: documents.docs, // collection data
+							pages: pages.docs, // collection data
+						})
+
+						for (const path of libPathsWeb) {
+							// '/assets/lib/leaflet-1.9.4.css'
+							// '/assets/custom-elements/un-map-leaflet.js'
+							if (path.startsWith('/assets/lib/')) {
+								// only care about lib files because separate c-elements files are copied via a standalone script
+								const dest = `${pathSite}${path}`
+								const src = `${site.paths.fs.admin.resources}${path}`
+								await cpFile(src, dest, user, { overwrite: false, ctParentPath: true })
+							}
+						}
+
+						data.html.main = html // update post.html.main
+						data.assets.imgs = imgFiles // update post.assets.imgs
+						data.assets.docs = docFiles // update post.assets.docs
+						data.assets.head = libPathsWeb // update page.assets.head
 					}
 
 					if (data.hasOwnPage) {
@@ -170,13 +181,18 @@ export const Posts = {
 					/* save this as own page */
 					if (doc.hasOwnPage) {
 						/* compose html */
+						const header = (doc.elements.header) ? await getDoc('headers', doc.elements.header, user, { depth: 0, locale: req.locale }) : null
+						const nav = (doc.elements.nav) ? await getDoc('navs', doc.elements.nav, user, { depth: 0, locale: req.locale }) : null
+						const footer = (doc.elements.footer) ? await getDoc('footers', doc.elements.footer, user, { depth: 0, locale: req.locale }) : null
+
 						const postHTML = renderHTMLPage(req.locale, doc, user, {
-							header: await getDoc('headers', doc.elements.header, user, { depth: 0, locale: req.locale }),
-							nav: await getDoc('navs', doc.elements.nav, user, { depth: 0, locale: req.locale }),
-							footer: await getDoc('footers', doc.elements.footer, user, { depth: 0, locale: req.locale })
+							// pass html or undefined:
+							navHTML: nav?.html,
+							headerHTML: header?.html,
+							footerHTML: footer?.html,
 						})
 
-						const destPath = `${site.paths.fs.site}/posts/${doc.id}/${req.locale}/index.html` // <-- ATT: hard-coded value
+						const destPath = `${site.paths.fs.site}/${mode}/posts/${doc.id}/${req.locale}/index.html` // <-- ATT: hard-coded value
 						await saveToDisk(destPath, postHTML, user, { ctParentPath: true })
 					}
 
@@ -252,9 +268,9 @@ export const Posts = {
 		afterOperation: [
 			async ({ args, operation, result }) => {
 				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
-					
 					const user = args?.req?.user?.shortName ?? 'internal'
 					args.req.context.site ??= await getRelatedDoc('sites', result.site, user)
+					const mode = getAppMode()
 					const site = args.req.context.site
 					/* save all posts to disk */
 					for (const loc of site.locales.used) {
@@ -268,7 +284,7 @@ export const Posts = {
 						})
 
 						const webVersion = createWebVersion(posts, args.req.user)
-						const destPath = `${site.paths.fs.posts}/${loc}/posts.json`
+						const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/posts.json`
 						await saveToDisk(destPath, JSON.stringify(webVersion), user)
 					}
 					console.timeEnd(`<7>[time] [posts] "${args.req.context.timeID}"`)
@@ -658,14 +674,18 @@ export const Posts = {
 									type: 'json',
 									name: 'imgs',
 									defaultValue: [],
-									localized: false,
 								},
 								// --- post.assets.docs
 								{
 									type: 'json',
 									name: 'docs',
 									defaultValue: [],
-									localized: false,
+								},
+								// --- post.assets.head
+								{
+									type: 'json',
+									name: 'head',
+									defaultValue: [],
 								},
 							]
 						}
