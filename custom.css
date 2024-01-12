@@ -16,6 +16,10 @@
 	margin-top: 0px !important;
 } */ 
 
+html[data-theme="light"] .logo svg path {
+	fill: black;
+}
+
 .hide-group-label .group-field__header {
 	padding: 0;
 	margin: 0;
