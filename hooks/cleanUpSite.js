@@ -22,7 +22,8 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 			},
 		})
 
-		/* get only the element IDs that are used on some page */
+		/* page elements */
+		// get the element IDs that are used on some page
 		let elementIDs = new Set()
 		for (const doc of pages.docs) {
 			if (doc.nav) elementIDs.add(doc.nav)
@@ -30,7 +31,8 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 			if (doc.footer) elementIDs.add(doc.footer)
 		}
 		elementIDs = Array.from(elementIDs)
-
+		
+		// get corresponding elements
 		const navs = await getCol('navs', user, {
 			depth: 0,
 			where: {
@@ -50,10 +52,11 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 			}
 		})
 
-		/* get all assets IDs in use from all elements AND the pages themselves  */
-		const allElementDocs = [...navs.docs, ...headers.docs, ...footers.docs, ...pages.docs]
+		/* assets */
+		// get all assets IDs in use from all elements AND the pages themselves
+		const allDocs = [...navs.docs, ...headers.docs, ...footers.docs, ...pages.docs]
 		let assetIDs = new Set()
-		for (const doc of allElementDocs) {
+		for (const doc of allDocs) {
 			if (Array.isArray(doc?.imgs)) {
 				for (const assets of doc.imgs) {
 					assetIDs.add(assets)	
@@ -74,6 +77,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 		assetIDs = Array.from(assetIDs)
 
 		if (cleanUpPages === true) {
+			// remove page files
 			const allSlugs = pages.docs.map(doc => doc.slug) // slugs or not localized
 
 			for (const loc of locales) {

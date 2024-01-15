@@ -300,10 +300,6 @@ export const Pages = {
 						}
 					}
 
-					/* update site.assets.fromPages */
-					site.assets.fromPages ??= {} // init 'site.assets.fromPages'
-					site.assets.fromPages[doc.id] = [...imgFilesUnique, ...docFilesUnique]
-
 					/* update 'sites' */
 					// * updates site.assets
 					// * very useful because it triggers the site's hooks so that we can make sure that user.css and fonts.css are there
@@ -332,38 +328,6 @@ export const Pages = {
 
 						if (site) {
 							// if afterDelete is triggered because site is deleted - there won't be not site anymore (surprise!)
-
-							/* update site.assets.fromPages */
-
-							delete site.assets.fromPages[doc.id]
-
-							await updateDocSingle('sites', site.id, user, {
-								data: {
-									assets: {
-										fromPages: site.assets.fromPages
-									}
-								}
-							})
-
-							/* update filesystem */
-							// this is done now in cleanUpSite
-
-							/* const pathSite = site.paths.fs.site
-							switch (doc.isHome) {
-
-								case true:
-									await rmFile(`${pathSite}/index.html`, user)
-									for (const loc of site.locales.used) { // <-- IMP!
-										await rmFile(`${pathSite}/${loc}/index.html`, user)
-									}
-									break
-
-								case false:
-									for (const loc of site.locales.used) { // <-- IMP!
-										await rmFile(`${pathSite}/${loc}/${doc.slug}`, user, { recursive: true }) // remove directory containing index.html
-									}
-									break
-							} */
 						}
 					}
 				} catch (err) {

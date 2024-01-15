@@ -382,7 +382,7 @@ export const Sites = {
 		{
 			type: 'tabs',
 			tabs: [
-				// --- ASSETS [tab-1]
+				// --- META [tab-1]
 				{
 					label: 'Assets',
 					fields: [
@@ -391,23 +391,6 @@ export const Sites = {
 							type: 'group',
 							name: 'assets',
 							fields: [
-								// --- site.assets.fromPages
-								// ---> array of ids with all related assets
-								{
-									type: 'collapsible',
-									label: 'fromPages',
-									admin: {
-										initCollapsed: true,
-									},
-									fields: [
-										// --- site.assets.fromPages
-										{
-											type: 'json',
-											name: 'fromPages',
-											label: ' ',
-										},
-									]
-								},
 								// --- site.assets.fromPosts
 								// ---> array of ids with all related assets
 								{
