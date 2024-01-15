@@ -8,7 +8,7 @@ export default function createImgBlock({ } = {}) {
 		labels: {
 			singular: {
 				en: 'Image',
-				en: 'Bild'
+				de: 'Bild'
 			},
 			plural: {
 				en: 'Images',

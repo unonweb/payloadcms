@@ -24,8 +24,14 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 	const block = {
 		slug: 'link-internal',
 		labels: {
-			singular: 'Internal Link',
-			plural: 'Internal Links',
+			singular: {
+				de: 'Interner Link',
+				en: 'Internal Link'
+			},
+			plural: {
+				de: 'Interne Links',
+				en: 'Internal Links'
+			},
 		},
 		fields: [
 			{

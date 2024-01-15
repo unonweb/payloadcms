@@ -265,8 +265,8 @@ export const Navs = {
 							type: 'blocks',
 							name: 'blocks',
 							label: {
-								de: 'Menü Layout',
-								en: 'Menu Layout'
+								de: ' ',
+								en: ' '
 							},
 							labels: {
 								singular: {
