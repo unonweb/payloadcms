@@ -479,6 +479,65 @@ export const Posts = {
 						// --- post.elements.nav
 						// --- post.elements.footer
 						createPageElementsField(),
+						{
+							type: 'collapsible',
+							label: 'Admin',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							fields: [
+								// --- post.html
+								{
+									type: 'group',
+									name: 'html',
+									fields: [
+										// --- post.html.main
+										{
+											type: 'code',
+											name: 'main',
+											localized: true,
+											admin: {
+												language: 'html',
+											}
+										},
+										// --- post.html.head
+										{
+											type: 'code',
+											name: 'head',
+											localized: true,
+											admin: {
+												language: 'html',
+											}
+										},
+									]
+								},
+								// --- post.assets
+								{
+									type: 'group',
+									name: 'assets',
+									fields: [
+										// --- post.assets.imgs
+										{
+											type: 'json',
+											name: 'imgs',
+											defaultValue: [],
+										},
+										// --- post.assets.docs
+										{
+											type: 'json',
+											name: 'docs',
+											defaultValue: [],
+										},
+										// --- post.assets.head
+										{
+											type: 'json',
+											name: 'head',
+											defaultValue: [],
+										},
+									]
+								}
+							]
+						}
 
 						// meta: url
 						/* {
@@ -633,62 +692,6 @@ export const Posts = {
 								createImgBlock(),
 							]
 						},
-					]
-				},
-				// --- ADMIN [tab-3] ---
-				{
-					label: 'Admin',
-					fields: [
-						// --- post.html
-						{
-							type: 'group',
-							name: 'html',
-							fields: [
-								// --- post.html.main
-								{
-									type: 'code',
-									name: 'main',
-									localized: true,
-									admin: {
-										language: 'html',
-									}
-								},
-								// --- post.html.head
-								{
-									type: 'code',
-									name: 'head',
-									localized: true,
-									admin: {
-										language: 'html',
-									}
-								},
-							]
-						},
-						// --- post.assets
-						{
-							type: 'group',
-							name: 'assets',
-							fields: [
-								// --- post.assets.imgs
-								{
-									type: 'json',
-									name: 'imgs',
-									defaultValue: [],
-								},
-								// --- post.assets.docs
-								{
-									type: 'json',
-									name: 'docs',
-									defaultValue: [],
-								},
-								// --- post.assets.head
-								{
-									type: 'json',
-									name: 'head',
-									defaultValue: [],
-								},
-							]
-						}
 					]
 				},
 			]
