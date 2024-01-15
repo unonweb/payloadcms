@@ -13,7 +13,6 @@ import editingModeField from '../../fields/editingMode';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import log from '../../customLog';
 import mailError from '../../mailError';
-import updateRelatedPages from '../../hooks/updateRelatedPages';
 import updateDocsMany from '../../hooks/updateDocsMany';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';

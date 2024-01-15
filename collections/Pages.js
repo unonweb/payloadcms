@@ -125,9 +125,9 @@ export const Pages = {
 					const site = context.site
 					const pathSite = `${site.paths.fs.site}/${mode}`
 
-					/* render html from page.blocks and update used assets */
+					/* render html.main from blocks and update assets */
 
-					if (data.main.blocks && data.main.blocks.length > 0) {
+					if (!context.updatedByPageElement && data.main.blocks && data.main.blocks.length > 0) {
 						if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {
 							// data contains the current values
 							// originalDoc contains the previous values
@@ -227,9 +227,6 @@ export const Pages = {
 					const header = (doc.header) ? await getDoc('headers', doc.header, user, { depth: 0, locale: req.locale }) : null
 					const nav = (doc.nav) ? await getDoc('navs', doc.nav, user, { depth: 0, locale: req.locale }) : null
 					const footer = (doc.footer) ? await getDoc('footers', doc.footer, user, { depth: 0, locale: req.locale }) : null
-					//const header = null
-					//const nav = null
-					//const footer = null
 
 					/* site assets */
 					// --------------------
@@ -272,25 +269,6 @@ export const Pages = {
 						if (req.locale === defLang) {
 							await saveToDisk(`${pathSite}/index.html`, pageHTML, user) // save additional non-localized home
 						}
-
-						/* save other localized home */
-						/* if (site.locales.used.length > 1) {
-							for (const loc of site.locales.used.filter(item => item !== req.locale)) {
-								const otherDoc = await getDoc('pages', doc.id, user, { locale: loc })
-								if (otherDoc) {
-									const otherHTML = renderHTMLPage(loc, otherDoc, user, {
-										nav: nav,
-										header: header,
-										footer: footer
-									})
-									const otherPath = `${pathSite}/${loc}/index.html`
-									await saveToDisk(otherPath, otherHTML, user) // save localized home
-									if (loc === defLang) {
-										await saveToDisk(`${pathSite}/index.html`, otherHTML, user) // save additional non-localized home
-									}
-								}
-							}
-						} */
 					}
 
 					/* save other locale pages */
@@ -327,6 +305,7 @@ export const Pages = {
 					site.assets.fromPages[doc.id] = [...imgFilesUnique, ...docFilesUnique]
 
 					/* update 'sites' */
+					// * updates site.assets
 					// * very useful because it triggers the site's hooks so that we can make sure that user.css and fonts.css are there
 					await updateDocSingle('sites', site.id, user, {
 						data: site

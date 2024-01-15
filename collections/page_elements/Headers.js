@@ -14,14 +14,10 @@ import editingModeField from '../../fields/editingMode';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import log from '../../customLog';
 import mailError from '../../mailError';
-import updateRelatedPages from '../../hooks/updateRelatedPages';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
-import updateElementData from '../../hooks/pageElementBeforeChange';
-import updateDocSingle from '../../hooks/updateDocSingle';
 import getUserSites from '../../hooks/getUserSites';
-import cpAssets from '../../hooks/_cpAssets';
 import pageElementAfterChange from '../../hooks/pageElementAfterChange';
 import pageElementBeforeChange from '../../hooks/pageElementBeforeChange';
 

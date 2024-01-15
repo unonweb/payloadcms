@@ -9,6 +9,8 @@ export default async function pageElementAfterChange(col = '', { req, doc, previ
 	try {
 		const user = req?.user?.shortName ?? 'internal'
 		context.site ??= await getRelatedDoc('sites', doc.site, user)
+		context.updatedBy = `${col}` // currently not used
+		context.updatedByPageElement = true
 		const site = context.site
 		const mode = getAppMode()
 		const colSingular = (col[col.length - 1] === 's') ? col.slice(0, col.length - 1) : null
@@ -19,7 +21,7 @@ export default async function pageElementAfterChange(col = '', { req, doc, previ
 		/* cp assets */
 		await cpAssets(`${process.cwd()}/upload/images/`, `${site.paths.fs.site}/${mode}/assets/imgs`, doc.imgs, user) // cp imgs from src to dest
 
-		/* init other locales */
+		/* init other locales of this collection */
 		if (operation === 'create') {
 			if (site.locales.used.length > 1 && site.locales.initOthers === true) {
 				for (const loc of site.locales.used) {
