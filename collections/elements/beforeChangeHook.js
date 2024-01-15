@@ -1,9 +1,9 @@
-import hasChanged from './_hasChanged'
-import getCol from './_getCol'
-import iterateBlocks from './iterateBlocks'
-import getAppMode from './_getAppMode'
-import getRelatedDoc from './getRelatedDoc'
-import log from '../customLog'
+import hasChanged from '../../hooks/_hasChanged'
+import getCol from '../../hooks/_getCol'
+import iterateBlocks from '../../hooks/iterateBlocks'
+import getAppMode from '../../hooks/_getAppMode'
+import getRelatedDoc from '../../hooks/getRelatedDoc'
+import log from '../../customLog'
 
 export default async function pageElementBeforeChange(col = '', { data, req, operation, originalDoc, context }) {
 
@@ -44,7 +44,7 @@ export default async function pageElementBeforeChange(col = '', { data, req, ope
 
 				/* update data */
 				data.html = html
-				data.imgs = imgFiles
+				data.assets.imgs = imgFiles
 			}
 		}
 

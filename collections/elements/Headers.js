@@ -1,26 +1,31 @@
 /* ACCESS */
-import { isAdmin } from '../../access/isAdmin';
+import { isAdmin, isAdminFieldLevel } from '../../access/isAdmin';
 import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
 import { isLoggedIn } from '../../access/isLoggedIn';
 
 /* BLOCKS */
-import footerDefault from '../../blocks/footers/footer-default';
+import headerBanner from '../../blocks/headers/header-banner';
+import createImgBlock from '../../blocks/img-block';
 
 /* FIELDS */
 import editingModeField from '../../fields/editingMode';
 
-/*  HOOKS */
+/*  HOOKS & HELPERS */
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import log from '../../customLog';
 import mailError from '../../mailError';
-import updateDocsMany from '../../hooks/updateDocsMany';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
-import pageElementAfterChange from '../../hooks/pageElementAfterChange';
-import pageElementBeforeChange from '../../hooks/pageElementBeforeChange';
+import updateDocsMany from '../../hooks/updateDocsMany';
+import getUserSites from '../../hooks/getUserSites';
+import pageElementAfterChange from './afterChangeHook';
+import pageElementBeforeChange from './beforeChangeHook';
+import createAssetsFields from '../../fields/createAssetsFields';
+import afterOperationHook from './afterOperationHook';
+import beforeOperationHook from './beforeOperationHook';
 
-export const Footers = {
-	slug: 'footers',
+export const Headers = {
+	slug: 'headers',
 	admin: {
 		group: {
 			en: 'Elements',
@@ -40,12 +45,7 @@ export const Footers = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			({ operation, args }) => {
-				if (['create', 'update'].includes(operation)) {
-					args.req.context.timeID = Date.now()
-					console.time(`<7>[time] [footers] [total] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation }) => beforeOperationHook('headers', { args, operation })
 		],
 		// --- beforeValidate
 		beforeValidate: [
@@ -54,11 +54,15 @@ export const Footers = {
 					if (operation === 'create' || operation === 'update') {
 						const user = req?.user?.shortName ?? 'internal'
 						log('--- beforeValidate ---', user, __filename, 7)
-						/* default values */
+
+						/* default title */
+
 						if (!data.title) {
 							const user = req?.user?.shortName ?? 'internal'
-							const site = await getRelatedDoc('sites', data.site, user)
-							data.title = `${(data.blocks && data.blocks.length > 0) ? data.blocks[0].blockType : 'default'} (${site.domainShort})` // title of this menu
+							context.site ??= await getRelatedDoc('sites', data.site, user)
+							const site = context.site
+
+							data.title = `${(data.blocks && data.blocks?.length > 0) ? data.blocks[0].blockType : 'default'} (${site.domainShort})` // title of this menu
 						}
 
 						return data
@@ -71,11 +75,11 @@ export const Footers = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => pageElementBeforeChange('footers', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => pageElementBeforeChange('headers', { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => pageElementAfterChange('footers', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => pageElementAfterChange('headers', { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -88,11 +92,11 @@ export const Footers = {
 					where: {
 						and: [
 							{ site: { equals: siteID } },
-							{ footer: { equals: doc.id } },
+							{ header: { equals: doc.id } },
 						]
 					},
 					data: {
-						footer: ''
+						header: ''
 					}
 				})
 				await updateDocsMany('posts', user, {
@@ -100,26 +104,23 @@ export const Footers = {
 						and: [
 							{ site: { equals: siteID } },
 							{ hasOwnPage: { equals: true } },
-							{ footer: { equals: doc.id } },
+							{ header: { equals: doc.id } },
 						]
 					},
-					data: { footer: '' }
+					data: { header: '' }
 				})
 			}
 		],
 		// --- afterOperation
 		afterOperation: [
-			({ operation, args }) => {
-				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
-					console.timeEnd(`<7>[time] [footers] [total] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ operation, args }) => afterOperationHook('headers', { operation, args })
 		],
 	},
 	// --- fields
 	fields: [
 		// --- editingMode
 		editingModeField,
+		// --- tabs
 		{
 			type: 'tabs',
 			tabs: [
@@ -127,7 +128,7 @@ export const Footers = {
 				{
 					label: 'Meta',
 					fields: [
-						// --- footer.site
+						// --- header.site
 						{
 							type: 'relationship',
 							name: 'site',
@@ -137,12 +138,11 @@ export const Footers = {
 							// to the first site that they have access to
 							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
 						},
-						// --- footer.title
+						// --- header.title
 						{
 							type: 'text',
 							name: 'title',
 							unique: false,
-							required: false,
 							admin: {
 								placeholder: {
 									en: 'Leave blank for automatic insertion',
@@ -150,95 +150,77 @@ export const Footers = {
 								}
 							}
 						},
-						// --- footer.isDefault
+						// --- header.isDefault
 						{
 							type: 'checkbox',
 							name: 'isDefault',
 							label: {
-								de: 'Standard-Navigation',
-								en: 'Default Navigation'
+								de: 'Standard-Header',
+								en: 'Default Header'
 							},
 							admin: {
 								description: {
-									en: 'Is automatically picked when creating new pages/posts. Es kann nur eine Navigation als Standard gesetzt werden.',
-									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one navigation may be set as default.'
+									en: 'Is automatically picked when creating new pages/posts. Es kann nur ein Header als Standard gesetzt werden.',
+									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one header may be set as default.'
 								}
 							},
-							defaultValue: async ({ user }) => await firstDefaultsToTrue('footers', user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'footers'),
+							defaultValue: async ({ user }) => await firstDefaultsToTrue('headers', user.shortName),
+							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'headers'),
 						},
-						// --- ADMIN
+						// --- header.html
 						{
-							type: 'collapsible',
-							label: 'Admin',
+							type: 'code',
+							name: 'html',
 							admin: {
+								language: 'html',
 								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 							},
-							fields: [
-								// --- footer.html
-								{
-									type: 'code',
-									name: 'html',
-									admin: {
-										language: 'html',
-									},
-									access: {
-										update: isAdmin,
-									},
-									localized: true,
-								},
-								// --- footer.imgs
-								{
-									type: 'json',
-									name: 'imgs',
-									access: {
-										update: isAdmin,
-									},
-									localized: false,
-									defaultValue: [],
-								},
-							]
-						}
+							localized: true,
+						},
+						// --- header.imgs
+						// updated in beforeChange hook
+						createAssetsFields('imgs'),
 					]
 				},
-				// --- CONTENT [tab-2]
+				// --- content [tab-2]
 				{
 					label: {
 						de: 'Inhalt',
 						en: 'Content'
 					},
 					fields: [
-						// --- footer.blocks
+						// --- header.blocks
 						{
 							type: 'blocks',
 							name: 'blocks',
 							label: {
-								de: 'Footer Layout',
-								en: 'Footer Layout'
+								de: 'Header Layout',
+								en: 'Header Layout'
 							},
-							labels: {
+							labels: { // Customize the block row labels appearing in the Admin dashboard.
 								singular: {
-									de: 'Footer Layout',
-									en: 'Footer Layout'
+									de: 'Header Layout',
+									en: 'Header Layout'
 								},
 								plural: {
-									de: 'Footer Layout',
-									en: 'Footer Layout'
+									de: 'Header Layout',
+									en: 'Header Layout'
 								},
 							},
 							maxRows: 1,
 							/* defaultValue: [
 								{
-									blockType: 'footer-default'
+									blockType: 'header-banner'
 								}
 							], */
 							blocks: [
-								footerDefault
+								headerBanner,
+								createImgBlock(),
 							]
 						},
 					]
 				},
 			]
-		}
+		},
 	],
 }

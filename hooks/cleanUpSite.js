@@ -7,7 +7,13 @@ import canAccess from './_canAccess'
 import getAppMode from './_getAppMode'
 import isDirectory from './_isDirectory'
 
-export default async function cleanUpSite(site = {}, locales = [], user = '', { cleanUpPages = true, cleanUpFonts = true, cleanUpImgs = true, cleanUpDocs = true, cleanUpCElements = false } = {}) {
+export default async function cleanUpSite(site = {}, locales = [], user = '', {
+	cleanUpPages = true,
+	cleanUpFonts = true,
+	cleanUpImgs = true,
+	cleanUpDocs = true,
+	cleanUpPosts = true,
+	cleanUpCElements = false } = {}) {
 
 	try {
 
@@ -16,6 +22,13 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 		const pathSiteAssets = `${site.paths.fs.site}/${mode}/assets`
 
 		const pages = await getCol('pages', user, {
+			depth: 0,
+			where: {
+				site: { equals: site.id },
+			},
+		})
+
+		const posts = await getCol('posts', user, {
 			depth: 0,
 			where: {
 				site: { equals: site.id },
@@ -31,7 +44,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 			if (doc.footer) elementIDs.add(doc.footer)
 		}
 		elementIDs = Array.from(elementIDs)
-		
+
 		// get corresponding elements
 		const navs = await getCol('navs', user, {
 			depth: 0,
@@ -54,38 +67,43 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 
 		/* assets */
 		// get all assets IDs in use from all elements AND the pages themselves
-		const allDocs = [...navs.docs, ...headers.docs, ...footers.docs, ...pages.docs]
+		const allDocs = [...navs.docs, ...headers.docs, ...footers.docs, ...pages.docs, ...posts.docs]
 		let assetIDs = new Set()
 		for (const doc of allDocs) {
 			if (Array.isArray(doc?.imgs)) {
 				for (const assets of doc.imgs) {
-					assetIDs.add(assets)	
-				}	
+					assetIDs.add(assets)
+				}
 			}
 			if (Array.isArray(doc?.assets?.imgs)) {
 				for (const assets of doc.assets.imgs) {
-					assetIDs.add(assets)	
-				}	
+					assetIDs.add(assets)
+				}
 			}
 			if (Array.isArray(doc?.assets?.docs)) {
 				for (const assets of doc.assets.docs) {
 					assetIDs.add(assets)
-				}	
+				}
 			}
 		}
 
 		assetIDs = Array.from(assetIDs)
 
+		/* cleanUpPages */
 		if (cleanUpPages === true) {
 			// remove page files
-			const allSlugs = pages.docs.map(doc => doc.slug) // slugs or not localized
+			const pageSlugs = pages.docs.map(doc => doc.slug) // slugs or not localized
 
 			for (const loc of locales) {
+
 				const pathSiteLocale = `${pathSite}/${loc}`
+
 				if (await canAccess(pathSiteLocale) && await isDirectory(pathSiteLocale)) {
-					const pageFileObjs = await readdir(pathSiteLocale, { withFileTypes: true, recursive: false })
-					for (const file of pageFileObjs) {
-						if (file.isDirectory() && !allSlugs.includes(file.name)) {
+
+					const fileObjs = await readdir(pathSiteLocale, { withFileTypes: true, recursive: false })
+
+					for (const file of fileObjs) {
+						if (file.isDirectory() && !pageSlugs.includes(file.name)) {
 							await rm(`${file.path}/${file.name}`, { force: false, recursive: true })
 							log(`removed: ${file.path}/${file.name}`, user, __filename, 6)
 						}
@@ -93,7 +111,27 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 				}
 			}
 		}
+		/* cleanUpPosts */
+		if (cleanUpPosts === true) {
+			// remove post files
+			const allIDs = posts.docs.map(doc => doc.id) // get all post IDs
 
+			const pathPosts = `${pathSite}/posts`
+
+			if (await canAccess(pathPosts) && await isDirectory(pathPosts)) {
+
+				const fileObjs = await readdir(pathPosts, { withFileTypes: true, recursive: false })
+
+				for (const file of fileObjs) {
+					if (file.isDirectory() && !allIDs.includes(file.name)) {
+						await rm(`${file.path}/${file.name}`, { force: false, recursive: true })
+						log(`removed: ${file.path}/${file.name}`, user, __filename, 6)
+					}
+				}
+			}
+		}
+
+		/* cleanUpImgs */
 		if (cleanUpImgs === true) {
 			const imgDir = `${pathSiteAssets}/imgs`
 			// rm all img files that are not on the positive list:
@@ -106,7 +144,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 				}
 			}
 		}
-
+		/* cleanUpDocs */
 		if (cleanUpDocs === true) {
 			// rm all doc files that are not on the positive list:
 			const pathDocs = `${pathSiteAssets}/docs`
@@ -120,6 +158,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', { 
 			}
 		}
 
+		/* cleanUpFonts */
 		if (cleanUpFonts === true) {
 			const pathFonts = `${pathSiteAssets}/fonts`
 			const fontsPosList = (site.assets.fonts) ? site.assets.fonts : null

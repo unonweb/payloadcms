@@ -7,17 +7,12 @@ export default function initSitePaths(data) {
 
 	// site
 	data.paths.fs.site = `${data.paths.fs.admin.sites}/${data.domainShort}`
-	
-	// assets
-	data.paths.fs.assets = `${data.paths.fs.admin.sites}/${data.domainShort}/assets`
 	// fonts
 	data.paths.fs.fonts = `${data.paths.fs.admin.sites}/${data.domainShort}/assets`
 	// docs
 	data.paths.fs.docs = `${data.paths.fs.admin.sites}/${data.domainShort}/assets/docs`
 	// imgs
 	data.paths.fs.imgs = `${data.paths.fs.admin.sites}/${data.domainShort}/assets/imgs`
-	// custom elements
-	data.paths.fs.customElements = `${data.paths.fs.admin.sites}/${data.domainShort}/assets/custom-elements`
 	
 	// posts
 	data.paths.fs.posts = `${data.paths.fs.admin.sites}/${data.domainShort}/assets/posts`

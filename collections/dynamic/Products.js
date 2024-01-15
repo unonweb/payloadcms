@@ -16,7 +16,7 @@ import getDoc from '../../hooks/getDoc';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import mailError from '../../mailError';
 import saveToDisk from '../../hooks/_saveToDisk';
-import createPageElementsField from '../../fields/createPageElementsField';
+import createElementsFields from '../../fields/createPageElementsField';
 import getUserSites from '../../hooks/getUserSites';
 
 export const Products = {
@@ -113,20 +113,6 @@ export const Products = {
 						await saveToDisk(destPath, JSON.stringify(webVersion), user)
 					}
 
-					if (hasChanged(doc.assets, previousDoc.assets, user)) {
-						/* update site.assets.fromPosts */
-						site.assets.fromPosts ??= {} // init 'site.assets.fromPosts'
-						site.assets.fromPosts[doc.id] = [...doc.assets.imgs, ...doc.assets.docs]
-
-						await updateDocSingle('sites', site.id, user, {
-							data: {
-								assets: {
-									fromPosts: site.assets.fromPosts
-								}
-							}
-						})
-					}
-
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
 					mailError(err, req)
@@ -162,17 +148,6 @@ export const Products = {
 						const destPath = `${site.paths.fs.products}/${loc}/products.json`
 						await saveToDisk(destPath, JSON.stringify(webVersion), user)
 					}
-
-					/* update site.assets.fromPosts */
-					delete site.assets.fromPosts[doc.id]
-
-					await updateDocSingle('sites', site.id, user, {
-						data: {
-							assets: {
-								fromPosts: site.assets.fromPosts
-							}
-						}
-					})
 
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
@@ -300,7 +275,7 @@ export const Products = {
 						// --- product.elements.header
 						// --- product.elements.nav
 						// --- product.elements.footer
-						createPageElementsField(),
+						createElementsFields(),
 					]
 				},
 				// --- CONTENT [tab-2] ---

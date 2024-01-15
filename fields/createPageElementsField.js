@@ -1,4 +1,4 @@
-export default function createPageElementsField() {
+export default function createElementsFields() {
 	const field = {
 		type: 'group',
 		name: 'elements',

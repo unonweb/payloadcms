@@ -21,9 +21,13 @@ import saveToDisk from '../../hooks/_saveToDisk';
 import rmFile from '../../hooks/_rmFile';
 import getDoc from '../../hooks/getDoc';
 import renderHTMLPage from '../../hooks/renderHTMLPage';
-import createPageElementsField from '../../fields/createPageElementsField';
+import createElementsFields from '../../fields/createPageElementsField';
 import cpAssets from '../../hooks/_cpAssets';
 import getAppMode from '../../hooks/_getAppMode';
+import createAssetsFields from '../../fields/createAssetsFields';
+import afterOperationHook from './afterOperationHook';
+import beforeOperationHook from './beforeOperationHook';
+import afterChangeHook from './afterChangeHook';
 
 export const Events = {
 	slug: 'events',
@@ -52,6 +56,10 @@ export const Events = {
 		delete: isAdminOrHasSiteAccess('site'),
 	},
 	hooks: {
+		// --- beforeOperation
+		beforeOperation: [
+			async ({ args, operation }) => beforeOperationHook('events', { args, operation })
+		],
 		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => {
@@ -115,142 +123,12 @@ export const Events = {
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					const mode = getAppMode()
-					log('--- afterChange ---', user, __filename, 7)
-
-					context.site ??= await getRelatedDoc('sites', doc.site, user)
-					const site = context.site
-
-					/* cp assets */
-					await cpAssets(`${process.cwd()}/upload/images/`, `${site.paths.fs.site}/${mode}/assets/imgs`, doc.assets.imgs, user) // cp imgs from src to dest
-					await cpAssets(`${process.cwd()}/upload/documents/`, `${site.paths.fs.site}/${mode}/assets/docs`, doc.assets.docs, user) // cp docs from src to dest
-					
-					/* init other locales */
-					if (operation === 'create') {
-						if (site.locales.used.length > 1 && site.locales.initOthers === true) {
-							for (const loc of site.locales.used) {
-								if (loc !== req.locale) {
-									const updatedDoc = await updateDocSingle('events', doc.id, user, {
-										data: doc,
-										locale: loc,
-									})
-								}
-							}
-						}
-					}
-
-					/* save this as own page */
-					if (doc.hasOwnPage) {
-						/* compose html */
-						const postHTML = renderHTMLPage(req.locale, doc, user, {
-							header: await getDoc('headers', doc.elements.header, user, { depth: 0, locale: req.locale }),
-							nav: await getDoc('navs', doc.elements.nav, user, { depth: 0, locale: req.locale }),
-							footer: await getDoc('footers', doc.elements.footer, user, { depth: 0, locale: req.locale })
-						})
-
-						const destPath = `${site.paths.fs.site}/events/${doc.id}/${req.locale}/index.html` // <-- ATT: hard-coded value
-						await saveToDisk(destPath, postHTML, user, { ctParentPath: true })
-					}
-
-					/* save collection to disk */
-					for (const loc of site.locales.used) {
-
-						const events = await getCol('events', user, {
-							depth: 1,
-							locale: loc,
-							where: {
-								site: { equals: site.id }
-							},
-						})
-
-						const eventsWebVersion = createWebVersion(events, req.user)
-						const destPath = `${site.paths.fs.events}/${loc}/events.json`
-						await saveToDisk(destPath, JSON.stringify(eventsWebVersion), user)
-					}
-
-					/* update site.assets.fromPosts */
-					if (hasChanged(doc.assets, previousDoc.assets, user)) {
-						site.assets.fromPosts ??= {} // init 'site.assets.fromPosts'
-						site.assets.fromPosts[doc.id] = [...doc.assets.imgs, ...doc.assets.docs]
-
-						await updateDocSingle('sites', site.id, user, {
-							data: {
-								assets: {
-									fromPosts: site.assets.fromPosts
-								}
-							}
-						})
-					}
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			},
+			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook('events', { req, doc, previousDoc, context, operation }),
 		],
-		// --- afterDelete
-		afterDelete: [
-			async ({ req, doc, context }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					context.site ??= await getRelatedDoc('sites', doc.site, user)
-					const site = context.site
-
-					/* delete own page */
-					if (doc.hasOwnPage) {
-						const destPath = `${site.paths.fs.site}/events/${doc.id}/${req.locale}/index.html`
-						await rmFile(destPath, user, { recursive: true, throwErrorIfMissing: false })
-					}
-
-					/* save collection to disk */
-					for (const loc of site.locales.used) {
-
-						const events = await getCol('events', user, {
-							depth: 1,
-							locale: loc,
-							where: {
-								site: { equals: site.id }
-							},
-						})
-
-						const webVersion = events.map(doc => {
-							return {
-								id: doc.id,
-								tags: doc.tags,
-								title: doc.title,
-								time: doc.time,
-								html: doc.html.main,
-								author: `${user.firstName} ${user.lastName}`,
-								date: doc.date,
-								updatedAt: doc.updatedAt,
-								createdAt: doc.createdAt,
-							}
-						})
-
-						const destPath = `${site.paths.fs.events}/${loc}/events.json`
-						await saveToDisk(destPath, JSON.stringify(webVersion), user)
-					}
-
-					/* update site.assets.fromPosts */
-					delete site.assets.fromPosts[doc.id]
-
-					await updateDocSingle('sites', site.id, user, {
-						data: {
-							assets: {
-								fromPosts: site.assets.fromPosts
-							}
-						}
-					})
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			},
-		]
+		// --- afterOperation
+		afterOperation: [
+			async ({ args, operation, result }) => afterOperationHook('events', { args, operation, result })
+		],
 	},
 	fields: [
 		// --- editingMode
@@ -437,7 +315,19 @@ export const Events = {
 						// --- event.elements.header
 						// --- event.elements.nav
 						// --- event.elements.footer
-						createPageElementsField(),
+						createElementsFields(),
+						// --- event.assets
+						createAssetsFields(),
+						// --- event.html
+						{
+							type: 'code',
+							name: 'html',
+							localized: true,
+							admin: {
+								language: 'html',
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							}
+						},
 					]
 				},
 				// --- CONTENT [tab-2] ---
@@ -463,63 +353,7 @@ export const Events = {
 						},
 					]
 				},
-				// --- ADMIN [tab-3] ---
-				{
-					label: 'Admin',
-					fields: [
-						// --- event.html
-						{
-							type: 'code',
-							name: 'html',
-							localized: true,
-							admin: {
-								language: 'html',
-							}
-						},
-						// --- event.assets
-						{
-							type: 'group',
-							name: 'assets',
-							fields: [
-								// --- event.assets.imgs
-								{
-									type: 'json',
-									name: 'imgs',
-									localized: false,
-									defaultValue: [],
-								},
-								// --- event.assets.docs
-								{
-									type: 'json',
-									name: 'docs',
-									localized: false,
-									defaultValue: [],
-								},
-							]
-						}
-					]
-				},
 			]
 		}
 	],
-}
-
-function createWebVersion(events = [], user = {}) {
-
-	events = (events.docs) ? events.docs : events
-	events = (!Array.isArray(events)) ? [events] : events
-
-	return events.map(doc => {
-		return {
-			id: doc.id,
-			tags: doc.tags,
-			title: doc.title,
-			time: doc.time,
-			html: doc.html,
-			author: `${user.firstName} ${user.lastName}`,
-			date: doc.date,
-			updatedAt: doc.updatedAt,
-			createdAt: doc.createdAt,
-		}
-	})
 }

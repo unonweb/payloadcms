@@ -202,7 +202,7 @@ export const Sites = {
 			async ({ req, doc, operation, previousDoc, context }) => {
 				try {
 					const user = req?.user?.shortName ?? 'internal'
-					
+
 					context.site = doc
 					const mode = getAppMode()
 					const pathSite = `${doc.paths.fs.site}/${mode}`
@@ -220,14 +220,14 @@ export const Sites = {
 						let userCSS = convertJSONToCSS(doc.frontend.css)
 						await saveToDisk(`${pathSite}/assets/user.css`, userCSS, user)
 					}
-					
+
 					if (operation === 'create') {
 
 						/* INIT FS STRUCTURE */
 						if (!existsSync(doc.paths.fs.site)) {
 							await fsPromises.mkdir(doc.paths.fs.site)
-							await fsPromises.mkdir(doc.paths.fs.assets)
-							await fsPromises.mkdir(doc.paths.fs.customElements)
+							await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/custom-elements`, { recursive: true })
+							await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/custom-elements`, { recursive: true })
 							await fsPromises.mkdir(doc.paths.fs.imgs)
 						}
 
@@ -336,78 +336,64 @@ export const Sites = {
 	},
 	// --- fields
 	fields: [
-		// --- site.domain
-		{
-			type: 'text',
-			name: 'domain',
-			required: false,
-			unique: true,
-			admin: {
-				placeholder: 'yourdomain.de',
-			},
-			index: true,
-			validate: (value, { operation }) => {
-
-				let response
-
-				// client-side validation
-				if (operation === 'create') {
-					response = (isValidDomain(value)) ? true : 'This is not a valid domain name!'
-				}
-				else {
-					response = true
-				}
-
-				return response
-			},
-		},
-		// --- site.domainShort
-		{
-			type: 'text',
-			name: 'domainShort',
-			required: false,
-			validate: (value, { payload }) => exists(value, payload),
-			admin: {
-				readOnly: true,
-			},
-		},
-		// --- site.brandName
-		{
-			type: 'text',
-			name: 'brandName',
-			required: false,
-			validate: (value, { payload }) => exists(value, payload),
-		},
 		// --- tabs
 		{
 			type: 'tabs',
 			tabs: [
 				// --- META [tab-1]
 				{
-					label: 'Assets',
+					label: 'META',
 					fields: [
+						// --- site.domain
+						{
+							type: 'text',
+							name: 'domain',
+							required: false,
+							unique: true,
+							admin: {
+								placeholder: 'yourdomain.de',
+							},
+							index: true,
+							validate: (value, { operation }) => {
+
+								let response
+
+								// client-side validation
+								if (operation === 'create') {
+									response = (isValidDomain(value)) ? true : 'This is not a valid domain name!'
+								}
+								else {
+									response = true
+								}
+
+								return response
+							},
+						},
+						// --- site.domainShort
+						{
+							type: 'text',
+							name: 'domainShort',
+							required: false,
+							validate: (value, { payload }) => exists(value, payload),
+							admin: {
+								readOnly: true,
+							},
+						},
+						// --- site.brandName
+						{
+							type: 'text',
+							name: 'brandName',
+							required: false,
+							validate: (value, { payload }) => exists(value, payload),
+						},
 						// --- site.assets
 						{
 							type: 'group',
 							name: 'assets',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
 							fields: [
-								// --- site.assets.fromPosts
-								// ---> array of ids with all related assets
-								{
-									type: 'collapsible',
-									label: 'fromPosts',
-									admin: {
-										initCollapsed: true,
-									},
-									fields: [
-										// --- assets.fromPosts
-										{
-											type: 'json',
-											name: 'fromPosts',
-											label: ' ',
-										},
-									]
-								},
 								// --- site.assets.fonts
 								// 	* updated in beforeChange
 								//	* required for cleanUpSite()
@@ -417,286 +403,208 @@ export const Sites = {
 									label: 'site.assets.fonts',
 									defaultValue: [],
 								},
-								// --- site.assets.bundle
-								{
-									type: 'json',
-									name: 'bundle',
-									label: 'site.assets.bundle',
-									defaultValue: [],
-								},
-								// --- site.assets.lib
-								//		(filenames)
-								{
-									type: 'json',
-									name: 'lib',
-									label: 'site.assets.lib',
-									defaultValue: []
-								},
-								// --- site.assets.cElements
+							]
+						},
+						{
+							type: 'group',
+							name: 'paths',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							fields: [
+								// --- site.paths.web
 								{
 									type: 'group',
-									name: 'cElements',
+									name: 'web',
+									label: {
+										de: 'Web',
+										en: 'Web'
+									},
 									fields: [
-										/* // --- site.assets.cElements.bundles
-										// --> object with 'css' and 'js' key
-										// not used any more because we use the static bundle filenames 'bundle.js' and 'bundle.css'
+										// --- site.paths.web.origin
 										{
-											type: 'json',
-											name: 'bundles',
-											label: 'site.assets.cElements.bundles',
-										}, */
-										// --- site.assets.cElements.files
-										// * object with two keys: 'css' and 'js' and respectively an array of filenames
-										// * required for dev build where all files are inserted individually
-										// * set by 'pages'
-										{
-											type: 'json',
-											name: 'files',
-											label: 'site.assets.cElements.files',
+											type: 'group',
+											name: 'origin',
+											fields: [
+												// --- site.paths.web.origin.dev
+												{
+													type: 'text',
+													name: 'dev',
+													required: false,
+													admin: {
+														placeholder: 'http://<domain>.local'
+													},
+													validate: (value, { payload }) => exists(value, payload)
+												},
+												// --- site.paths.web.origin.prod
+												{
+													type: 'text',
+													name: 'prod',
+													required: false,
+													admin: {
+														placeholder: 'https://<domain>.de'
+													},
+													validate: (value, { payload }) => exists(value, payload),
+												},
+											]
 										},
-										// --- site.assets.cElements.lastModifiedSum
+										// --- site.paths.web.admin
 										{
-											type: 'number',
-											name: 'lastModifiedSum',
-											label: 'site.assets.cElements.lastModifiedSum',
-											defaultValue: 0,
-											admin: {
-												hidden: true,
-											}
+											type: 'group',
+											name: 'admin',
+											fields: [
+												// --- site.paths.web.admin.resources
+												{
+													type: 'text',
+													name: 'resources',
+													label: 'site.paths.web.admin.resources',
+													required: false,
+													saveToJWT: true,
+													defaultValue: 'https://resources.unonweb.local',
+													admin: {
+														placeholder: 'https://resources.unonweb.local',
+														readOnly: true,
+														description: 'This value is set by afterChange by Admin Global.'
+													},
+												},
+											]
 										}
 									]
-								}
-
-							]
-						},
-					]
-				},
-				// --- PATHS [tab-2]
-				{
-					label: 'Paths',
-					name: 'paths',
-					fields: [
-						// --- site.paths.web
-						{
-							type: 'group',
-							name: 'web',
-							label: {
-								de: 'Web',
-								en: 'Web'
-							},
-							access: {
-								update: ({ req: { user } }) => Boolean(user?.roles?.includes('admin'))
-							},
-							fields: [
-								// --- site.paths.web.origin
+								},
+								// --- site.paths.fs
 								{
 									type: 'group',
-									name: 'origin',
+									name: 'fs',
+									label: {
+										en: 'Filesystem',
+										de: 'Dateisystem',
+									},
 									fields: [
-										// --- site.paths.web.origin.dev
+										// --- site.paths.fs.site
 										{
 											type: 'text',
-											name: 'dev',
+											name: 'site',
+											label: 'site.paths.fs.site',
 											required: false,
 											admin: {
-												placeholder: 'http://<domain>.local'
-											},
-											validate: (value, { payload }) => exists(value, payload)
-										},
-										// --- site.paths.web.origin.prod
-										{
-											type: 'text',
-											name: 'prod',
-											required: false,
-											admin: {
-												placeholder: 'https://<domain>.de'
-											},
-											validate: (value, { payload }) => exists(value, payload),
-										},
-									]
-								},
-								// --- site.paths.web.admin
-								{
-									type: 'group',
-									name: 'admin',
-									fields: [
-										// --- site.paths.web.admin.resources
-										{
-											type: 'text',
-											name: 'resources',
-											label: 'site.paths.web.admin.resources',
-											required: false,
-											saveToJWT: true,
-											defaultValue: 'https://resources.unonweb.local',
-											admin: {
-												placeholder: 'https://resources.unonweb.local',
+												placeholder: '/home/payload/sites/<domain>',
 												readOnly: true,
-												description: 'This value is set by afterChange by Admin Global.'
+												description: 'This value is set afterChange by Admin Global. If changed all path fields are recreated.'
 											},
 										},
-									]
-								}
-							]
-						},
-						// --- site.paths.fs
-						{
-							type: 'group',
-							name: 'fs',
-							label: {
-								en: 'Filesystem',
-								de: 'Dateisystem',
-							},
-							access: {
-								update: ({ req: { user } }) => Boolean(user?.roles?.includes('admin'))
-							},
-							fields: [
-								// --- site.paths.fs.site
-								{
-									type: 'text',
-									name: 'site',
-									label: 'site.paths.fs.site',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>',
-										readOnly: true,
-										description: 'This value is set afterChange by Admin Global. If changed all path fields are recreated.'
-									},
-								},
-								// --- site.paths.fs.assets
-								// --- not used any more
-								{
-									type: 'text',
-									name: 'assets',
-									label: 'site.paths.fs.assets',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- site.paths.fs.imgs
-								// --- not used any more
-								{
-									type: 'text',
-									name: 'imgs',
-									label: 'site.paths.fs.imgs',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets/imgs'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- site.paths.fs.customElements
-								// --- not used any more
-								{
-									type: 'text',
-									name: 'customElements',
-									label: 'site.paths.fs.customElements',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets/custom-elements'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- site.paths.fs.posts
-								{
-									type: 'text',
-									name: 'posts',
-									label: 'site.paths.fs.posts',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets/posts'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- site.paths.fs.fonts
-								{
-									type: 'text',
-									name: 'fonts',
-									label: 'site.paths.fs.fonts',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- site.paths.fs.docs
-								{
-									type: 'text',
-									name: 'docs',
-									label: 'site.paths.fs.docs',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets/docs'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- site.paths.fs.events
-								{
-									type: 'text',
-									name: 'events',
-									label: 'site.paths.fs.events',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets/events'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- site.paths.fs.products
-								{
-									type: 'text',
-									name: 'products',
-									label: 'site.paths.fs.products',
-									required: false,
-									admin: {
-										placeholder: '/home/payload/sites/<domain>/assets/products'
-									},
-									validate: (value, { payload }) => isValidPath(value, payload),
-								},
-								// --- group: admin
-								{
-									type: 'group',
-									name: 'admin',
-									fields: [
-										// --- site.paths.fs.admin.sites
+										// --- site.paths.fs.imgs
+										// --- not used any more
 										{
 											type: 'text',
-											name: 'sites',
-											label: 'site.paths.fs.admin.sites',
+											name: 'imgs',
+											label: 'site.paths.fs.imgs',
 											required: false,
-											defaultValue: '/home/payload/sites',
 											admin: {
-												placeholder: `/home/payload/sites`,
-												readOnly: true,
-												description: 'This value is set by afterChange by Admin Global. If changed all path fields are recreated.'
+												placeholder: '/home/payload/sites/<domain>/assets/imgs'
 											},
+											validate: (value, { payload }) => isValidPath(value, payload),
 										},
-										// --- site.paths.fs.admin.resources
+										// --- site.paths.fs.posts
 										{
 											type: 'text',
-											name: 'resources',
-											label: 'site.paths.fs.admin.resources',
+											name: 'posts',
+											label: 'site.paths.fs.posts',
 											required: false,
-											defaultValue: '/srv/web/resources',
 											admin: {
-												placeholder: `/srv/web/resources`,
-												readOnly: true,
-												description: 'This value is set by afterChange by Admin Global.'
+												placeholder: '/home/payload/sites/<domain>/assets/posts'
 											},
+											validate: (value, { payload }) => isValidPath(value, payload),
 										},
-										// --- site.paths.fs.admin.customElements
+										// --- site.paths.fs.fonts
 										{
 											type: 'text',
-											name: 'customElements',
-											label: 'site.paths.fs.admin.customElements',
+											name: 'fonts',
+											label: 'site.paths.fs.fonts',
 											required: false,
-											defaultValue: '/srv/web/resources/custom-elements',
 											admin: {
-												placeholder: `/srv/web/resources/custom-elements`,
-												readOnly: true,
-												description: 'This value is set by afterChange by Admin Global.'
+												placeholder: '/home/payload/sites/<domain>/assets'
 											},
+											validate: (value, { payload }) => isValidPath(value, payload),
 										},
+										// --- site.paths.fs.docs
+										{
+											type: 'text',
+											name: 'docs',
+											label: 'site.paths.fs.docs',
+											required: false,
+											admin: {
+												placeholder: '/home/payload/sites/<domain>/assets/docs'
+											},
+											validate: (value, { payload }) => isValidPath(value, payload),
+										},
+										// --- site.paths.fs.events
+										{
+											type: 'text',
+											name: 'events',
+											label: 'site.paths.fs.events',
+											required: false,
+											admin: {
+												placeholder: '/home/payload/sites/<domain>/assets/events'
+											},
+											validate: (value, { payload }) => isValidPath(value, payload),
+										},
+										// --- site.paths.fs.products
+										{
+											type: 'text',
+											name: 'products',
+											label: 'site.paths.fs.products',
+											required: false,
+											admin: {
+												placeholder: '/home/payload/sites/<domain>/assets/products'
+											},
+											validate: (value, { payload }) => isValidPath(value, payload),
+										},
+										// --- group: admin
+										{
+											type: 'group',
+											name: 'admin',
+											fields: [
+												// --- site.paths.fs.admin.sites
+												{
+													type: 'text',
+													name: 'sites',
+													label: 'site.paths.fs.admin.sites',
+													required: false,
+													defaultValue: '/home/payload/sites',
+													admin: {
+														placeholder: `/home/payload/sites`,
+														readOnly: true,
+														description: 'This value is set by afterChange by Admin Global. If changed all path fields are recreated.'
+													},
+												},
+												// --- site.paths.fs.admin.resources
+												{
+													type: 'text',
+													name: 'resources',
+													label: 'site.paths.fs.admin.resources',
+													required: false,
+													defaultValue: '/srv/web/resources',
+													admin: {
+														placeholder: `/srv/web/resources`,
+														readOnly: true,
+														description: 'This value is set by afterChange by Admin Global.'
+													},
+												},
+												// --- site.paths.fs.admin.customElements
+												{
+													type: 'text',
+													name: 'customElements',
+													label: 'site.paths.fs.admin.customElements',
+													required: false,
+													defaultValue: '/srv/web/resources/custom-elements',
+													admin: {
+														placeholder: `/srv/web/resources/custom-elements`,
+														readOnly: true,
+														description: 'This value is set by afterChange by Admin Global.'
+													},
+												},
+											]
+										}
 									]
 								}
 							]

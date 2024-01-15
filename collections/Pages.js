@@ -38,6 +38,7 @@ import getUserSites from '../hooks/getUserSites';
 import cpAssets from '../hooks/_cpAssets';
 import canAccess from '../hooks/_canAccess';
 import convertJSONToCSS from '../hooks/_convertJSONToCSS';
+import createAssetsFields from '../fields/createAssetsFields';
 
 export const Pages = {
 	slug: 'pages',
@@ -570,90 +571,54 @@ export const Pages = {
 								]
 							}
 						},
-						// --- ADMIN
+						// --- page.html
 						{
-							type: 'collapsible',
-							label: 'Admin',
+							type: 'group',
+							name: 'html',
 							admin: {
 								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 							},
 							fields: [
-								// --- page.html
+								// --- page.html.header
 								{
-									type: 'group',
-									name: 'html',
-									access: {
-										update: isAdmin,
+									type: 'code',
+									name: 'header',
+									localized: true,
+									admin: {
+										language: 'html',
 									},
-									fields: [
-										// --- page.html.header
-										{
-											type: 'code',
-											name: 'header',
-											localized: true,
-											admin: {
-												language: 'html',
-											},
-										},
-										// --- page.html.head
-										{
-											type: 'code',
-											name: 'head',
-											localized: true,
-											admin: {
-												language: 'html',
-											},
-										},
-										// --- page.html.main
-										{
-											type: 'code',
-											name: 'main',
-											localized: true,
-											admin: {
-												language: 'html',
-											},
-										},
-										// --- page.html.nav
-										{
-											type: 'code',
-											name: 'nav',
-											localized: true,
-											admin: {
-												language: 'html',
-											},
-										},
-									]
 								},
-								// --- page.assets
+								// --- page.html.head
 								{
-									type: 'group',
-									name: 'assets',
-									access: {
-										update: isAdmin,
+									type: 'code',
+									name: 'head',
+									localized: true,
+									admin: {
+										language: 'html',
 									},
-									fields: [
-										// --- page.assets.imgs
-										{
-											type: 'json',
-											name: 'imgs',
-											defaultValue: [],
-										},
-										// --- page.assets.docs
-										{
-											type: 'json',
-											name: 'docs',
-											defaultValue: [],
-										},
-										// --- page.assets.head
-										{
-											type: 'json',
-											name: 'head',
-											defaultValue: [],
-										},
-									]
-								}
+								},
+								// --- page.html.main
+								{
+									type: 'code',
+									name: 'main',
+									localized: true,
+									admin: {
+										language: 'html',
+									},
+								},
+								// --- page.html.nav
+								{
+									type: 'code',
+									name: 'nav',
+									localized: true,
+									admin: {
+										language: 'html',
+									},
+								},
 							]
 						},
+						// --- page.assets
+						createAssetsFields('imgs', 'docs', 'head'),
 					]
 				},
 				// --- ELEMENTS [tab-2]

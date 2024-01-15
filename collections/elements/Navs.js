@@ -1,16 +1,17 @@
-/* ACCESS */
-import { isAdmin, isAdminFieldLevel } from '../../access/isAdmin';
+// ACCESS
 import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
 import { isLoggedIn } from '../../access/isLoggedIn';
+import { isAdmin } from '../../access/isAdmin';
 
-/* BLOCKS */
-import headerBanner from '../../blocks/headers/header-banner';
-import createImgBlock from '../../blocks/img-block';
+// BLOCKS
+import menuSplitBlock from '../../blocks/navs/menu-split-block';
+import menuAside from '../../blocks/navs/menu-aside-block';
+import navBar from '../../blocks/navs/nav-bar-block';
 
-/* FIELDS */
+// FIELDS
 import editingModeField from '../../fields/editingMode';
 
-/*  HOOKS & HELPERS */
+// HOOKS & HELPERS
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import log from '../../customLog';
 import mailError from '../../mailError';
@@ -18,39 +19,55 @@ import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
 import getUserSites from '../../hooks/getUserSites';
-import pageElementAfterChange from '../../hooks/pageElementAfterChange';
-import pageElementBeforeChange from '../../hooks/pageElementBeforeChange';
+import pageElementAfterChange from './afterChangeHook';
+import pageElementBeforeChange from './beforeChangeHook';
+import createAssetsFields from '../../fields/createAssetsFields';
+import beforeOperationHook from './beforeOperationHook';
+import afterOperationHook from './afterOperationHook';
 
-export const Headers = {
-	slug: 'headers',
+export const Navs = {
+	slug: 'navs',
+	labels: {
+		singular: {
+			de: 'Navigation',
+			en: 'Navigation'
+		},
+		plural: {
+			de: 'Navigation',
+			en: 'Navigation'
+		},
+	},
+	// --- admin
 	admin: {
 		group: {
 			en: 'Elements',
 			de: 'Elemente'
 		},
 		useAsTitle: 'title',
+		defaultColumns: ['title', 'site'],
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
+		/* preview: async (doc) => {
+			return 'https://manueldieterich.unonweb.local/'
+			if (doc.site) {
+				const site = (typeof doc.site === 'string') ? await getDoc('sites', doc.site) : doc.site
+				const appMode = getAppMode()
+				return `${site[appMode].origin}`;
+			}
+		}, */
 	},
+	// --- accces
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('site'),
-		read: isAdminOrHasSiteAccess('site'),
-		delete: isAdminOrHasSiteAccess('site'),
+		update: isAdminOrHasSiteAccess(),
+		read: isAdminOrHasSiteAccess(),
+		delete: isAdminOrHasSiteAccess(),
 	},
 	// --- hooks
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ operation, args }) => {
-				if (['create', 'update', 'delete'].includes(operation)) {
-					if (args.req.user) {
-						args.req.context.sites ??= await getUserSites(args.req.user.sites, args.req.user.shortName)
-					}
-					args.req.context.timeID ??= Date.now()
-					console.time(`<7>[time] [headers] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation }) => beforeOperationHook('headers', { args, operation })
 		],
 		// --- beforeValidate
 		beforeValidate: [
@@ -59,14 +76,11 @@ export const Headers = {
 					if (operation === 'create' || operation === 'update') {
 						const user = req?.user?.shortName ?? 'internal'
 						log('--- beforeValidate ---', user, __filename, 7)
-
-						/* default title */
-
+						/* default values */
 						if (!data.title) {
 							const user = req?.user?.shortName ?? 'internal'
 							context.site ??= await getRelatedDoc('sites', data.site, user)
 							const site = context.site
-
 							data.title = `${(data.blocks && data.blocks?.length > 0) ? data.blocks[0].blockType : 'default'} (${site.domainShort})` // title of this menu
 						}
 
@@ -80,11 +94,11 @@ export const Headers = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => pageElementBeforeChange('headers', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => pageElementBeforeChange('navs', { data, req, operation, originalDoc, context })
 		],
-		// --- afterChange
+		// --- afterChange 
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => pageElementAfterChange('headers', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => pageElementAfterChange('navs', { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -97,32 +111,29 @@ export const Headers = {
 					where: {
 						and: [
 							{ site: { equals: siteID } },
-							{ header: { equals: doc.id } },
+							{ nav: { equals: doc.id } },
 						]
 					},
 					data: {
-						header: ''
+						nav: ''
 					}
 				})
+
 				await updateDocsMany('posts', user, {
 					where: {
 						and: [
 							{ site: { equals: siteID } },
 							{ hasOwnPage: { equals: true } },
-							{ header: { equals: doc.id } },
+							{ nav: { equals: doc.id } },
 						]
 					},
-					data: { header: '' }
+					data: { nav: '' }
 				})
 			}
 		],
 		// --- afterOperation
 		afterOperation: [
-			({ operation, args }) => {
-				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
-					console.timeEnd(`<7>[time] [headers] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ operation, args }) => afterOperationHook('headers', { operation, args })
 		],
 	},
 	// --- fields
@@ -137,7 +148,7 @@ export const Headers = {
 				{
 					label: 'Meta',
 					fields: [
-						// --- header.site
+						// --- nav.site
 						{
 							type: 'relationship',
 							name: 'site',
@@ -147,11 +158,12 @@ export const Headers = {
 							// to the first site that they have access to
 							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
 						},
-						// --- header.title
+						// --- nav.title
 						{
 							type: 'text',
 							name: 'title',
 							unique: false,
+							required: false,
 							admin: {
 								placeholder: {
 									en: 'Leave blank for automatic insertion',
@@ -159,96 +171,95 @@ export const Headers = {
 								}
 							}
 						},
-						// --- header.isDefault
+						/* // --- nav.area
+						{
+							type: 'select',
+							name: 'area',
+							hasMany: false,
+							required: true,
+							options: [
+								{
+									label: 'header',
+									value: 'header'
+								},
+								{
+									label: 'aside',
+									value: 'aside',
+								},
+								{
+									label: 'bottom',
+									value: 'bottom'
+								},
+							],
+							defaultValue: 'header'
+						}, */
+						// --- nav.isDefault
 						{
 							type: 'checkbox',
 							name: 'isDefault',
 							label: {
-								de: 'Standard-Header',
-								en: 'Default Header'
+								de: 'Standard-Navigation',
+								en: 'Default Navigation'
 							},
 							admin: {
 								description: {
-									en: 'Is automatically picked when creating new pages/posts. Es kann nur ein Header als Standard gesetzt werden.',
-									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one header may be set as default.'
+									en: 'Is automatically picked when creating new pages/posts. Es kann nur eine Navigation als Standard gesetzt werden.',
+									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one navigation may be set as default.'
 								}
 							},
-							defaultValue: async ({ user }) => await firstDefaultsToTrue('headers', user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'headers'),
+							defaultValue: async ({ user }) => await firstDefaultsToTrue('navs', user.shortName),
+							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'navs'),
 						},
-						// --- ADMIN
+						// --- nav.html
 						{
-							type: 'collapsible',
-							label: 'Admin',
+							type: 'code',
+							name: 'html',
 							admin: {
+								language: 'html',
 								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 							},
-							fields: [
-								// --- header.html
-								{
-									type: 'code',
-									name: 'html',
-									admin: {
-										language: 'html',
-									},
-									access: {
-										update: isAdmin,
-									},
-									localized: true,
-								},
-								// --- header.imgs
-								{
-									type: 'json',
-									name: 'imgs',
-									access: {
-										update: isAdmin,
-									},
-									localized: false,
-									defaultValue: [],
-								},
-							],
-						}
+							localized: true,
+						},
+						// --- nav.imgs
+						// updated in beforeChange hook
+						createAssetsFields('imgs'),
 					]
 				},
-				// --- content [tab-2]
+				// --- CONTENT [tab-2]
 				{
 					label: {
 						de: 'Inhalt',
 						en: 'Content'
 					},
 					fields: [
-						// --- header.blocks
+						// --- nav.blocks
 						{
 							type: 'blocks',
 							name: 'blocks',
 							label: {
-								de: 'Header Layout',
-								en: 'Header Layout'
+								de: ' ',
+								en: ' '
 							},
-							labels: { // Customize the block row labels appearing in the Admin dashboard.
+							labels: {
 								singular: {
-									de: 'Header Layout',
-									en: 'Header Layout'
+									de: 'Menü Layout',
+									en: 'Menu Layout'
 								},
 								plural: {
-									de: 'Header Layout',
-									en: 'Header Layout'
+									de: 'Menü Layouts',
+									en: 'Menu Layouts'
 								},
 							},
 							maxRows: 1,
-							/* defaultValue: [
-								{
-									blockType: 'header-banner'
-								}
-							], */
 							blocks: [
-								headerBanner,
-								createImgBlock(),
+								//menuSplitBlock,
+								//menuAside,
+								navBar
 							]
 						},
 					]
 				},
-			]
-		},
-	],
+			],
+		}
+	]
 }

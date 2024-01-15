@@ -20,13 +20,18 @@ import getCol from '../../hooks/_getCol';
 import saveToDisk from '../../hooks/_saveToDisk';
 import cpFile from '../../hooks/_cpFile';
 import hasChanged from '../../hooks/_hasChanged';
-import createPageElementsField from '../../fields/createPageElementsField';
+import createElementsFields from '../../fields/createPageElementsField';
 import renderHTMLPage from '../../hooks/renderHTMLPage';
 import renderHTMLHead from '../../hooks/renderHTMLHead';
 import rmFile from '../../hooks/_rmFile';
 import getUserSites from '../../hooks/getUserSites';
 import cpAssets from '../../hooks/_cpAssets';
 import getAppMode from '../../hooks/_getAppMode';
+import createAssetsFields from '../../fields/createAssetsFields';
+import createHTMLFields from '../../fields/createHTMLFields';
+import beforeOperationHook from './beforeOperationHook';
+import afterOperationHook from './afterOperationHook';
+import afterChangeHook from './afterChangeHook';
 
 export const Posts = {
 	slug: 'posts',
@@ -61,15 +66,7 @@ export const Posts = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => {
-				if (['create', 'update', 'delete'].includes(operation)) {
-					if (args.req.user) {
-						args.req.context.sites ??= await getUserSites(args.req.user.sites, args.req.user.shortName)
-					}
-					args.req.context.timeID ??= Date.now()
-					console.time(`<7>[time] [posts] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation }) => beforeOperationHook('posts', { args, operation })
 		],
 		// --- beforeChange
 		beforeChange: [
@@ -153,143 +150,10 @@ export const Posts = {
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					log('--- afterChange ---', user, __filename, 7)
-					const mode = getAppMode()
-
-					context.site ??= await getRelatedDoc('sites', doc.site, user)
-					const site = context.site
-
-					if (operation === 'create' && site.locales.used.length > 1 && site.locales.initOthers === true) {
-						/* init other locales */
-						for (const loc of site.locales.used) {
-							if (loc !== req.locale) {
-								const updatedDoc = await updateDocSingle('posts', doc.id, user, {
-									data: doc,
-									locale: loc,
-								})
-							}
-						}
-					}
-
-					/* cp assets */
-					await cpAssets(`${process.cwd()}/upload/images/`, `${site.paths.fs.site}/${mode}/assets/imgs`, doc.assets.imgs, user) // cp imgs from src to dest
-					await cpAssets(`${process.cwd()}/upload/documents/`, `${site.paths.fs.site}/${mode}/assets/docs`, doc.assets.docs, user) // cp docs from src to dest
-
-					/* save this as own page */
-					if (doc.hasOwnPage) {
-						/* compose html */
-						const header = (doc.elements.header) ? await getDoc('headers', doc.elements.header, user, { depth: 0, locale: req.locale }) : null
-						const nav = (doc.elements.nav) ? await getDoc('navs', doc.elements.nav, user, { depth: 0, locale: req.locale }) : null
-						const footer = (doc.elements.footer) ? await getDoc('footers', doc.elements.footer, user, { depth: 0, locale: req.locale }) : null
-
-						const postHTML = renderHTMLPage(req.locale, doc, user, {
-							// pass html or undefined:
-							navHTML: nav?.html,
-							headerHTML: header?.html,
-							footerHTML: footer?.html,
-						})
-
-						const destPath = `${site.paths.fs.site}/${mode}/posts/${doc.id}/${req.locale}/index.html` // <-- ATT: hard-coded value
-						await saveToDisk(destPath, postHTML, user, { ctParentPath: true })
-					}
-
-					if (hasChanged(doc.assets, previousDoc.assets, user)) {
-						/* update site.assets.fromPosts */
-						site.assets.fromPosts ??= {} // init 'site.assets.fromPosts'
-						site.assets.fromPosts[doc.id] = [...doc.assets.imgs, ...doc.assets.docs]
-
-						await updateDocSingle('sites', site.id, user, {
-							data: {
-								assets: {
-									fromPosts: site.assets.fromPosts
-								}
-							}
-						})
-					}
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			},
+			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook('posts', { req, doc, previousDoc, context, operation })
 		],
-		// --- afterDelete
-		afterDelete: [
-			async ({ req, doc, context }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					const mode = getAppMode()
-					context.site ??= await getRelatedDoc('sites', doc.site, user)
-					const site = context.site
-
-					/* delete own page */
-					if (doc.hasOwnPage) {
-						const destPath = `${site.paths.fs.site}/posts/${doc.id}/${req.locale}/index.html`
-						await rmFile(destPath, user, { recursive: true, throwErrorIfMissing: false })
-					}
-
-					/* save collection to disk */
-					for (const loc of site.locales.used) {
-
-						const posts = await getCol('posts', user, {
-							depth: 1,
-							locale: loc,
-							where: {
-								site: { equals: site.id }
-							},
-						})
-
-						const webVersion = createWebVersion(posts, req.user)
-						const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/posts.json`
-						await saveToDisk(destPath, JSON.stringify(webVersion), user)
-					}
-
-					/* update site.assets.fromPosts */
-					delete site.assets.fromPosts[doc.id]
-
-					await updateDocSingle('sites', site.id, user, {
-						data: {
-							assets: {
-								fromPosts: site.assets.fromPosts
-							}
-						}
-					})
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			},
-		],
-		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => {
-				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
-					const user = args?.req?.user?.shortName ?? 'internal'
-					args.req.context.site ??= await getRelatedDoc('sites', result.site, user)
-					const mode = getAppMode()
-					const site = args.req.context.site
-					/* save all posts to disk */
-					for (const loc of site.locales.used) {
-
-						const posts = await getCol('posts', user, {
-							depth: 1,
-							locale: loc,
-							where: {
-								site: { equals: site.id }
-							},
-						})
-
-						const webVersion = createWebVersion(posts, args.req.user)
-						const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/posts.json`
-						await saveToDisk(destPath, JSON.stringify(webVersion), user)
-					}
-					console.timeEnd(`<7>[time] [posts] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation, result }) => afterOperationHook('posts', { args, operation, result })
 		],
 	},
 	fields: [
@@ -478,67 +342,11 @@ export const Posts = {
 						// --- post.elements.header
 						// --- post.elements.nav
 						// --- post.elements.footer
-						createPageElementsField(),
-						{
-							type: 'collapsible',
-							label: 'Admin',
-							admin: {
-								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-							},
-							fields: [
-								// --- post.html
-								{
-									type: 'group',
-									name: 'html',
-									fields: [
-										// --- post.html.main
-										{
-											type: 'code',
-											name: 'main',
-											localized: true,
-											admin: {
-												language: 'html',
-											}
-										},
-										// --- post.html.head
-										{
-											type: 'code',
-											name: 'head',
-											localized: true,
-											admin: {
-												language: 'html',
-											}
-										},
-									]
-								},
-								// --- post.assets
-								{
-									type: 'group',
-									name: 'assets',
-									fields: [
-										// --- post.assets.imgs
-										{
-											type: 'json',
-											name: 'imgs',
-											defaultValue: [],
-										},
-										// --- post.assets.docs
-										{
-											type: 'json',
-											name: 'docs',
-											defaultValue: [],
-										},
-										// --- post.assets.head
-										{
-											type: 'json',
-											name: 'head',
-											defaultValue: [],
-										},
-									]
-								}
-							]
-						}
-
+						createElementsFields(),
+						// post.html
+						createHTMLFields(),
+						// --- post.assets
+						createAssetsFields('imgs', 'docs', 'head'),
 						// meta: url
 						/* {
 							type: 'text',
@@ -792,23 +600,4 @@ async function addFullRelationshipData(doc = {}, relField = '', destCol = '', lo
 	}
 
 	return doc
-}
-
-function createWebVersion(posts = [], user = {}) {
-
-	posts = (posts.docs) ? posts.docs : posts
-
-	return posts.map(doc => {
-		return {
-			id: doc.id,
-			tags: doc.tags,
-			title: doc.title,
-			time: doc.time,
-			html: doc.html.main,
-			author: `${user.firstName} ${user.lastName}`,
-			date: doc.date,
-			updatedAt: doc.updatedAt,
-			createdAt: doc.createdAt,
-		}
-	})
 }

@@ -1,9 +1,9 @@
 import payload from 'payload'
-import cpAssets from './_cpAssets'
-import getAppMode from './_getAppMode'
-import getRelatedDoc from './getRelatedDoc'
-import log from '../customLog'
-import mailError from '../mailError'
+import cpAssets from '../../hooks/_cpAssets'
+import getAppMode from '../../hooks/_getAppMode'
+import getRelatedDoc from '../../hooks/getRelatedDoc'
+import log from '../../customLog'
+import mailError from '../../mailError'
 
 export default async function pageElementAfterChange(col = '', { req, doc, previousDoc, operation, context }) {
 	try {
