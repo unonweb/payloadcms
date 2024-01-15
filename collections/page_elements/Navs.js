@@ -218,7 +218,39 @@ export const Navs = {
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue('navs', user.shortName),
 							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'navs'),
-						}
+						},
+						// --- ADMIN
+						{
+							type: 'collapsible',
+							label: 'Admin',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							fields: [
+								// --- nav.html
+								{
+									type: 'code',
+									name: 'html',
+									admin: {
+										language: 'html'
+									},
+									localized: true,
+									access: {
+										update: isAdmin,
+									},
+								},
+								// --- nav.imgs
+								{
+									type: 'json',
+									name: 'imgs',
+									access: {
+										update: isAdmin,
+									},
+									localized: false,
+									defaultValue: [],
+								},
+							]
+						},
 					]
 				},
 				// --- CONTENT [tab-2]
@@ -255,37 +287,6 @@ export const Navs = {
 						},
 					]
 				},
-				// --- ADMIN [tab-3]
-				{
-					label: {
-						de: 'Admin',
-						en: 'Admin'
-					},
-					fields: [
-						// --- nav.html
-						{
-							type: 'code',
-							name: 'html',
-							admin: {
-								language: 'html'
-							},
-							localized: true,
-							access: {
-								update: isAdmin,
-							},
-						},
-						// --- nav.imgs
-						{
-							type: 'json',
-							name: 'imgs',
-							access: {
-								update: isAdmin,
-							},
-							localized: false,
-							defaultValue: [],
-						},
-					]
-				}
 			],
 		}
 	]

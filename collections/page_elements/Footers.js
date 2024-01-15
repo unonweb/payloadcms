@@ -166,6 +166,38 @@ export const Footers = {
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue('footers', user.shortName),
 							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'footers'),
+						},
+						// --- ADMIN
+						{
+							type: 'collapsible',
+							label: 'Admin',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							fields: [
+								// --- footer.html
+								{
+									type: 'code',
+									name: 'html',
+									admin: {
+										language: 'html',
+									},
+									access: {
+										update: isAdmin,
+									},
+									localized: true,
+								},
+								// --- footer.imgs
+								{
+									type: 'json',
+									name: 'imgs',
+									access: {
+										update: isAdmin,
+									},
+									localized: false,
+									defaultValue: [],
+								},
+							]
 						}
 					]
 				},
@@ -206,37 +238,6 @@ export const Footers = {
 						},
 					]
 				},
-				// --- admin [tab-3]
-				{
-					label: {
-						de: 'Admin',
-						en: 'Admin'
-					},
-					fields: [
-						// --- footer.html
-						{
-							type: 'code',
-							name: 'html',
-							admin: {
-								language: 'html',
-							},
-							access: {
-								update: isAdmin,
-							},
-							localized: true,
-						},
-						// --- footer.imgs
-						{
-							type: 'json',
-							name: 'imgs',
-							access: {
-								update: isAdmin,
-							},
-							localized: false,
-							defaultValue: [],
-						},
-					]
-				}
 			]
 		}
 	],

@@ -175,6 +175,38 @@ export const Headers = {
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue('headers', user.shortName),
 							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'headers'),
+						},
+						// --- ADMIN
+						{
+							type: 'collapsible',
+							label: 'Admin',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							fields: [
+								// --- header.html
+								{
+									type: 'code',
+									name: 'html',
+									admin: {
+										language: 'html',
+									},
+									access: {
+										update: isAdmin,
+									},
+									localized: true,
+								},
+								// --- header.imgs
+								{
+									type: 'json',
+									name: 'imgs',
+									access: {
+										update: isAdmin,
+									},
+									localized: false,
+									defaultValue: [],
+								},
+							],
 						}
 					]
 				},
@@ -216,37 +248,6 @@ export const Headers = {
 						},
 					]
 				},
-				// --- ADMIN [tab-3]
-				{
-					label: {
-						de: 'Admin',
-						en: 'Admin'
-					},
-					fields: [
-						// --- header.html
-						{
-							type: 'code',
-							name: 'html',
-							admin: {
-								language: 'html',
-							},
-							access: {
-								update: isAdmin,
-							},
-							localized: true,
-						},
-						// --- header.imgs
-						{
-							type: 'json',
-							name: 'imgs',
-							access: {
-								update: isAdmin,
-							},
-							localized: false,
-							defaultValue: [],
-						},
-					],
-				}
 			]
 		},
 	],

@@ -606,7 +606,7 @@ export const Pages = {
 								]
 							}
 						},
-						// --- ADMIN [tab-3] ---
+						// --- ADMIN
 						{
 							type: 'collapsible',
 							label: 'Admin',
