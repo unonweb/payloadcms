@@ -113,7 +113,7 @@ export const Tags = {
 			name: 'createdByID',
 			maxDepth: 0,
 			hasMany: false,
-			defaultValue: ({ user }) => user.id,
+			defaultValue: ({ user }) => (user) ? user.id : '',
 			admin: {
 				condition: (data, siblingData, { user }) => user && user.roles.includes('admin'),
 			},
