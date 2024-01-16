@@ -1,5 +1,8 @@
 export default function createAssetsFields(...names) {
-
+	/*	returns a group with the desired number of asset fields, e.g. 
+		assets.imgs, assets.docs, assets.head
+	*/
+	
 	names ??= ['imgs', 'docs', 'head']
 	const _fields = []
 

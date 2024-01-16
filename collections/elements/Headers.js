@@ -18,8 +18,8 @@ import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
 import getUserSites from '../../hooks/getUserSites';
-import pageElementAfterChange from './afterChangeHook';
-import pageElementBeforeChange from './beforeChangeHook';
+import afterChangeHook from './afterChangeHook';
+import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterOperationHook from './afterOperationHook';
 import beforeOperationHook from './beforeOperationHook';
@@ -75,11 +75,11 @@ export const Headers = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => pageElementBeforeChange('headers', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook('headers', { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => pageElementAfterChange('headers', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook('headers', { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -177,7 +177,7 @@ export const Headers = {
 							},
 							localized: true,
 						},
-						// --- header.imgs
+						// --- header.assets.imgs
 						// updated in beforeChange hook
 						createAssetsFields('imgs'),
 					]

@@ -5,7 +5,7 @@ import getAppMode from '../../hooks/_getAppMode'
 import getRelatedDoc from '../../hooks/getRelatedDoc'
 import log from '../../customLog'
 
-export default async function pageElementBeforeChange(col = '', { data, req, operation, originalDoc, context }) {
+export default async function beforeChangeHook(col = '', { data, req, operation, originalDoc, context }) {
 
 	try {
 		const user = req?.user?.shortName ?? 'internal'

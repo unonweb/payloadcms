@@ -19,8 +19,8 @@ import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
 import getUserSites from '../../hooks/getUserSites';
-import pageElementAfterChange from './afterChangeHook';
-import pageElementBeforeChange from './beforeChangeHook';
+import afterChangeHook from './afterChangeHook';
+import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
@@ -94,11 +94,11 @@ export const Navs = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => pageElementBeforeChange('navs', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook('navs', { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange 
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => pageElementAfterChange('navs', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook('navs', { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -220,7 +220,7 @@ export const Navs = {
 							},
 							localized: true,
 						},
-						// --- nav.imgs
+						// --- nav.assets.imgs
 						// updated in beforeChange hook
 						createAssetsFields('imgs'),
 					]

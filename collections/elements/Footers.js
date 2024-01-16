@@ -16,8 +16,8 @@ import mailError from '../../mailError';
 import updateDocsMany from '../../hooks/updateDocsMany';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
-import pageElementAfterChange from './afterChangeHook';
-import pageElementBeforeChange from './beforeChangeHook';
+import afterChangeHook from './afterChangeHook';
+import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
@@ -69,11 +69,11 @@ export const Footers = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => pageElementBeforeChange('footers', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook('footers', { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => pageElementAfterChange('footers', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook('footers', { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -171,7 +171,7 @@ export const Footers = {
 							},
 							localized: true,
 						},
-						// --- footer.assets
+						// --- footer.assets.imgs
 						// updated in beforeChange hook
 						createAssetsFields('imgs'),
 					]

@@ -5,7 +5,7 @@ import getRelatedDoc from '../../hooks/getRelatedDoc'
 import log from '../../customLog'
 import mailError from '../../mailError'
 
-export default async function pageElementAfterChange(col = '', { req, doc, previousDoc, operation, context }) {
+export default async function afterChangeHook(col = '', { req, doc, previousDoc, operation, context }) {
 	try {
 		const user = req?.user?.shortName ?? 'internal'
 		context.site ??= await getRelatedDoc('sites', doc.site, user)
@@ -19,7 +19,7 @@ export default async function pageElementAfterChange(col = '', { req, doc, previ
 		log('--- afterChange ---', user, __filename, 7)
 
 		/* cp assets */
-		await cpAssets(`${process.cwd()}/upload/images/`, `${site.paths.fs.site}/${mode}/assets/imgs`, doc.imgs, user) // cp imgs from src to dest
+		await cpAssets(`${process.cwd()}/upload/images/`, `${site.paths.fs.site}/${mode}/assets/imgs`, doc.assets.imgs, user) // cp imgs from src to dest
 
 		/* init other locales of this collection */
 		if (operation === 'create') {
@@ -36,9 +36,9 @@ export default async function pageElementAfterChange(col = '', { req, doc, previ
 			}
 		}
 
+		/* update pages */
 		if (mode === 'dev' || doc.html !== previousDoc.html) {
 			//  || doc?.imgs?.toSorted()?.toString() !== previousDoc?.imgs?.toSorted()?.toString()
-			/* update pages */
 			if (operation === 'update') {
 				// doesn't make sense during creating as it can't be referenced by a page at this point
 				for (const loc of site.locales.used) {
