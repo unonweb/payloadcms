@@ -2,13 +2,12 @@ import createLinkIntBlock from '../link-int-block'
 import createLinkExtBlock from '../link-ext-block'
 import createMenuDropDown from '../menu-drop-down'
 import createLangSwitchBlock from '../lang-switch'
-import createAnchorAttrsFields from '../../fields/anchor-attributes'
 
-const menuSplitBlock = {
-	slug: 'menu-split',
+const navSplit = {
+	slug: 'nav-split',
 	labels: {
-		singular: 'Menu Split',
-		plural: 'Menu Split'
+		singular: 'Split Navigation',
+		plural: 'Split Navigations'
 	},
 	// --- fields
 	fields: [
@@ -85,8 +84,6 @@ const menuSplitBlock = {
 				},
 			]
 		},
-		// --- link
-		//createAnchorAttrsFields(),
 		// --- blocksDefault
 		{
 			type: 'blocks',
@@ -156,7 +153,7 @@ const menuSplitBlock = {
 	]
 }
 
-export default menuSplitBlock
+export default navSplit
 
 /* fields: [
 		// -- slotLeft

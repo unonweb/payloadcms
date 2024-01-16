@@ -4,9 +4,9 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 import { isAdmin } from '../../access/isAdmin';
 
 // BLOCKS
-import menuSplitBlock from '../../blocks/navs/menu-split-block';
+import navSplit from '../../blocks/navs/nav-split';
 import menuAside from '../../blocks/navs/menu-aside-block';
-import navBar from '../../blocks/navs/nav';
+import nav from '../../blocks/navs/nav';
 
 // FIELDS
 import editingModeField from '../../fields/editingMode';
@@ -252,9 +252,8 @@ export const Navs = {
 							},
 							maxRows: 1,
 							blocks: [
-								//menuSplitBlock,
-								//menuAside,
-								navBar
+								nav,
+								navSplit
 							]
 						},
 					]

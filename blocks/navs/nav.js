@@ -3,7 +3,7 @@ import createLinkExtBlock from '../link-ext-block';
 import createLinkIntBlock from '../link-int-block';
 import createMenuDropDown from '../menu-drop-down';
 
-const navBar = {
+const nav = {
 	slug: 'nav',
 	labels: {
 		singular: 'Navigation',
@@ -145,4 +145,4 @@ const navBar = {
 	]
 }
 
-export default navBar
+export default nav
