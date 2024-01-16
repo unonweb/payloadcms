@@ -164,8 +164,8 @@ export const Sites = {
 					log('--- beforeChange ---', user, __filename, 7)
 
 					/* update data.assets.fonts */
-					const fontBody = await getRelatedDoc('fonts', data.frontend.fonts.body, user, { depth: 0 })
-					const fontHeadings = await getRelatedDoc('fonts', data.frontend.fonts.headings, user, { depth: 0 })
+					const fontBody = await getRelatedDoc('fonts', data.fonts.body, user, { depth: 0 })
+					const fontHeadings = await getRelatedDoc('fonts', data.fonts.headings, user, { depth: 0 })
 
 					data.assets.fonts = [
 						fontBody.filename ?? '',
@@ -177,15 +177,15 @@ export const Sites = {
 						fontHeadings.face ?? ''
 					]
 
-					/* update data.frontend.fonts.css */
-					data.frontend.fonts.css = createFontCSS(fontFaces, fontBody, fontHeadings)
+					/* update data.fonts.css */
+					data.fonts.css = createFontCSS(fontFaces, fontBody, fontHeadings)
 
-					/* update data.frontend.css */
-					if (hasChanged(data.frontend.colors, originalDoc.frontend.colors, user)) {
+					/* update data.css */
+					if (hasChanged(data.colors, originalDoc.colors, user)) {
 						let newCSS
-						newCSS = updateCSSObj(data.frontend.css, 'html', '--primary', data.frontend.colors.primary)
-						newCSS = updateCSSObj(newCSS, 'html', '--secondary', data.frontend.colors.secondary)
-						data.frontend.css = newCSS
+						newCSS = updateCSSObj(data.css, 'html', '--primary', data.colors.primary)
+						newCSS = updateCSSObj(newCSS, 'html', '--secondary', data.colors.secondary)
+						data.css = newCSS
 					}
 
 					return data
@@ -210,13 +210,13 @@ export const Sites = {
 					await cpAssets(`${process.cwd()}/upload/fonts`, `${pathSite}/assets`, doc.assets.fonts)
 
 					/* write font.css */
-					if (doc?.frontend?.fonts?.css !== previousDoc?.frontend?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
-						saveToDisk(`${pathSite}/assets/fonts.css`, doc.frontend.fonts.css, user)
+					if (doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
+						saveToDisk(`${pathSite}/assets/fonts.css`, doc.fonts.css, user)
 					}
 
 					/* write user.css */
-					if (JSON.stringify(doc?.frontend?.css) !== JSON.stringify(previousDoc?.frontend?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
-						let userCSS = convertJSONToCSS(doc.frontend.css)
+					if (JSON.stringify(doc?.css) !== JSON.stringify(previousDoc?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
+						let userCSS = convertJSONToCSS(doc.css)
 						await saveToDisk(`${pathSite}/assets/user.css`, userCSS, user)
 					}
 
@@ -236,7 +236,7 @@ export const Sites = {
 						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/docs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/docs`)
 						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/lib`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/lib`)
 						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/posts`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/posts`)
-						
+
 
 						/* INIT PAYLOAD */
 						// needs to be run in afterChange hook because before this site has no id yet
@@ -288,37 +288,44 @@ export const Sites = {
 					log(`--- afterDelete ---`, user, __filename, 7)
 					context.siteIsDeleted = true
 
+					const rmSiteFiles = true
+					const rmPagesData = true
+					const rmPostsData = true
+					const rmHeadersData = true
+					const rmNavsData = true
+					const rmFootersData = true
+
 					// remove site files
-					if (doc.backend.onDelete.rmSiteFiles === true) {
+					if (rmSiteFiles) {
 						const pathSite = doc.paths.fs.site
 						await rmFile(pathSite, user, { recursive: true, force: true })
 					}
 					// remove 'Pages' Data
-					if (doc.backend.onDelete.rmPagesData === true) {
+					if (rmPagesData) {
 						await rmDocs('pages', user, {
 							where: { site: { equals: id } }
 						})
 					}
 					// remove 'Posts' Data
-					if (doc.backend.onDelete.rmPostsData === true) {
+					if (rmPostsData) {
 						await rmDocs('posts', user, {
 							where: { site: { equals: id } }
 						})
 					}
 					// remove 'Headers' Data
-					if (doc.backend.onDelete.rmHeadersData === true) {
+					if (rmHeadersData) {
 						await rmDocs('headers', user, {
 							where: { site: { equals: id } }
 						})
 					}
 					// remove 'Nav' Data
-					if (doc.backend.onDelete.rmNavsData === true) {
+					if (rmNavsData) {
 						await rmDocs('navs', user, {
 							where: { site: { equals: id } }
 						})
 					}
 					// remove 'Footers' Data
-					if (doc.backend.onDelete.rmFootersData === true) {
+					if (rmFootersData) {
 						await rmDocs('footers', user, {
 							where: { site: { equals: id } }
 						})
@@ -412,6 +419,7 @@ export const Sites = {
 								},
 							]
 						},
+						// --- site.paths
 						{
 							type: 'group',
 							name: 'paths',
@@ -616,7 +624,7 @@ export const Sites = {
 								}
 							]
 						},
-						// --- updatedBy
+						// --- site.updatedBy
 						{
 							type: 'text',
 							name: 'updatedBy',
@@ -626,7 +634,7 @@ export const Sites = {
 						},
 					]
 				},
-				// --- OPTIONS [tab-5]
+				// --- OPTIONS [tab]
 				{
 					label: {
 						de: 'Options',
@@ -730,108 +738,97 @@ export const Sites = {
 								},
 							]
 						},
-						// --- site.frontend
+						// --- site.fonts
 						{
 							type: 'group',
-							name: 'frontend',
-							label: {
-								de: 'Frontend',
-								en: 'Frontend'
-							},
+							name: 'fonts',
 							fields: [
-								// --- site.frontend.fonts
+								//--- site.fonts.body
 								{
-									type: 'group',
-									name: 'fonts',
-									fields: [
-										//--- site.frontend.fonts.body
-										{
-											type: 'relationship',
-											name: 'body',
-											relationTo: 'fonts',
-											label: {
-												de: 'Standard-Schriftart',
-												en: 'Default Font'
-											},
-											maxDepth: 0,
-											required: false,
-											defaultValue: async ({ user }) => await getRandomDocID('fonts', user.shortName),
-										},
-										//--- site.frontend.fonts.headings
-										{
-											type: 'relationship',
-											name: 'headings',
-											relationTo: 'fonts',
-											label: {
-												de: 'Schriftart für Überschriften',
-												en: 'Font for Headings'
-											},
-											maxDepth: 0,
-											required: false,
-											defaultValue: async ({ user }) => await getRandomDocID('fonts', user.shortName),
-										},
-										// --- site.frontend.fonts.css
-										{
-											type: 'code',
-											name: 'css',
-											label: 'site.frontend.fonts.css',
-											localized: false,
-											admin: {
-												language: 'css',
-												readOnly: true
-											},
-										},
-									],
+									type: 'relationship',
+									name: 'body',
+									relationTo: 'fonts',
+									label: {
+										de: 'Standard-Schriftart',
+										en: 'Default Font'
+									},
+									maxDepth: 0,
+									required: false,
+									defaultValue: async ({ user }) => await getRandomDocID('fonts', user.shortName),
 								},
-								// --- site.frontend.colors
+								//--- site.fonts.headings
 								{
-									type: 'group',
-									name: 'colors',
-									fields: [
-										{
-											type: 'row',
-											fields: [
-												// --- site.frontend.colors.primary
-												{
-													type: 'text',
-													name: 'primary',
-													label: {
-														de: 'Primäre Farbe',
-														en: 'Primary Color'
-													},
-													admin: {
-														components: {
-															Field: colorPickerField,
-														},
-													},
-													defaultValue: `#${Math.floor(Math.random() * 16777215).toString(16)}`
-												},
-												// --- site.frontend.colors.secondary
-												{
-													type: 'text',
-													name: 'secondary',
-													label: {
-														de: 'Sekundäre Farbe',
-														en: 'Secondary Color'
-													},
-													admin: {
-														components: {
-															Field: colorPickerField,
-														},
-													},
-													defaultValue: `#${Math.floor(Math.random() * 16777215).toString(16)}`
-												},
-											]
-										}
-									]
+									type: 'relationship',
+									name: 'headings',
+									relationTo: 'fonts',
+									label: {
+										de: 'Schriftart für Überschriften',
+										en: 'Font for Headings'
+									},
+									maxDepth: 0,
+									required: false,
+									defaultValue: async ({ user }) => await getRandomDocID('fonts', user.shortName),
 								},
-								// --- site.frontend.css
+								// --- site.fonts.css
 								{
-									type: 'json',
+									type: 'code',
 									name: 'css',
-									defaultValue: defaultUserCSS
+									label: 'site.fonts.css',
+									localized: false,
+									admin: {
+										language: 'css',
+										readOnly: true
+									},
 								},
+							],
+						},
+						// --- site.colors
+						{
+							type: 'group',
+							name: 'colors',
+							fields: [
+								{
+									type: 'row',
+									fields: [
+										// --- site.colors.primary
+										{
+											type: 'text',
+											name: 'primary',
+											label: {
+												de: 'Primäre Farbe',
+												en: 'Primary Color'
+											},
+											admin: {
+												components: {
+													Field: colorPickerField,
+												},
+											},
+											defaultValue: `#${Math.floor(Math.random() * 16777215).toString(16)}`
+										},
+										// --- site.colors.secondary
+										{
+											type: 'text',
+											name: 'secondary',
+											label: {
+												de: 'Sekundäre Farbe',
+												en: 'Secondary Color'
+											},
+											admin: {
+												components: {
+													Field: colorPickerField,
+												},
+											},
+											defaultValue: `#${Math.floor(Math.random() * 16777215).toString(16)}`
+										},
+									]
+								}
 							]
+						},
+						// --- site.css
+						{
+							type: 'json',
+							name: 'css',
+							defaultValue: defaultUserCSS
 						},
 						// --- site.backend
 						{
@@ -840,6 +837,9 @@ export const Sites = {
 							label: {
 								de: 'Backend',
 								en: 'Backend'
+							},
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 							},
 							fields: [
 								// --- site.backend.deployTo
@@ -852,9 +852,6 @@ export const Sites = {
 									access: {
 										update: isAdmin
 									},
-									admin: {
-										condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-									},
 								},
 								// --- site.backend.deployToken
 								{
@@ -864,67 +861,6 @@ export const Sites = {
 									access: {
 										update: isAdmin
 									},
-									admin: {
-										condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-									},
-								},
-								// --- site.backend.onDelete
-								{
-									type: 'group',
-									name: 'onDelete',
-									label: 'On Delete',
-									access: {
-										update: isAdmin
-									},
-									admin: {
-										description: 'Remove ...',
-										condition: (data, siblingData, { user }) => {
-											if (user && user?.roles?.includes('admin')) {
-												return true
-											} else {
-												return false
-											}
-										},
-									},
-									fields: [
-										// --- site.backend.onDelete.rmSiteFiles
-										{
-											type: 'checkbox',
-											name: 'rmSiteFiles',
-											label: 'site files',
-											defaultValue: true,
-										},
-										{
-											type: 'checkbox',
-											name: 'rmPagesData',
-											label: 'data from "Pages"-Collection',
-											defaultValue: true,
-										},
-										{
-											type: 'checkbox',
-											name: 'rmPostsData',
-											label: 'data from "Posts"-Collection',
-											defaultValue: true,
-										},
-										{
-											type: 'checkbox',
-											name: 'rmHeadersData',
-											label: 'data from "Headers"-Collection',
-											defaultValue: true,
-										},
-										{
-											type: 'checkbox',
-											name: 'rmNavsData',
-											label: 'data from "Navs"-Collection',
-											defaultValue: true,
-										},
-										{
-											type: 'checkbox',
-											name: 'rmFootersData',
-											label: 'data from "Footers"-Collection',
-											defaultValue: true,
-										},
-									]
 								},
 							]
 						},
@@ -956,7 +892,7 @@ export const Sites = {
 
 function writeSiteCSS(doc) {
 	let content = ''
-	content += insertCSSRule('html', '--primary', `'${doc.frontend.colors.primary}'`)
+	content += insertCSSRule('html', '--primary', `'${doc.colors.primary}'`)
 }
 
 function createFontCSS(fontFaces = [], fontBody = {}, fontHeadings = {}) {

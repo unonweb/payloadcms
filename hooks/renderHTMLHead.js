@@ -43,11 +43,11 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 
 		/* // fonts.css
 		if (!await canAccess(`${fsPathAssets}/fonts.css`)) {
-			saveToDisk(`${fsPathAssets}/fonts.css`, site.frontend.fonts.css, user)
+			saveToDisk(`${fsPathAssets}/fonts.css`, site.fonts.css, user)
 		}
 		// user.css
 		if (!await canAccess(`${fsPathAssets}/user.css`)) {
-			let userCSS = convertJSONToCSS(site.frontend.css)
+			let userCSS = convertJSONToCSS(site.css)
 			await saveToDisk(`${fsPathAssets}/user.css`, userCSS, user)
 		}
 		// site.css
