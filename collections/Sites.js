@@ -709,6 +709,23 @@ export const Sites = {
 											en: 'The contents of the first language version of a posts are copied to the other languages in order to serve as a starting point for translations.'
 										}
 									},
+									defaultValue: true,
+								},
+								// --- site.locales.updateOthers
+								{
+									type: 'checkbox',
+									name: 'updateOthers',
+									label: {
+										de: 'Automatische Updates der anderen Sprachversion',
+										en: 'Automatically update other languages'
+									},
+									admin: {
+										condition: (data, siblingData) => (siblingData.initOthers === true) ? true : false,
+										description: {
+											de: 'Veränderungen in einer Sprachversion lösen beim Speichern automatisch ein Update der anderen Sprachversionen aus.',
+											en: 'Changes in one language version automatically trigger an update of the other version.'
+										}
+									},
 									defaultValue: false,
 								},
 							]

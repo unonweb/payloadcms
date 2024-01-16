@@ -204,8 +204,6 @@ export const Pages = {
 					const pathSite = `${site.paths.fs.site}/${mode}`
 					const defLang = site.locales.default
 
-
-
 					if (mode === 'dev' || doc.html !== previousDoc.html || doc.title !== previousDoc.title || doc.description !== previousDoc.description || doc.isHome !== previousDoc.isHome || doc.header !== previousDoc.header || doc.nav !== previousDoc.nav || doc.footer !== previousDoc.footer) {
 						// something has changed...
 						// Tasks:
@@ -287,24 +285,26 @@ export const Pages = {
 					}
 
 					// update other locales of this doc
-					// always because any non-localized layout or style property may have changed
-					if (operation === 'update' && site.locales.used.length > 1 && context.buildOtherLocale !== false) {
-						for (const loc of site.locales.used.filter(item => item !== req.locale)) {
-
-							const updatedDoc = updateDocSingle('pages', doc.id, user, {
-								data: { updatedBy: `${user}-${Date.now()}` },
-								locale: loc,
-								context: {
-									// set a flag to prevent from running again
-									buildOtherLocale: false,
-									sites: context.sites,
-									site: site,
-									nav: nav,
-									header: header,
-									footer: footer
-								},
-							})
-						}
+					// any non-localized layout or style property may have changed
+					if (operation === 'update' ) {
+						if (site.locales.updateOthers && site.locales.used.length > 1 && context.buildOtherLocale !== false) {
+							for (const loc of site.locales.used.filter(item => item !== req.locale)) {
+	
+								const updatedDoc = updateDocSingle('pages', doc.id, user, {
+									data: { updatedBy: `${user}-${Date.now()}` },
+									locale: loc,
+									context: {
+										// set a flag to prevent from running again
+										buildOtherLocale: false,
+										sites: context.sites,
+										site: site,
+										nav: nav,
+										header: header,
+										footer: footer
+									},
+								})
+							}
+						}	
 					}
 
 					/* sites */
