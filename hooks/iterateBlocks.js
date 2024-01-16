@@ -94,8 +94,8 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 					// --- NAVS ---
 					case 'nav':
 						return renderUnNav(block);
-					case 'menu-split':
-						return renderUnMenuSplit(block);
+					case 'nav-split':
+						return renderUnNavSplit(block);
 
 					case 'menu-aside':
 						return renderUnMenuAside(block);
@@ -291,20 +291,27 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		const attributes = [
 			(theme) ? `data-theme="${theme}"` : '',
 			(slug) ? `data-page="${slug}"` : '',
+			(block.isDropDown) ? `data-dropdown="${block.isDropDown}"` : '',
 			//(block.area) ? `data-area="${block.area}"` : '',
 			(block.justify) ? `data-justify="${block.justify}"` : '',
 		].filter(item => item).join(' ')
 
-		let html = /* html */`
+		const html = /* html */`
 			<un-nav ${attributes}>
-				${block.blocks ? render(block.blocks) : ''}
+				<slot name="default">
+					${block.blocks ? render(block.blocks) : ''}
+				</slot>
+				${(block.offset.length > 0) 
+					? /* html */`<slot name="offset">${render(block.offset)}</slot>` 
+					: ''
+				}
 			</un-nav>
 		`
 
 		return html
 	}
 
-	function renderUnMenuSplit(block = {}) {
+	function renderUnNavSplit(block = {}) {
 		// blockType: 'menu-bar'
 		
 		const attributes = [
@@ -317,14 +324,14 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		].filter(item => item).join(' ')
 
 		let html = /* html */`
-			<un-menu-split ${attributes}>
+			<un-nav-split ${attributes}>
 				<div style="display: contents">
 					${block.blocksDefault ? render(block.blocksDefault, block.blockType, block.linkAttrs) : ''}
 				</div>
 				<div slot="offset" style="display: contents">
 					${block.blocksOffset ? render(block.blocksOffset, block.blockType, block.linkAttrs) : ''}
 				</div>
-			</un-menu-split>	
+			</un-nav-split>	
 		`
 
 		return html

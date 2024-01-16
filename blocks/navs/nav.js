@@ -11,112 +11,28 @@ const nav = {
 	},
 	// --- fields
 	fields: [
-		/* // --- block.area
 		{
-			type: 'select',
-			name: 'area',
-			label: {
-				en: 'Placement',
-				de: 'Platzierung'
-			},
-			hasMany: false,
-			required: true,
-			options: [
+			type: 'row',
+			fields: [
 				{
-					label: {
-						en: 'Before the Header',
-						de: 'Vor dem Header',
-					},
-					value: 'headerbefore'
+					type: 'checkbox',
+					name: 'enableSplit',
+					defaultValue: false,
+					admin: {
+						width: '25%'
+					}
 				},
 				{
-					label: {
-						en: 'On top of the Header',
-						de: 'Auf dem Header',
+					type: 'select',
+					name: 'isDropDown',
+					defaultValue: 'false',
+					admin: {
+						width: '25%'
 					},
-					value: 'header'
+					options: ['breakpoint', 'false', 'true']
 				},
-				{
-					label: {
-						en: 'After the Header',
-						de: 'Nach dem Header',
-					},
-					value: 'headerafter'
-				},
-				{
-					label: {
-						en: 'Aside (left)',
-						de: 'Links vom Hauptteil',
-					},
-					value: 'asideleft',
-				},
-				{
-					label: {
-						en: 'Aside (right)',
-						de: 'Rechts vom Hauptteil',
-					},
-					value: 'asideright',
-				},
-				{
-					label: {
-						en: 'Before the Footer',
-						de: 'Vor dem Footer',
-					},
-					value: 'footerbefore'
-				},
-				{
-					label: {
-						en: 'On top of the Footer',
-						de: 'Auf dem Footer',
-					},
-					value: 'footer'
-				},
-				{
-					label: {
-						en: 'After the Footer',
-						de: 'Nach dem Footer',
-					},
-					value: 'footerafter'
-				},
-			],
-			defaultValue: 'headerafter'
-		}, */
-		/* // --- block.justify
-		{
-			type: 'radio',
-			name: 'justify',
-			label: {
-				de: 'Ausrichtung',
-				en: 'Justify',
-			},
-			admin: {
-				condition: (data) => (data.editingMode === 'layout') ? true : false
-			},
-			options: [
-				{
-					value: 'center',
-					label: {
-						en: 'Center',
-						de: 'Zentriert'
-					},
-				},
-				{	
-					value: 'left',
-					label: {
-						en: 'Left',
-						de: 'Links'
-					},
-				},
-				{	
-					value: 'right',
-					label: {
-						en: 'Right',
-						de: 'Rechts'
-					},
-				}
-			],
-			defaultValue: 'center'
-		}, */
+			]
+		},
 		// --- blocks
 		{
 			type: 'blocks',
@@ -136,7 +52,41 @@ const nav = {
 				},
 			},
 			blocks: [
-				createLinkIntBlock({ slots: ['offset']}),
+				createLinkIntBlock({ slots: ['offset'] }),
+				createLinkExtBlock(),
+				createLangSwitchBlock(),
+				createMenuDropDown()
+			]
+		},
+		// --- block.offset
+		{
+			type: 'blocks',
+			name: 'offset',
+			label: {
+				de: 'Offset Slot',
+				en: 'Offset Slot'
+			},
+			labels: {
+				singular: {
+					de: 'Menüpunkt',
+					en: 'Menu item'
+				},
+				plural: {
+					de: 'Menüpunkte',
+					en: 'Menu items'
+				},
+			},
+			minRows: 0,
+			maxRows: 3,
+			admin: {
+				condition: (data, siblingData) => (siblingData.enableSplit === true) ? true : false,
+				description: {
+					de: 'Die Menüpunkte in diesem Slot werden von den anderen im Layout abgesetzt.',
+					en: 'The menu items in this slot will appear offset in the layout.'
+				}
+			},
+			blocks: [
+				createLinkIntBlock({ slots: ['offset'] }),
 				createLinkExtBlock(),
 				createLangSwitchBlock(),
 				createMenuDropDown()
