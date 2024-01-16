@@ -1,7 +1,5 @@
-import createImgsArray from '../../fields/imgs-array'
 import createImgBlock from '../img-block'
 import createDrawerBlock from '../drawer'
-import getRandomDocID from '../../hooks/getRandomDocID'
 
 const headerBanner = {
 	slug: 'header-banner',
