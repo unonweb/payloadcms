@@ -272,7 +272,7 @@ export const Pages = {
 					/* other locale versions */
 					// init other locales of this doc
 					if (operation === 'create') {
-						if (site.locales.used.length > 1 && site.locales.initOthers === true) {
+						if (site.locales.initOthers === true && site.locales.used.length > 1) {
 							for (const loc of site.locales.used) {
 								if (loc !== req.locale) {
 									const updatedDoc = await updateDocSingle('pages', doc.id, user, {
@@ -286,10 +286,11 @@ export const Pages = {
 
 					// update other locales of this doc
 					// any non-localized layout or style property may have changed
-					if (operation === 'update' ) {
-						if (site.locales.updateOthers && site.locales.used.length > 1 && context.buildOtherLocale !== false) {
+					if (operation === 'update') {
+						if ((site.locales.updateOthers || doc.slug !== previousDoc.slug) && site.locales.used.length > 1 && context.buildOtherLocale !== false) {
+							// is also executed if slug has changed
 							for (const loc of site.locales.used.filter(item => item !== req.locale)) {
-	
+
 								const updatedDoc = updateDocSingle('pages', doc.id, user, {
 									data: { updatedBy: `${user}-${Date.now()}` },
 									locale: loc,
@@ -304,7 +305,7 @@ export const Pages = {
 									},
 								})
 							}
-						}	
+						}
 					}
 
 					/* sites */
@@ -457,11 +458,7 @@ export const Pages = {
 										en: 'Customize URL'
 									},
 									admin: {
-										condition: (data) => (data.isHome === false && data.editingMode === 'functional') ? true : false,
-										/* description: {
-											de: 'Die URL wird automatisch aus dem ersten (!) Titel der Website erzeugt. Wenn danach der Titel geändert wird, kann die URL manuell angepasst werden.',
-											en: 'By default the URL is generated from the first (!) title of the website.'
-										} */
+										condition: (data) => (data.isHome === false) ? true : false,
 									}
 								},
 							]
@@ -477,7 +474,7 @@ export const Pages = {
 							unique: false,
 							localized: false,
 							admin: {
-								condition: (data) => (data.isHome === false && data.editingMode === 'functional' && data.useCustomSlug === true) ? true : false,
+								condition: (data) => (data.isHome === false && data.useCustomSlug === true) ? true : false,
 								/* placeholder: {
 									en: 'Leave empty to generate from title',
 									de: 'Leer lassen um URL Slug automatisch aus dem Titel zu erzeugen.'
@@ -497,40 +494,41 @@ export const Pages = {
 											let slug = ''
 
 											if (data.isHome === true) {
-												// home
-												slug = ''
-											} else {
-												// not home
-												if (value) {
-													// has value
-													if (data.useCustomSlug === true) {
-														// use custom slug
-														slug = `${slugify(value)}`
-													} else {
-														// use former slug
-														slug = value
-													}
-												} else {
-													// no value
-													if (data.title && data.useCustomSlug === false) {
-														// generate slug from title only if empty
-														// prevents automatic re-generation of slug when changing the title or the language
-														if (typeof data.title === 'object' && Object.keys(data.title).length === 1) {
-															// 'title' is a (locale) object and this objects has only one key
-															let titleKey = Object.keys(data.title)[0]
-															slug = `${slugify(data.title[titleKey])}`
-															context.slug = slug
-														} else {
-															// title is a string 
-															slug = `${slugify(data.title)}`
-															context.slug = slug
-														}
-													}
-												}
-
+												return ''
 											}
 
-											return slug
+											if (data.isHome === false && value) {
+												// has value
+												if (data.useCustomSlug === true) {
+													// use custom slug
+													let slug = `${slugify(value)}`
+													context.slug = slug
+													return slug
+												} else {
+													// use former slug
+													return value
+												}
+											}
+
+											if (data.isHome === false && !value && data.title) {
+												// no value
+												// generate slug from title only if empty
+												// prevents automatic re-generation of slug when changing the title or the language
+												let slug
+												if (typeof data.title === 'object' && Object.keys(data.title).length === 1) {
+													// 'title' is a (locale) object and this objects has only one key
+													let titleKey = Object.keys(data.title)[0]
+													slug = `${slugify(data.title[titleKey])}`
+													context.slug = slug
+													
+												} else {
+													// title is a string 
+													slug = `${slugify(data.title)}`
+													context.slug = slug
+												}
+
+												return slug
+											}
 
 										} catch (error) {
 											log(error.stack, user, __filename, 3)
@@ -538,6 +536,7 @@ export const Pages = {
 									}
 								],
 							},
+							validate: async (val, { data, operation, t, payload }) => (data.isHome === false && data.useCustomSlug === true && val === '') ? 'Bitte Wert angeben oder "ULR anpassen" deaktivieren' : true
 						},
 						// --- page.url
 						{
@@ -564,16 +563,19 @@ export const Pages = {
 											log('--- beforeChange [url] ---', user, __filename, 7)
 											//context.site ??= await getRelatedDoc('sites', data.site, user)
 											//const site = context.site
-											switch (data.isHome) {
-												case true:
-													return '/'
-												case false:
-													if (data.slug || context.slug) {
-														return `/${req.locale}/${data.slug || context.slug}`
-													} else {
-														throw new Error('url not set')
-													}
+
+											if (data.isHome === true) {
+												return '/'
 											}
+
+											if (data.isHome === false) {
+												if (context.slug || data.slug) {
+													return `/${req.locale}/${context.slug || data.slug}`
+												} else {
+													throw new Error('url not set')
+												}
+											}
+
 										} catch (error) {
 											log(error.stack, user, __filename, 3)
 										}
