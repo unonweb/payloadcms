@@ -5,7 +5,11 @@ import saveToDisk from '../../hooks/_saveToDisk'
 import getRelatedDoc from '../../hooks/getRelatedDoc'
 
 export default async function afterOperationHook(col = '', { args, operation, result }) {
-	/* in bulk operation result contains result.docs and result.errors */
+	/*	Attention: 
+		in bulk operation result contains result.docs and result.errors 
+		Tasks:
+		- Save entire collection as posts.json
+	*/
 
 	if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
 		const user = args?.req?.user?.shortName ?? 'internal'
@@ -29,7 +33,7 @@ export default async function afterOperationHook(col = '', { args, operation, re
 					},
 				})
 
-				const webVersion = createWebVersion(col, res.docs, args.req.user)
+				const webVersion = createWebVersion(col, res.docs, loc, args.req.user)
 				const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/${col}.json`
 				await saveToDisk(destPath, JSON.stringify(webVersion), user)
 			}
@@ -39,41 +43,26 @@ export default async function afterOperationHook(col = '', { args, operation, re
 	}
 }
 
-function createWebVersion(slug = '', docs = [], user = {}) {
+function createWebVersion(slug = '', docs = [], locale = '', user = {}) {
 
 	docs = (docs.docs) ? docs.docs : docs
 	docs = (!Array.isArray(docs)) ? [docs] : docs
 
 	let webVersion
 
-	if (slug === 'events') {
+	if (['posts', 'events'].includes(slug)) {
 		webVersion = docs.map(doc => {
 			return {
 				id: doc.id,
 				tags: doc.tags,
 				title: doc.title,
 				time: doc.time,
-				html: doc.html,
+				html: (typeof doc.html === 'string') ? doc.html : doc.html.main,
 				author: `${user.firstName} ${user.lastName}`,
 				date: doc.date,
 				updatedAt: doc.updatedAt,
 				createdAt: doc.createdAt,
-			}
-		})
-	}
-
-	if (slug === 'posts') {
-		webVersion = docs.map(doc => {
-			return {
-				id: doc.id,
-				tags: doc.tags,
-				title: doc.title,
-				time: doc.time,
-				html: doc.html.main,
-				author: `${user.firstName} ${user.lastName}`,
-				date: doc.date,
-				updatedAt: doc.updatedAt,
-				createdAt: doc.createdAt,
+				locale: locale,
 			}
 		})
 	}
