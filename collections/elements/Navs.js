@@ -242,12 +242,12 @@ export const Navs = {
 							},
 							labels: {
 								singular: {
-									de: 'Menü Layout',
-									en: 'Menu Layout'
+									de: 'Navigation',
+									en: 'Navigation'
 								},
 								plural: {
-									de: 'Menü Layouts',
-									en: 'Menu Layouts'
+									de: 'Navigationen',
+									en: 'Navigations'
 								},
 							},
 							maxRows: 1,
