@@ -125,8 +125,11 @@ export const Sites = {
 			// runs before server-side validation
 			async ({ data, req, operation, originalDoc }) => {
 				try {
-
 					if (operation === 'create') {
+
+						const user = req?.user?.shortName ?? 'internal'
+						log('--- beforeValidate ---', user, __filename, 7)
+
 						/* init paths from Admin global */
 
 						/* constants */
@@ -141,6 +144,10 @@ export const Sites = {
 						data.paths.web.admin.resources = admin.paths.web.resources
 						data.paths.fs.admin.sites = admin.paths.fs.sites
 						data.paths.fs.admin.customElements = admin.paths.fs.customElements
+						
+						// fonts
+						data.fonts.body ??= await getRandomDocID('fonts', user.shortName)
+						data.fonts.headings ??= await getRandomDocID('fonts', user.shortName)
 
 						// update site paths
 						data = initSitePaths(data)
@@ -743,7 +750,7 @@ export const Sites = {
 							type: 'group',
 							name: 'fonts',
 							fields: [
-								//--- site.fonts.body
+								// --- site.fonts.body
 								{
 									type: 'relationship',
 									name: 'body',
@@ -754,9 +761,10 @@ export const Sites = {
 									},
 									maxDepth: 0,
 									required: false,
-									defaultValue: async ({ user }) => await getRandomDocID('fonts', user.shortName),
+									// defaultValue: async ({ user }) => (user) ? await getRandomDocID('fonts', user.shortName) : '', 
+									// defaultValue set by beforeValidate
 								},
-								//--- site.fonts.headings
+								// --- site.fonts.headings
 								{
 									type: 'relationship',
 									name: 'headings',
@@ -767,7 +775,8 @@ export const Sites = {
 									},
 									maxDepth: 0,
 									required: false,
-									defaultValue: async ({ user }) => await getRandomDocID('fonts', user.shortName),
+									// defaultValue: async ({ user }) => (user) ? await getRandomDocID('fonts', user.shortName) : '',
+									// defaultValue set by beforeValidate
 								},
 								// --- site.fonts.css
 								{
@@ -949,19 +958,6 @@ function createFontCSS(fontFaces = [], fontBody = {}, fontHeadings = {}) {
 
 function insertCSSRule(selector = '', key = '', value = '') {
 	return `${selector} { \n\t${key}: ${value};\n}\n`
-}
-
-async function getDefaultValue(col = '') {
-	// not perfect
-	const res = await fetch('/api/fonts')
-	if (res.ok) {
-		const data = await res.json()
-		if (data?.docs[0]?.id) {
-			return data.docs[0].id
-		} else {
-			return null
-		}
-	}
 }
 
 function exists(value, payload) {
