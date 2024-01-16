@@ -4,10 +4,10 @@ import createLinkIntBlock from '../link-int-block';
 import createMenuDropDown from '../menu-drop-down';
 
 const navBar = {
-	slug: 'nav-bar',
+	slug: 'nav',
 	labels: {
-		singular: 'Navigation Bar',
-		plural: 'Navigation Bars'
+		singular: 'Navigation',
+		plural: 'Navigations'
 	},
 	// --- fields
 	fields: [

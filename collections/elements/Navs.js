@@ -6,7 +6,7 @@ import { isAdmin } from '../../access/isAdmin';
 // BLOCKS
 import menuSplitBlock from '../../blocks/navs/menu-split-block';
 import menuAside from '../../blocks/navs/menu-aside-block';
-import navBar from '../../blocks/navs/nav-bar-block';
+import navBar from '../../blocks/navs/nav';
 
 // FIELDS
 import editingModeField from '../../fields/editingMode';

@@ -92,7 +92,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 						return renderUnContactData(block);
 
 					// --- NAVS ---
-					case 'nav-bar':
+					case 'nav':
 						return renderUnNav(block);
 					case 'menu-split':
 						return renderUnMenuSplit(block);
