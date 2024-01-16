@@ -119,70 +119,73 @@ export const Pages = {
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => {
 				try {
-					const user = req?.user?.shortName ?? 'internal'
-					log('--- beforeChange ---', user, __filename, 7)
-					const mode = getAppMode()
-					context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : await getRelatedDoc('sites', data.site, user)
-					const site = context.site
-					const pathSite = `${site.paths.fs.site}/${mode}`
 
-					/* render html.main from blocks and update assets */
+					if (!context.updatedByPageElement) {
+						const user = req?.user?.shortName ?? 'internal'
+						log('--- beforeChange ---', user, __filename, 7)
+						const mode = getAppMode()
+						context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : await getRelatedDoc('sites', data.site, user)
+						const site = context.site
+						const pathSite = `${site.paths.fs.site}/${mode}`
 
-					if (!context.updatedByPageElement && data.main.blocks && data.main.blocks.length > 0) {
-						if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {
-							// data contains the current values
-							// originalDoc contains the previous values
-							// seems to work with bulk operations, too
-						}
+						/* render html.main from blocks and update assets */
 
-						/* iterate blocks */
-
-						const images = context?.images ?? await getCol('images', user, {
-							depth: 0,
-							where: { sites: { contain: site.id } }
-						})
-
-						const documents = context?.documents ?? await getCol('documents', user, {
-							depth: 0,
-							where: { sites: { contain: site.id } }
-						})
-
-						const pages = context?.pages ?? await getCol('pages', user, {
-							depth: 0,
-							where: { site: { equals: site.id } },
-						})
-
-						const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, {
-							user: user,
-							locale: req.locale,
-							blocks: data.main.blocks,
-							site: site,
-							images: images.docs,
-							documents: documents.docs,
-							pages: pages.docs,
-						})
-
-						for (const path of libPathsWeb) {
-							// '/assets/lib/leaflet-1.9.4.css'
-							// '/assets/custom-elements/un-map-leaflet.js'
-							if (path.startsWith('/assets/lib/')) {
-								// only care about lib files because separate c-elements files are copied via a standalone script
-								const dest = `${pathSite}${path}`
-								const src = `${site.paths.fs.admin.resources}${path}`
-								await cpFile(src, dest, user, { overwrite: false, ctParentPath: true })
+						if (data.main.blocks && data.main.blocks.length > 0) {
+							if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {
+								// data contains the current values
+								// originalDoc contains the previous values
+								// seems to work with bulk operations, too
 							}
+
+							/* iterate blocks */
+
+							const images = context?.images ?? await getCol('images', user, {
+								depth: 0,
+								where: { sites: { contain: site.id } }
+							})
+
+							const documents = context?.documents ?? await getCol('documents', user, {
+								depth: 0,
+								where: { sites: { contain: site.id } }
+							})
+
+							const pages = context?.pages ?? await getCol('pages', user, {
+								depth: 0,
+								where: { site: { equals: site.id } },
+							})
+
+							const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, {
+								user: user,
+								locale: req.locale,
+								blocks: data.main.blocks,
+								site: site,
+								images: images.docs,
+								documents: documents.docs,
+								pages: pages.docs,
+							})
+
+							for (const path of libPathsWeb) {
+								// '/assets/lib/leaflet-1.9.4.css'
+								// '/assets/custom-elements/un-map-leaflet.js'
+								if (path.startsWith('/assets/lib/')) {
+									// only care about lib files because separate c-elements files are copied via a standalone script
+									const dest = `${pathSite}${path}`
+									const src = `${site.paths.fs.admin.resources}${path}`
+									await cpFile(src, dest, user, { overwrite: false, ctParentPath: true })
+								}
+							}
+
+							/* update page */
+							data.html.main = html // update page.html.main
+							data.assets.imgs = imgFiles // update page.assets.imgs
+							data.assets.docs = docFiles	// update page.assets.docs
+							data.assets.head = libPathsWeb // update page.assets.head
 						}
 
-						/* update page */
-						data.html.main = html // update page.html.main
-						data.assets.imgs = imgFiles // update page.assets.imgs
-						data.assets.docs = docFiles	// update page.assets.docs
-						data.assets.head = libPathsWeb // update page.assets.head
+						data.html.head = await renderHTMLHead(data, site, user) // update page.html.head
+
+						return data
 					}
-
-					data.html.head = await renderHTMLHead(data, site, user) // update page.html.head
-
-					return data
 
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
@@ -201,19 +204,7 @@ export const Pages = {
 					const pathSite = `${site.paths.fs.site}/${mode}`
 					const defLang = site.locales.default
 
-					/* init other locales */
-					if (operation === 'create') {
-						if (site.locales.used.length > 1 && site.locales.initOthers === true) {
-							for (const loc of site.locales.used) {
-								if (loc !== req.locale) {
-									const updatedDoc = await updateDocSingle('pages', doc.id, user, {
-										data: doc,
-										locale: loc,
-									})
-								}
-							}
-						}
-					}
+
 
 					if (mode === 'dev' || doc.html !== previousDoc.html || doc.title !== previousDoc.title || doc.description !== previousDoc.description || doc.isHome !== previousDoc.isHome || doc.header !== previousDoc.header || doc.nav !== previousDoc.nav || doc.footer !== previousDoc.footer) {
 						// something has changed...
@@ -272,9 +263,32 @@ export const Pages = {
 						}
 					}
 
-					/* save other locale pages */
+					/* remove previous page */
+					if (doc.slug !== previousDoc.slug && previousDoc.slug !== '') {
+						// slug has changed and is not empty
+						for (const loc of site.locales.used) {
+							await rmFile(`${pathSite}/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory if slug has changed
+						}
+					}
+
+					/* other locale versions */
+					// init other locales of this doc
+					if (operation === 'create') {
+						if (site.locales.used.length > 1 && site.locales.initOthers === true) {
+							for (const loc of site.locales.used) {
+								if (loc !== req.locale) {
+									const updatedDoc = await updateDocSingle('pages', doc.id, user, {
+										data: doc,
+										locale: loc,
+									})
+								}
+							}
+						}
+					}
+
+					// update other locales of this doc
 					// always because any non-localized layout or style property may have changed
-					if (site.locales.used.length > 1 && context.buildOtherLocale !== false) {
+					if (operation === 'update' && site.locales.used.length > 1 && context.buildOtherLocale !== false) {
 						for (const loc of site.locales.used.filter(item => item !== req.locale)) {
 
 							const updatedDoc = updateDocSingle('pages', doc.id, user, {
@@ -293,20 +307,15 @@ export const Pages = {
 						}
 					}
 
-					/* remove previous page */
-					if (doc.slug !== previousDoc.slug && previousDoc.slug !== '') {
-						// slug has changed and is not empty
-						for (const loc of site.locales.used) {
-							await rmFile(`${pathSite}/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory if slug has changed
-						}
+					/* sites */
+					// make sure that user.css and fonts.css are there
+					if (!await canAccess(`${pathSite}/assets/fonts.css`) || !await canAccess(`${pathSite}/assets/user.css`)) {
+						updateDocSingle('sites', site.id, user, {
+							data: {
+								updatedBy: `pages-${Date.now()}`
+							},
+						})
 					}
-
-					/* update 'sites' */
-					// * updates site.assets
-					// * very useful because it triggers the site's hooks so that we can make sure that user.css and fonts.css are there
-					await updateDocSingle('sites', site.id, user, {
-						data: site
-					})
 
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
@@ -339,6 +348,7 @@ export const Pages = {
 		// --- afterOperation
 		afterOperation: [
 			async ({ args, operation, result }) => {
+
 				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
 					console.timeEnd(`<7>[time] [pages] "${args.req.context.timeID}"`)
 				}
@@ -859,15 +869,6 @@ export const Pages = {
 			name: 'updatedBy',
 			admin: {
 				hidden: true
-			}
-		},
-		// --- locale
-		{
-			type: 'text',
-			name: 'locale',
-			admin: {
-				hidden: true,
-				readOnly: true
 			}
 		},
 		// --- SIDEBAR ---
