@@ -157,7 +157,6 @@ export const Sites = {
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => {
 				try {
-
 					// data contains the current values
 					// originalDoc contains the previous values
 					// seems to work with bulk operations, too
@@ -224,12 +223,20 @@ export const Sites = {
 					if (operation === 'create') {
 
 						/* INIT FS STRUCTURE */
-						if (!existsSync(doc.paths.fs.site)) {
-							await fsPromises.mkdir(doc.paths.fs.site)
-							await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/custom-elements`, { recursive: true })
-							await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/custom-elements`, { recursive: true })
-							await fsPromises.mkdir(doc.paths.fs.imgs)
-						}
+						if (!await canAccess(doc.paths.fs.site)) await fsPromises.mkdir(doc.paths.fs.site)
+						// prod
+						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/custom-elements`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/custom-elements`, { recursive: true })
+						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/imgs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/imgs`)
+						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/docs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/docs`)
+						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/lib`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/lib`)
+						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/posts`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/posts`)
+						// dev
+						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/custom-elements`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/custom-elements`, { recursive: true })
+						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/imgs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/imgs`)
+						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/docs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/docs`)
+						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/lib`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/lib`)
+						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/posts`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/posts`)
+						
 
 						/* INIT PAYLOAD */
 						// needs to be run in afterChange hook because before this site has no id yet
@@ -342,7 +349,7 @@ export const Sites = {
 			tabs: [
 				// --- META [tab-1]
 				{
-					label: 'META',
+					label: 'Meta',
 					fields: [
 						// --- site.domain
 						{
@@ -608,7 +615,15 @@ export const Sites = {
 									]
 								}
 							]
-						}
+						},
+						// --- updatedBy
+						{
+							type: 'text',
+							name: 'updatedBy',
+							admin: {
+								hidden: true
+							}
+						},
 					]
 				},
 				// --- OPTIONS [tab-5]
