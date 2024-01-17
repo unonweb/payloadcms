@@ -292,8 +292,8 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			(theme) ? `data-theme="${theme}"` : '',
 			(slug) ? `data-page="${slug}"` : '',
 			(block.isDropDown) ? `data-dropdown="${block.isDropDown}"` : '',
-			//(block.area) ? `data-area="${block.area}"` : '',
-			(block.justify) ? `data-justify="${block.justify}"` : '',
+			(block.sticky) ? `data-sticky="${block.sticky}"` : '',
+			(block.enableSplit) ? `data-split="${block.enableSplit}"` : '',
 		].filter(item => item).join(' ')
 
 		const html = /* html */`
@@ -306,32 +306,6 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 					: ''
 				}
 			</un-nav>
-		`
-
-		return html
-	}
-
-	function renderUnNavSplit(block = {}) {
-		// blockType: 'menu-bar'
-		
-		const attributes = [
-			`role="navigation"`,
-			(theme) ? `data-theme="${theme}"` : '',
-			(slug) ? `data-page="${slug}"` : '',
-			(block.area) ? `data-area="${block.area}"` : '',
-			(block?.layout?.orientation) ? `data-orient="${block.layout.orientation}"` : '',
-			(block?.layout?.order) ? `data-order="${block.layout.order}"` : '',
-		].filter(item => item).join(' ')
-
-		let html = /* html */`
-			<un-nav-split ${attributes}>
-				<div style="display: contents">
-					${block.blocksDefault ? render(block.blocksDefault, block.blockType, block.linkAttrs) : ''}
-				</div>
-				<div slot="offset" style="display: contents">
-					${block.blocksOffset ? render(block.blocksOffset, block.blockType, block.linkAttrs) : ''}
-				</div>
-			</un-nav-split>	
 		`
 
 		return html
@@ -440,6 +414,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		return html
 
 	}
+
 	function renderUnDropDown(block = {}) {
 		// block.title
 		// block.subMenu
@@ -523,7 +498,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			(locale) ? `src="${`${pathWebPosts}/${locale}/posts.json`}"` : '',
 			(block?.meta?.dateStyle) ? `date-style="${block.meta.dateStyle}"` : '',
 			(block?.meta?.include) ? `post-parts="${block.meta.include.join(' ')}"` : '',
-			(block?.meta?.isCollapsible) ? "collapsible" : '',
+			(block?.meta?.isCollapsible) ? "collapsible" : '', // boolean property
 			(block?.ui?.include) ? `ui-parts="${block.ui.include.join(' ')}"` : '',
 			//(block.categories) ? `categories="${block.categories.map(c => c.name).join(' ')}"` : '',
 			(block.tags) ? `tags="${block.tags.join(' ')}"` : '',

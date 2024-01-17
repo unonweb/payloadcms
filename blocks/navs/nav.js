@@ -14,6 +14,7 @@ const nav = {
 		{
 			type: 'row',
 			fields: [
+				// --- block.enableSplit
 				{
 					type: 'checkbox',
 					name: 'enableSplit',
@@ -22,6 +23,22 @@ const nav = {
 						width: '25%'
 					}
 				},
+			]
+		},
+		{
+			type: 'row',
+			fields: [
+				// --- block.sticky
+				{
+					type: 'select',
+					name: 'sticky',
+					defaultValue: 'false',
+					admin: {
+						width: '25%'
+					},
+					options: ['true', 'false', 'smart']
+				},
+				// --- block.isDropDown
 				{
 					type: 'select',
 					name: 'isDropDown',
@@ -33,7 +50,7 @@ const nav = {
 				},
 			]
 		},
-		// --- blocks
+		// --- block.blocks
 		{
 			type: 'blocks',
 			name: 'blocks',
