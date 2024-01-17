@@ -390,11 +390,6 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 
 	function renderUnLangSwitch(block = {}) {
 
-		
-		if (typeof block.image === 'string') {
-			block.image = images[block.image] // looks like we've got just an id reference to the images collection
-		}
-
 		const attributes = [
 			(theme) ? `data-theme="${theme}"` : '',
 			(slug) ? `data-page="${slug}"` : '',
@@ -404,10 +399,10 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		let html = /* html */`
 			<un-lang-switch ${attributes}>
 				${block.languages.map(lang => {
-			let textContent = (lang === 'de') ? 'Deutsch' : (lang === 'en') ? 'English' : ''
-			return /* html */`
+					let textContent = (lang === 'de') ? 'Deutsch' : (lang === 'en') ? 'English' : ''
+					return /* html */`
 						<button value="${lang}">${textContent}</button>`
-		}).join(' ')}
+				}).join(' ')}
 			</un-lang-switch>
 		`;
 
