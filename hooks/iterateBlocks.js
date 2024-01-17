@@ -301,7 +301,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 				<slot name="default">
 					${block.blocks ? render(block.blocks) : ''}
 				</slot>
-				${(block.offset.length > 0) 
+				${(block.enableSplit && block.offset.length > 0) 
 					? /* html */`<slot name="offset">${render(block.offset)}</slot>` 
 					: ''
 				}
