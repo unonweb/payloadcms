@@ -13,6 +13,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', {
 	cleanUpImgs = true,
 	cleanUpDocs = true,
 	cleanUpPosts = true,
+	cleanUpLocales = true,
 	cleanUpCElements = false } = {}) {
 
 	try {
@@ -95,10 +96,15 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', {
 			const pageSlugs = pages.docs.map(doc => doc.slug) // slugs or not localized
 
 			for (const loc of locales) {
-
+				
 				const pathSiteLocale = `${pathSite}/${loc}`
 
-				if (await canAccess(pathSiteLocale) && await isDirectory(pathSiteLocale)) {
+				/* cleanUpLocales */
+				if (!site.locales.used.includes(loc) && cleanUpLocales === true) {
+					await rm(pathSiteLocale, { force: false, recursive: true }) // remove the entire locale directory
+					log(`removed: ${pathSiteLocale}`, user, __filename, 6)
+				} 
+				else if (await canAccess(pathSiteLocale) && await isDirectory(pathSiteLocale)) {
 
 					const fileObjs = await readdir(pathSiteLocale, { withFileTypes: true, recursive: false })
 
@@ -111,6 +117,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', {
 				}
 			}
 		}
+
 		/* cleanUpPosts */
 		if (cleanUpPosts === true) {
 			// remove post files
@@ -144,6 +151,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', {
 				}
 			}
 		}
+
 		/* cleanUpDocs */
 		if (cleanUpDocs === true) {
 			// rm all doc files that are not on the positive list:

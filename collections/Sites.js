@@ -671,6 +671,13 @@ export const Sites = {
 									},
 									hasMany: true,
 									defaultValue: ['de'],
+									admin: {
+										description: {
+											en: 'Be aware that removing any language additional to your default language will remove all webpages generated in that language.',
+											de: 'Achtung: Das Entfernen einer Sprache führt dazu, dass alle Webpages in dieser Sprache entfernt werden.'
+										}
+									},
+									validate: (value, { data }) => value.includes(data.locales.default) ? true : `You can't remove the default language`,
 									options: [
 										{
 											label: 'Deutsch',
