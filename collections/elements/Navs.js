@@ -4,8 +4,6 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 import { isAdmin } from '../../access/isAdmin';
 
 // BLOCKS
-import navSplit from '../../blocks/navs/nav-split';
-import menuAside from '../../blocks/navs/menu-aside-block';
 import nav from '../../blocks/navs/nav';
 
 // FIELDS
@@ -253,7 +251,6 @@ export const Navs = {
 							maxRows: 1,
 							blocks: [
 								nav,
-								navSplit
 							]
 						},
 					]
