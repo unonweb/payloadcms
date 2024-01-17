@@ -13,25 +13,18 @@ import createImgBlock from '../../blocks/img-block';
 import log from '../../customLog';
 import getDoc from '../../hooks/getDoc';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
-import mailError from '../../mailError';
-import updateDocSingle from '../../hooks/updateDocSingle';
 import iterateBlocks from '../../hooks/iterateBlocks';
 import getCol from '../../hooks/_getCol';
-import saveToDisk from '../../hooks/_saveToDisk';
 import cpFile from '../../hooks/_cpFile';
 import hasChanged from '../../hooks/_hasChanged';
 import createElementsFields from '../../fields/createPageElementsField';
-import renderHTMLPage from '../../hooks/renderHTMLPage';
 import renderHTMLHead from '../../hooks/renderHTMLHead';
-import rmFile from '../../hooks/_rmFile';
-import getUserSites from '../../hooks/getUserSites';
-import cpAssets from '../../hooks/_cpAssets';
-import getAppMode from '../../hooks/_getAppMode';
 import createAssetsFields from '../../fields/createAssetsFields';
 import createHTMLFields from '../../fields/createHTMLFields';
 import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
 import afterChangeHook from './afterChangeHook';
+import initOtherLocaleField from '../../fields/initOtherLocaleField';
 
 export const Posts = {
 	slug: 'posts',
@@ -159,6 +152,7 @@ export const Posts = {
 	fields: [
 		// --- editingMode
 		editingModeField,
+		initOtherLocaleField,
 		// --- TABS
 		{
 			type: 'tabs',

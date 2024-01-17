@@ -3,17 +3,12 @@ import * as React from "react";
 /* ACCESS */
 import isAdminOrHasSiteAccess from '../access/isAdminOrHasSiteAccess';
 import { isLoggedIn } from '../access/isLoggedIn';
-import { isAdmin } from '../access/isAdmin';
 
 /* FIELDS */
 import editingModeField from '../fields/editingMode';
 
 /* BLOCKS */
 import createColumnsFlex from '../blocks/layout/lay-flex';
-import createIncludePostsBlock from '../blocks/include-posts'
-
-/* NODE */
-import { basename } from 'path'
 
 /* HOOKS & HELPERS */
 import hasChanged from '../hooks/_hasChanged';
@@ -37,8 +32,8 @@ import getAppMode from '../hooks/_getAppMode';
 import getUserSites from '../hooks/getUserSites';
 import cpAssets from '../hooks/_cpAssets';
 import canAccess from '../hooks/_canAccess';
-import convertJSONToCSS from '../hooks/_convertJSONToCSS';
 import createAssetsFields from '../fields/createAssetsFields';
+import initOtherLocaleField from '../fields/initOtherLocaleField'
 
 export const Pages = {
 	slug: 'pages',
@@ -129,7 +124,6 @@ export const Pages = {
 						const pathSite = `${site.paths.fs.site}/${mode}`
 
 						/* render html.main from blocks and update assets */
-
 						if (data.main.blocks && data.main.blocks.length > 0) {
 							if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {
 								// data contains the current values
@@ -180,9 +174,12 @@ export const Pages = {
 							data.assets.imgs = imgFiles // update page.assets.imgs
 							data.assets.docs = docFiles	// update page.assets.docs
 							data.assets.head = libPathsWeb // update page.assets.head
+							if (site.locales.used.length > 1) {
+								data.assets.otherURLs = pages.docs.filter(p => (p.url !== data.url && p.url.replace(/\/(de|en|es)\//, '') === data.url.replace(/\/(de|en|es)\//, ''))) // <-- ATT: hard-coded locales	
+							}
 						}
-
-						data.html.head = await renderHTMLHead(data, site, user) // update page.html.head
+						
+						data.html.head = await renderHTMLHead(data, site, user) // update page.html.head; is called even if there's no doc.main.html
 
 						return data
 					}
@@ -272,7 +269,7 @@ export const Pages = {
 					/* other locale versions */
 					// init other locales of this doc
 					if (operation === 'create') {
-						if (site.locales.initOthers === true && site.locales.used.length > 1) {
+						if (doc.initOtherLocale === true && site.locales.used.length > 1) {
 							for (const loc of site.locales.used) {
 								if (loc !== req.locale) {
 									const updatedDoc = await updateDocSingle('pages', doc.id, user, {
@@ -630,7 +627,10 @@ export const Pages = {
 							]
 						},
 						// --- page.assets
-						createAssetsFields('imgs', 'docs', 'head'),
+						// --- page.assets.imgs
+						// --- page.assets.docs
+						// --- page.assets.head
+						createAssetsFields('imgs', 'docs', 'head', 'otherURLs'),
 					]
 				},
 				// --- ELEMENTS [tab-2]
@@ -876,6 +876,7 @@ export const Pages = {
 		// --- SIDEBAR ---
 		// --- editingMode
 		editingModeField,
+		initOtherLocaleField,
 		/* {
 			type: 'text',
 			name: 'preview',

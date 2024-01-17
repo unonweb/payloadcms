@@ -18,6 +18,10 @@ import mailError from '../../mailError';
 import saveToDisk from '../../hooks/_saveToDisk';
 import createElementsFields from '../../fields/createPageElementsField';
 import getUserSites from '../../hooks/getUserSites';
+import initOtherLocaleField from '../../fields/initOtherLocaleField';
+import afterChangeHook from './afterChangeHook';
+import beforeOperationHook from './beforeOperationHook';
+import afterOperationHook from './afterOperationHook';
 
 export const Products = {
 	slug: 'products',
@@ -50,123 +54,21 @@ export const Products = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ operation }) => {
-				if (['create', 'update', 'delete'].includes(operation)) {
-					if (args.req.user) {
-						args.req.context.sites ??= await getUserSites(args.req.user.sites, args.req.user.shortName)
-					}
-					args.req.context.timeID ??= Date.now()
-					console.time(`<7>[time] [products] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation }) => beforeOperationHook('products', { args, operation })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					log('--- afterChange ---', user, __filename, 7)
-
-					context.site ??= await getRelatedDoc('sites', doc.site, user)
-					const site = context.site
-
-					/* init other locales */
-					if (operation === 'create') {
-						if (site.locales.used.length > 1 && site.locales.initOthers === true) {
-							for (const loc of site.locales.used) {
-								if (loc !== req.locale) {
-									const updatedDoc = await updateDocSingle('products', doc.id, user, {
-										data: doc,
-										locale: loc,
-									})
-								}
-							}
-						}
-					}
-
-					/* save this as own page */
-					if (doc.hasOwnPage) {
-						/* compose html */
-						const html = renderHTMLPage(req.locale, doc, user, {
-							header: await getDoc('headers', doc.elements.header, user, { depth: 0, locale: req.locale }),
-							nav: await getDoc('navs', doc.elements.nav, user, { depth: 0, locale: req.locale }),
-							footer: await getDoc('footers', doc.elements.footer, user, { depth: 0, locale: req.locale })
-						})
-
-						const destPath = `${site.paths.fs.site}/products/${doc.id}/${req.locale}/index.html` // <-- ATT: hard-coded value
-						await saveToDisk(destPath, html, user, { ctParentPath: true })
-					}
-
-					/* save collection to disk */
-					for (const loc of site.locales.used) {
-
-						const result = await getCol('products', user, {
-							depth: 1,
-							locale: loc,
-							where: {
-								site: { equals: site.id }
-							},
-						})
-
-						const webVersion = createWebVersion(result, req.user)
-						const destPath = `${site.paths.fs.products}/${loc}/products.json`
-						await saveToDisk(destPath, JSON.stringify(webVersion), user)
-					}
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			},
-		],
-		// --- afterDelete
-		afterDelete: [
-			async ({ req, doc, context }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					context.site ??= await getRelatedDoc('sites', doc.site, user)
-					const site = context.site
-
-					/* delete own page */
-					if (doc.hasOwnPage) {
-						const destPath = `${site.paths.fs.site}/products/${doc.id}/${req.locale}/index.html`
-						await rmFile(destPath, user, { recursive: true, throwErrorIfMissing: false })
-					}
-
-					/* save collection to disk */
-					for (const loc of site.locales.used) {
-
-						const result = await getCol('products', user, {
-							depth: 1,
-							locale: loc,
-							where: {
-								site: { equals: site.id }
-							},
-						})
-
-						const webVersion = createWebVersion(result, req.user)
-						const destPath = `${site.paths.fs.products}/${loc}/products.json`
-						await saveToDisk(destPath, JSON.stringify(webVersion), user)
-					}
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			},
+			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook('products', { req, doc, previousDoc, context, operation }),
 		],
 		// --- afterOperation
 		afterOperation: [
-			({ operation }) => {
-				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
-					console.timeEnd(`<7>[time] [products] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation, result }) => afterOperationHook('products', { args, operation, result })
 		],
 	},
 	fields: [
 		// --- editingMode
 		editingModeField,
+		initOtherLocaleField,
 		// --- TABS
 		{
 			type: 'tabs',

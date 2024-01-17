@@ -717,22 +717,6 @@ export const Sites = {
 										},
 									],
 								},
-								// --- site.locales.initOthers
-								{
-									type: 'checkbox',
-									name: 'initOthers',
-									label: {
-										de: 'Erste Sprachversion initialisiert alle anderen',
-										en: 'First language version initializes all others'
-									},
-									admin: {
-										description: {
-											de: 'Die Inhalte der ersten Sprachversion eines Beitrags/Posts werden auf alle anderen kopiert (und können dann angepasst/übersetzt werden).',
-											en: 'The contents of the first language version of a posts are copied to the other languages in order to serve as a starting point for translations.'
-										}
-									},
-									defaultValue: true,
-								},
 								// --- site.locales.updateOthers
 								{
 									type: 'checkbox',

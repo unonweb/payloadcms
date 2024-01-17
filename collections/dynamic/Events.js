@@ -28,6 +28,7 @@ import createAssetsFields from '../../fields/createAssetsFields';
 import afterOperationHook from './afterOperationHook';
 import beforeOperationHook from './beforeOperationHook';
 import afterChangeHook from './afterChangeHook';
+import initOtherLocaleField from '../../fields/initOtherLocaleField';
 
 export const Events = {
 	slug: 'events',
@@ -133,6 +134,7 @@ export const Events = {
 	fields: [
 		// --- editingMode
 		editingModeField,
+		initOtherLocaleField,
 		{
 			type: 'tabs',
 			tabs: [
