@@ -16,16 +16,14 @@ export default async function afterChangeHook(col = '', { req, doc, previousDoc,
 
 		context.site ??= await getRelatedDoc('sites', doc.site, user)
 		const site = context.site
-		
+
 		if (operation === 'create' && doc.initOtherLocale === true && site.locales.used.length > 1) {
 			/* init other locales */
-			for (const loc of site.locales.used) {
-				if (loc !== req.locale) {
-					const updatedDoc = await updateDocSingle(col, doc.id, user, {
-						data: doc,
-						locale: loc,
-					})
-				}
+			for (const loc of site.locales.used.filter(loc => loc !== req.locale)) {
+				const updatedDoc = await updateDocSingle(col, doc.id, user, {
+					data: doc,
+					locale: loc,
+				})
 			}
 		}
 
