@@ -128,10 +128,7 @@ export const Posts = {
 					}
 
 					if (data.hasOwnPage) {
-						data.html.head ??= await renderHTMLHead(data, site, user) // create post.html.head
-						if (data.description !== originalDoc?.description || data.title !== originalDoc.title) {
-							data.html.head = await renderHTMLHead(data, site, user) // update post.html.head
-						}
+						data.html.head = await renderHTMLHead(data, site, user) // update post.html.head (do it always, because in prod it's cheap)
 					}
 
 					return data
