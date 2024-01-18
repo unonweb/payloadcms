@@ -300,16 +300,16 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		if (block.blocks) {
 			defaultHTML = /* html */`
 				<ul class="content default">
-					${block.blocks.map(b => /* html */`<li>${render(b)}</li>`)}
+					${block.blocks.map(b => /* html */`<li>${render(b)}</li>`).join(' ')}
 				</ul>
 			`
 		}
-		
+
 		let offsetHTML = ''
 		if (block.enableSplit && block.offset.length > 0) {
 			offsetHTML = /* html */`
 				<ul class="content offset">
-					${block.offset.map(b => /* html */`<li>${render(b)}</li>`)}
+					${block.offset.map(b => /* html */`<li>${render(b)}</li>`).join(' ')}
 				</ul>
 			`
 		}
@@ -407,13 +407,19 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			(block.icon) ? `data-icon="${block.icon}"` : '',
 		].filter(item => item).join(' ')
 
-		let html = /* html */`
+		const innerHTML = block.languages.map(lang => {
+			const textContent = (lang === 'de') ? 'Deutsch' : (lang === 'en') ? 'English' : ''
+			return /* html */`
+				<li class="lang">
+					<button value="${lang}">${textContent}</button>
+				</li>`
+		}).join(' ')
+
+		const html = /* html */`
 			<un-lang-switch ${attributes}>
-				${block.languages.map(lang => {
-					let textContent = (lang === 'de') ? 'Deutsch' : (lang === 'en') ? 'English' : ''
-					return /* html */`
-						<button value="${lang}">${textContent}</button>`
-				}).join(' ')}
+				<ul class="content">
+					${innerHTML}
+				</ul>
 			</un-lang-switch>
 		`;
 
