@@ -13,7 +13,7 @@ const editingModeField = {
 	options: [
 		{
 			label: {
-				en: 'Content Focus',
+				en: 'Content',
 				de: 'Inhalt'
 			},
 			value: 'content'
@@ -42,7 +42,7 @@ const editingModeField = {
 		{
 			label: {
 				en: 'Experimental',
-				de: 'Experimentell'
+				de: 'Experimental'
 			},
 			value: 'experimental'
 		},
