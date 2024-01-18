@@ -378,7 +378,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		const attributes = [
 			(theme) ? `data-theme="${theme}"` : '',
 			(linkedDoc?.slug) ? `href="/${locale}/${linkedDoc.slug}/"` : '', // subpage; use trailing slash so that anchor.href matches window.location.href
-			(linkedDoc?.slug === '') ? `href=/${locale}/` : '', // homepage
+			(linkedDoc?.slug === '') ? `href="/${locale}/"` : '', // homepage
 		].filter(item => item).join(' ') // remove empty strings
 
 		let html = /* html */`
@@ -1285,7 +1285,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 					(img.alt) ? `alt="${img.alt}"` : '',
 					(img.height) ? `height="${img.height}"` : '',
 					(img.width) ? `width="${img.width}"` : '',
-					(slot) ? `slot=${slot}` : '',
+					(slot) ? `slot="${slot}"` : '',
 					(loading) ? `loading="${loading}"` : '',
 					(classes) ? `class="${classes}"` : '',
 					(slug) ? `id="${doc.slug}-${img.id}"` : `id="${doc.title.toLowerCase()}-${img.id}"` // slug is undefined for posts
@@ -1293,9 +1293,9 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 
 				html = /* html */`
 					<img
-						src=${imgSrc}
+						src="${imgSrc}"
 						srcset="${imgOrgSrc}${img1920Src}${img1600Src}${img1366Src}${img1024Src}${img768Src}${img640Src}"
-						sizes=${sizes}
+						sizes="${sizes}"
 						${attributes}
 					>
 				`;
