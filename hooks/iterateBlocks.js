@@ -296,15 +296,28 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			(block.enableSplit) ? `data-split="${block.enableSplit}"` : '',
 		].filter(item => item).join(' ')
 
+		let defaultHTML = ''
+		if (block.blocks) {
+			defaultHTML = /* html */`
+				<ul class="content default">
+					${block.blocks.map(b => /* html */`<li>${render(b)}</li>`)}
+				</ul>
+			`
+		}
+		
+		let offsetHTML = ''
+		if (block.enableSplit && block.offset.length > 0) {
+			offsetHTML = /* html */`
+				<ul class="content offset">
+					${block.offset.map(b => /* html */`<li>${render(b)}</li>`)}
+				</ul>
+			`
+		}
+
 		const html = /* html */`
 			<un-nav ${attributes}>
-				<slot name="default">
-					${block.blocks ? render(block.blocks) : ''}
-				</slot>
-				${(block.enableSplit && block.offset.length > 0) 
-					? /* html */`<slot name="offset">${render(block.offset)}</slot>` 
-					: ''
-				}
+				${defaultHTML}
+				${offsetHTML}
 			</un-nav>
 		`
 
@@ -338,8 +351,8 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		// * called by un-menu-bar
 
 		const attributes = [
-			(block.slot) ? `slot=${block.slot}` : '',
-			(block.link.url) ? `href=${block.link.url}` : '', // startpage
+			(block.slot) ? `slot="${block.slot}"` : '',
+			(block.link.url) ? `href="${block.link.url}"` : '', // startpage
 			(theme) ? `data-theme="${theme}"` : '',
 			(slug) ? `data-page="${slug}"` : '',
 		].filter(item => item).join(' ')
@@ -381,9 +394,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			(linkedDoc?.slug === '') ? `href="/${locale}/"` : '', // homepage
 		].filter(item => item).join(' ') // remove empty strings
 
-		let html = /* html */`
-			<a ${attributes}>${title}</a>
-		`
+		let html = /* html */`<a ${attributes}>${title}</a>`
 
 		return html
 	}
