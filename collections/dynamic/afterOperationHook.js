@@ -22,20 +22,34 @@ export default async function afterOperationHook(col = '', { args, operation, re
 			args.req.context.site ??= await getRelatedDoc('sites', doc.site, user)
 			const site = args.req.context.site
 
-			/* save all contents to disk */
-			for (const loc of site.locales.used) {
+			/* save this locale col.json to disk */
+			const res = await getCol(col, user, {
+				depth: 1,
+				locale: args.req.locale,
+				where: {
+					site: { equals: site.id }
+				},
+			})
 
-				const res = await getCol(col, user, {
-					depth: 1,
-					locale: loc,
-					where: {
-						site: { equals: site.id }
-					},
-				})
+			const webVersion = createWebVersion(col, res.docs, args.req.locale, args.req.user)
+			const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${args.req.locale}/${col}.json`
+			await saveToDisk(destPath, JSON.stringify(webVersion), user)
 
-				const webVersion = createWebVersion(col, res.docs, loc, args.req.user)
-				const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/${col}.json`
-				await saveToDisk(destPath, JSON.stringify(webVersion), user)
+			/* save additional locale col.json to disk */
+			if (['delete', 'deleteByID'].includes(operation)) {
+				for (const loc of site.locales.used.filter(loc => loc !== args.req.locale)) {
+					const res = await getCol(col, user, {
+						depth: 1,
+						locale: loc,
+						where: {
+							site: { equals: site.id }
+						},
+					})
+
+					const webVersion = createWebVersion(col, res.docs, loc, args.req.user)
+					const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/${col}.json`
+					await saveToDisk(destPath, JSON.stringify(webVersion), user)
+				}
 			}
 		}
 
