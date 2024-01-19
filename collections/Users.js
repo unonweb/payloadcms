@@ -66,7 +66,7 @@ export const Users = {
 					if (user?.sites) {
 						for (let site of user.sites) {
 							site = await getRelatedDoc('sites', site, user.shortName)
-							await cleanUpSite(site, req.languages, user.shortName)
+							await cleanUpSite(site, user.shortName)
 						}	
 					}
 				} catch (err) {
@@ -83,7 +83,7 @@ export const Users = {
 					if (req?.user?.sites) {
 						for (let site of req.user.sites) {
 							site = await getRelatedDoc('sites', site, req.user.shortName)
-							await cleanUpSite(site, req.languages, req.user.shortName)
+							await cleanUpSite(site, req.user.shortName)
 							spawnCmd('npx', ['-g', 'netlify', 'deploy', '--prod', '--auth', 'nfp_oEkc5bNNLWFDckQLS5xyTcrNzChCqnUi8ce4', '--site', 'haerer-geruestbau', '--dir', site.paths.fs.site], req.user.shortName)
 						}
 					}

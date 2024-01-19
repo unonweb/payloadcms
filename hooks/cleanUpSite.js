@@ -7,7 +7,7 @@ import canAccess from './_canAccess'
 import getAppMode from './_getAppMode'
 import isDirectory from './_isDirectory'
 
-export default async function cleanUpSite(site = {}, locales = [], user = '', {
+export default async function cleanUpSite(site = {}, user = '', {
 	cleanUpPages = true,
 	cleanUpFonts = true,
 	cleanUpImgs = true,
@@ -95,7 +95,7 @@ export default async function cleanUpSite(site = {}, locales = [], user = '', {
 			// remove page files
 			const pageSlugs = pages.docs.map(doc => doc.slug) // slugs or not localized
 
-			for (const loc of locales) {
+			for (const loc of site.locales.used) {
 				
 				const pathSiteLocale = `${pathSite}/${loc}`
 
