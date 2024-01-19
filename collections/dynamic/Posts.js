@@ -111,7 +111,7 @@ export const Posts = {
 							pages: pages.docs, // collection data
 						})
 
-						for (const path of libPathsWeb) {
+						/* for (const path of libPathsWeb) {
 							// '/assets/lib/leaflet-1.9.4.css'
 							// '/assets/custom-elements/un-map-leaflet.js'
 							if (path.startsWith('/assets/lib/')) {
@@ -120,7 +120,7 @@ export const Posts = {
 								const src = `${site.paths.fs.admin.resources}${path}`
 								await cpFile(src, dest, user, { overwrite: false, ctParentPath: true })
 							}
-						}
+						} */
 
 						data.html.main = html // update post.html.main
 						data.assets.imgs = imgFiles // update post.assets.imgs
