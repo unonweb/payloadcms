@@ -55,7 +55,8 @@ export const Footers = {
 						/* default values */
 						if (!data.title) {
 							const user = req?.user?.shortName ?? 'internal'
-							const site = await getRelatedDoc('sites', data.site, user)
+							context.site ??= await getRelatedDoc('sites', data.site, user)
+							const site = context.site
 							data.title = `${(data.blocks && data.blocks.length > 0) ? data.blocks[0].blockType : 'default'} (${site.domainShort})` // title of this menu
 						}
 

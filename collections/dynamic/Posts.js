@@ -68,7 +68,8 @@ export const Posts = {
 					const user = req?.user?.shortName ?? 'internal'
 					log('--- beforeChange ---', user, __filename, 7)
 
-					context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : await getRelatedDoc('sites', data.site, user)
+					context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
+					context.site ??= await getRelatedDoc('sites', data.site, user)
 					const site = context.site
 
 					if (data.blocks && data.blocks.length > 0) {

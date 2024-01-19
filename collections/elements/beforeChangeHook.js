@@ -9,7 +9,8 @@ export default async function beforeChangeHook(col = '', { data, req, operation,
 
 	try {
 		const user = req?.user?.shortName ?? 'internal'
-		context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : await getRelatedDoc('sites', data.site, user)
+		context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
+		context.site ??= await getRelatedDoc('sites', data.site, user)
 		const site = context.site
 		const mode = getAppMode()
 		log('--- beforeChange ---', user, __filename, 7)

@@ -4,9 +4,6 @@ import { isLoggedIn } from "../../access/isLoggedIn.js";
 
 /* HOOKS & HELPERS */
 import isAdminOrHasCreated from '../../access/isAdminOrHasCreated.js';
-import cpFile from '../../hooks/_cpFile.js';
-import canAccess from '../../hooks/_canAccess.js';
-import getRelatedDoc from '../../hooks/getRelatedDoc.js';
 import setFilenameToMd5 from '../../hooks/setFilenameToMd5.js';
 import mailError from '../../mailError.js';
 

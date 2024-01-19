@@ -76,6 +76,7 @@ export const Events = {
 						// seems to work with bulk operations, too
 
 						/* iterate blocks */
+						context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
 						context.site ??= await getRelatedDoc('sites', data.site, user)
 						const site = context.site
 
