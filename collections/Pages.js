@@ -119,17 +119,14 @@ export const Pages = {
 						const user = req?.user?.shortName ?? 'internal'
 						log('--- beforeChange ---', user, __filename, 7)
 						const mode = getAppMode()
-						context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : await getRelatedDoc('sites', data.site, user)
+						context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
+						context.site ??= await getRelatedDoc('sites', data.site, user)
 						const site = context.site
 						const pathSite = `${site.paths.fs.site}/${mode}`
 
 						/* render html.main from blocks and update assets */
 						if (data.main.blocks && data.main.blocks.length > 0) {
-							if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {
-								// data contains the current values
-								// originalDoc contains the previous values
-								// seems to work with bulk operations, too
-							}
+							//if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {}
 
 							/* iterate blocks */
 
@@ -158,17 +155,6 @@ export const Pages = {
 								pages: pages.docs,
 							})
 
-							for (const path of libPathsWeb) {
-								// '/assets/lib/leaflet-1.9.4.css'
-								// '/assets/custom-elements/un-map-leaflet.js'
-								if (path.startsWith('/assets/lib/')) {
-									// only care about lib files because separate c-elements files are copied via a standalone script
-									const dest = `${pathSite}${path}`
-									const src = `${site.paths.fs.admin.resources}${path}`
-									await cpFile(src, dest, user, { overwrite: false, ctParentPath: true })
-								}
-							}
-
 							/* update page */
 							data.html.main = html // update page.html.main
 							data.assets.imgs = imgFiles // update page.assets.imgs
@@ -195,20 +181,14 @@ export const Pages = {
 				try {
 					const user = req?.user?.shortName ?? 'internal'
 					log('--- afterChange ---', user, __filename, 7)
-					context.site ??= (typeof doc.site === 'string' && context.sites) ? context.sites.find(item => item.id === doc.site) : await getRelatedDoc('sites', doc.site, user)
+					context.site ??= (typeof doc.site === 'string' && context.sites) ? context.sites.find(item => item.id === doc.site) : null 
+					context.site ??= await getRelatedDoc('sites', doc.site, user)
 					const site = context.site
 					const mode = getAppMode()
 					const pathSite = `${site.paths.fs.site}/${mode}`
 					const defLang = site.locales.default
 
-					if (mode === 'dev' || doc.html !== previousDoc.html || doc.title !== previousDoc.title || doc.description !== previousDoc.description || doc.isHome !== previousDoc.isHome || doc.header !== previousDoc.header || doc.nav !== previousDoc.nav || doc.footer !== previousDoc.footer) {
-						// something has changed...
-						// Tasks:
-						// * get all elements (header, nav, footer) that compose this page
-						// * create a list of all assets required by this page
-						// * add page assets to web space
-						// * all obsolete files will be cleaned up in the logout hook
-					}
+					//if (mode === 'dev' || doc.html !== previousDoc.html || doc.title !== previousDoc.title || doc.description !== previousDoc.description || doc.isHome !== previousDoc.isHome || doc.header !== previousDoc.header || doc.nav !== previousDoc.nav || doc.footer !== previousDoc.footer) {}
 
 					/* elements html */
 					const header = (doc.header) ? await getDoc('headers', doc.header, user, { depth: 0, locale: req.locale }) : null
@@ -558,8 +538,6 @@ export const Pages = {
 										try {
 											const user = req?.user?.shortName ?? 'internal'
 											log('--- beforeChange [url] ---', user, __filename, 7)
-											//context.site ??= await getRelatedDoc('sites', data.site, user)
-											//const site = context.site
 
 											if (data.isHome === true) {
 												return '/'
