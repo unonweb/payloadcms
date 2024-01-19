@@ -7,8 +7,8 @@ const initOtherLocaleField = {
 	},
 	admin: {
 		description: {
-			de: 'Die Inhalte der ersten Sprachversion einer Seite werden auf alle anderen kopiert (und können dann angepasst/übersetzt werden).',
-			en: 'The contents of the first language version of a posts are copied to the other languages in order to serve as a starting point for translations.'
+			de: 'Bei der Erstellung werden die Inhalte dieser Sprachversion zu allen anderen kopiert',
+			en: 'After creation the contents of this language version are copied to all others'
 		},
 		position: 'sidebar',
 	},
