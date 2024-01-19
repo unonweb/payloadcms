@@ -29,13 +29,15 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 			cElementFilesCSS = dirContent.filter(fn => fn.endsWith('.css') && fn.startsWith('un-')) // includes all themes/domains
 		}
 
-		/* prod */
-		// lib & separate c-element files
+		/* lib & separate c-element files */
 		const pathsLibFilesJS = (page.assets.head?.length > 0) ? page.assets.head.filter(fn => fn.endsWith('.js')) : []
 		const pathsLibFilesCSS = (page.assets.head?.length > 0) ? page.assets.head.filter(fn => fn.endsWith('.css')) : [] // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
+
+		/* prod */
 		if (mode === 'prod') {
-			if (!await canAccess(`${webPathCElements}/bundle-celements.js`)) log(`Cant't access "${fsPathCElements}/bundle-celements.js"`, user, __filename, 3)
-			if (!await canAccess(`${webPathCElements}/bundle-celements.css`)) log(`Cant't access "${fsPathCElements}/bundle-celements.css"`, user, __filename, 3)
+			// check local fs asset paths
+			if (!await canAccess(`${fsPathCElements}/bundle-celements.js`)) log(`Cant't access "${fsPathCElements}/bundle-celements.js"`, user, __filename, 3)
+			if (!await canAccess(`${fsPathCElements}/bundle-celements.css`)) log(`Cant't access "${fsPathCElements}/bundle-celements.css"`, user, __filename, 3)
 			if (!await canAccess(`${fsPathAssets}/site.css`)) log(`Cant't access "${fsPathAssets}/site.css"`, user, __filename, 3)
 		}
 
@@ -62,19 +64,19 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<link rel="canonical" href="https://${site.domain}${page.url}"/>
 				${hrefLangHTML}
+				
 				<!--- ALWAYS --->
 				${(pathsLibFilesCSS.length > 0)
-				// '/assets/lib/leaflet-1.9.4.css'
-				// need to include separately for dev mode, too
-				? pathsLibFilesCSS.map(path => `<link rel="stylesheet" type="text/css" href="${path}">`).join(' ')
-				: ''
-			}
-
+					// '/assets/lib/leaflet-1.9.4.css'
+					// need to include separately for dev mode, too
+					? pathsLibFilesCSS.map(path => /* html */`<link rel="stylesheet" type="text/css" href="${path}">`).join(' ')
+					: ''
+				}
 				${(mode === 'prod' && pathsLibFilesJS.length > 0)
-				// in dev mode the js deps are included from 'https://resources.unonweb.local/custom-elements/prod/'
-				? pathsLibFilesJS.map(path => /* html */`<script type="module" src="${path}"></script>`).join(' ')
-				: ''
-			}
+					// in dev mode the js deps are included from 'https://resources.unonweb.local/custom-elements/prod/'
+					? pathsLibFilesJS.map(path => /* html */`<script type="module" src="${path}"></script>`).join(' ')
+					: ''
+				}
 				${(mode === 'prod')
 				? /* html */`
 							<!--- PROD ASSETS --->
