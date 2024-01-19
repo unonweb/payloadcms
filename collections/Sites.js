@@ -447,24 +447,31 @@ export const Sites = {
 										{
 											type: 'group',
 											name: 'origin',
+											label: 'site.paths.web.origin',
 											fields: [
 												// --- site.paths.web.origin.dev
+												//  * used for hreflang
 												{
 													type: 'text',
 													name: 'dev',
+													label: 'site.paths.web.origin.dev',
 													required: false,
 													admin: {
-														placeholder: 'http://<domain>.local'
+														placeholder: 'http://localhost:8003',
+														description: 'No trailing slash!'
 													},
 													validate: (value, { payload }) => exists(value, payload)
 												},
 												// --- site.paths.web.origin.prod
+												//  * used for hreflang
 												{
 													type: 'text',
 													name: 'prod',
+													label: 'site.paths.web.origin.prod',
 													required: false,
 													admin: {
-														placeholder: 'https://<domain>.de'
+														placeholder: 'https://<domain>.de',
+														description: 'No trailing slash!'
 													},
 													validate: (value, { payload }) => exists(value, payload),
 												},
@@ -638,6 +645,20 @@ export const Sites = {
 							admin: {
 								hidden: true
 							}
+						},
+						// --- site.urls
+						//  * updated by page
+						//  * object with key = page.id and value = page.url
+						/* 	{ 
+								"65534215e9026f928a66c756": {
+									de: "/de/veroffentlichungen" 
+							} 
+						*/
+						{
+							type: 'json',
+							name: 'urls',
+							label: 'site.urls',
+							defaultValue: {},
 						},
 					]
 				},
@@ -831,7 +852,7 @@ export const Sites = {
 							defaultValue: defaultUserCSS
 						},
 						// --- site.backend
-						{
+						/* {
 							type: 'group',
 							name: 'backend',
 							label: {
@@ -863,7 +884,7 @@ export const Sites = {
 									},
 								},
 							]
-						},
+						}, */
 					]
 				},
 			]

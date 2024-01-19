@@ -114,7 +114,6 @@ export const Pages = {
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => {
 				try {
-
 					if (!context.updatedByPageElement) {
 						const user = req?.user?.shortName ?? 'internal'
 						log('--- beforeChange ---', user, __filename, 7)
@@ -160,9 +159,6 @@ export const Pages = {
 							data.assets.imgs = imgFiles // update page.assets.imgs
 							data.assets.docs = docFiles	// update page.assets.docs
 							data.assets.head = libPathsWeb // update page.assets.head
-							if (site.locales.used.length > 1) {
-								data.assets.otherURLs = pages.docs.filter(p => (p.url !== data.url && p.url.replace(/\/(de|en|es)\//, '') === data.url.replace(/\/(de|en|es)\//, ''))) // <-- ATT: hard-coded locales	
-							}
 						}
 						
 						data.html.head = await renderHTMLHead(data, site, user) // update page.html.head; is called even if there's no doc.main.html
@@ -286,13 +282,26 @@ export const Pages = {
 					}
 
 					/* sites */
-					// make sure that user.css and fonts.css are there
+					// update site.urls
+					if (mode === 'dev' || operation === 'create' || doc.url !== previousDoc.url) {
+						
+						site.urls[doc.id] ??= {}
+						site.urls[doc.id][req.locale] = doc.url
+
+						updateDocSingle('sites', site.id, user, {
+							data: {
+								urls: site.urls
+							}
+						})
+					}
+
+					// update site if 'user.css' or 'fonts.css' are missing
 					if (!await canAccess(`${pathSite}/assets/fonts.css`) || !await canAccess(`${pathSite}/assets/user.css`)) {
 						updateDocSingle('sites', site.id, user, {
 							data: {
 								updatedBy: `pages-${Date.now()}`
-							},
-						})
+							}
+						})	
 					}
 
 				} catch (err) {
@@ -315,7 +324,15 @@ export const Pages = {
 						const site = context.site
 
 						if (site) {
+							// if site still exists
 							// if afterDelete is triggered because site is deleted - there won't be not site anymore (surprise!)
+							delete site.urls[doc.id]
+	
+							updateDocSingle('sites', site.id, user, {
+								data: {
+									urls: site.urls
+								}
+							})
 						}
 					}
 				} catch (err) {
