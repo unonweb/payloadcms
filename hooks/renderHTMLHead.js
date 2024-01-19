@@ -153,8 +153,8 @@ function getOrigin(mode = '', site = {}) {
 			if (mode === 'prod') return site.paths.web.origin.prod
 			break
 		case 'strato':
-			return `https://${domain}`
+			return `https://${site.domain}`
 		default:
-			return `https://${domain}`
+			return `https://${site.domain}`
 	}
 }
