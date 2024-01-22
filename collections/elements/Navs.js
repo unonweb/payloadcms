@@ -16,7 +16,6 @@ import mailError from '../../mailError';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
-import getUserSites from '../../hooks/getUserSites';
 import afterChangeHook from './afterChangeHook';
 import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
