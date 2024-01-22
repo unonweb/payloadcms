@@ -6,6 +6,11 @@ import getRelatedDoc from '../../hooks/getRelatedDoc'
 import log from '../../customLog'
 
 export default async function beforeChangeHook(col = '', { data, req, operation, originalDoc, context }) {
+	/* 
+		update:
+		- data.html
+		- data.assets.imgs
+	*/
 
 	try {
 		const user = req?.user?.shortName ?? 'internal'
