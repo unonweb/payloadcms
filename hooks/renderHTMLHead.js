@@ -148,7 +148,7 @@ function getAltLocaleURLs(pageURL = '', allURLs = []) {
 
 function getOrigin(mode = '', site = {}) {
 	switch (process.env.HOST) {
-		case 'frida':
+		case 'lem':
 			if (mode === 'dev') return site.paths.web.origin.dev
 			if (mode === 'prod') return site.paths.web.origin.prod
 			break
