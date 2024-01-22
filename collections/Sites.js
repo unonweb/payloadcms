@@ -145,9 +145,9 @@ export const Sites = {
 						data.paths.fs.admin.sites = admin.paths.fs.sites
 						data.paths.fs.admin.customElements = admin.paths.fs.customElements
 
-						// fonts
-						data.fonts.body ??= await getRandomDocID('fonts', user.shortName)
-						data.fonts.headings ??= await getRandomDocID('fonts', user.shortName)
+						// init fonts
+						data.fonts.body ??= await getRandomDocID('fonts', user)
+						data.fonts.headings ??= await getRandomDocID('fonts', user)
 
 						// update site paths
 						data = initSitePaths(data)
@@ -171,12 +171,12 @@ export const Sites = {
 					log('--- beforeChange ---', user, __filename, 7)
 
 					/* update data.assets.fonts */
-					const fontBody = await getRelatedDoc('fonts', data.fonts.body, user, { depth: 0 })
-					const fontHeadings = await getRelatedDoc('fonts', data.fonts.headings, user, { depth: 0 })
+					const fontBody = (data.fonts?.body) ? await getRelatedDoc('fonts', data.fonts.body, user, { depth: 0 }) : null
+					const fontHeadings = (data.fonts?.headings) ? await getRelatedDoc('fonts', data.fonts.headings, user, { depth: 0 }) : null
 
 					data.assets.fonts = [
-						fontBody.filename ?? '',
-						fontHeadings.filename ?? ''
+						fontBody?.filename ?? '',
+						fontHeadings?.filename ?? ''
 					]
 
 					const fontFaces = [
@@ -188,7 +188,7 @@ export const Sites = {
 					data.fonts.css = createFontCSS(fontFaces, fontBody, fontHeadings)
 
 					/* update data.css */
-					if (hasChanged(data.colors, originalDoc.colors, user)) {
+					if (hasChanged(data.colors, originalDoc?.colors, user)) {
 						let newCSS
 						newCSS = updateCSSObj(data.css, 'html', '--primary', data.colors.primary)
 						newCSS = updateCSSObj(newCSS, 'html', '--secondary', data.colors.secondary)
@@ -219,7 +219,7 @@ export const Sites = {
 					const pathSite = `${doc.paths.fs.site}/${mode}`
 
 					/* cp font files */
-					await cpAssets(`${process.cwd()}/upload/fonts`, `${pathSite}/assets`, doc.assets.fonts)
+					await cpAssets(`${process.cwd()}/upload/fonts`, `${pathSite}/assets`, doc.assets.fonts, user)
 
 					/* write font.css */
 					if (doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
@@ -252,7 +252,7 @@ export const Sites = {
 
 						/* INIT PAYLOAD */
 						// needs to be run in afterChange hook because before this site has no id yet
-						if (initPayload) {
+						if (false) {
 							// disabled currently !!!
 							const header = await createDoc('headers', user, {
 								locale: doc.locales.default,
@@ -739,7 +739,7 @@ export const Sites = {
 											de: 'Achtung: Das Entfernen einer Sprache führt dazu, dass alle Webpages in dieser Sprache entfernt werden.'
 										}
 									},
-									validate: (value, { data }) => value.includes(data.locales.default) ? true : `You can't remove the default language`,
+									validate: (value, { data }) => (value && !value.includes(data.locales.default)) ? `You can't remove the default language` : true,
 									options: [
 										{
 											label: 'Deutsch',
