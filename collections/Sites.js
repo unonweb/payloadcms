@@ -18,7 +18,6 @@ import createDoc from '../hooks/_createDoc';
 import rmDocs from '../hooks/rmDocs';
 import hasChanged from '../hooks/_hasChanged';
 import rmFile from '../hooks/_rmFile';
-import cpFile from '../hooks/_cpFile';
 import initSitePaths from '../hooks/initSitePaths';
 import resolveObjPath from '../hooks/_resolveObjPath';
 import getRandomDocID from '../hooks/getRandomDocID';
@@ -29,6 +28,7 @@ import cpAssets from '../hooks/_cpAssets';
 import getAppMode from '../hooks/_getAppMode';
 import canAccess from '../hooks/_canAccess';
 import capitalizeWords from '../hooks/_capitalizeWords';
+import updateDocsMany from '../hooks/updateDocsMany';
 
 const defaultUserCSS = {
 	"html": {
@@ -144,7 +144,7 @@ export const Sites = {
 						data.paths.web.admin.resources = admin.paths.web.resources
 						data.paths.fs.admin.sites = admin.paths.fs.sites
 						data.paths.fs.admin.customElements = admin.paths.fs.customElements
-						
+
 						// fonts
 						data.fonts.body ??= await getRandomDocID('fonts', user.shortName)
 						data.fonts.headings ??= await getRandomDocID('fonts', user.shortName)
@@ -193,6 +193,11 @@ export const Sites = {
 						newCSS = updateCSSObj(data.css, 'html', '--primary', data.colors.primary)
 						newCSS = updateCSSObj(newCSS, 'html', '--secondary', data.colors.secondary)
 						data.css = newCSS
+					}
+
+					if (data.fullUpdate) {
+						context.fullUpdate = true
+						data.fullUpdate = false
 					}
 
 					return data
@@ -278,6 +283,42 @@ export const Sites = {
 									footer: footer.id
 								}
 							}) */
+						}
+					}
+
+					/* full update */
+					if (context.fullUpdate) {
+						for (const loc of doc.locales.used) {
+							// update pages
+							await updateDocsMany('pages', user, {
+								where: {
+									site: { equals: doc.id }
+								},
+								data: { updatedBy: `sites-${Date.now()}` },
+								depth: 0,
+								locale: loc,
+								context: { site: doc }
+							})
+							// update navs
+							await updateDocsMany('navs', user, {
+								where: {
+									site: { equals: doc.id }
+								},
+								data: { updatedBy: `sites-${Date.now()}` },
+								depth: 0,
+								locale: loc,
+								context: { site: doc }
+							})
+							// update headers
+							await updateDocsMany('headers', user, {
+								where: {
+									site: { equals: doc.id }
+								},
+								data: { updatedBy: `sites-${Date.now()}` },
+								depth: 0,
+								locale: loc,
+								context: { site: doc }
+							})
 						}
 					}
 
@@ -896,7 +937,7 @@ export const Sites = {
 		// --- editingMode
 		editingModeField,
 		// --- freezeSite
-		{
+		/* {
 			type: 'checkbox',
 			name: 'freezeSite',
 			defaultValue: false,
@@ -906,6 +947,16 @@ export const Sites = {
 					en: '',
 					de: 'Verhindert, dass die Seite beim Logout hochgeladen wird.'
 				}
+			}
+		}, */
+		// --- site.fullUpdate
+		{
+			type: 'checkbox',
+			name: 'fullUpdate',
+			defaultValue: false,
+			admin: {
+				position: 'sidebar',
+				condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 			}
 		},
 	]
