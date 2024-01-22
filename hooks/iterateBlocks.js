@@ -790,10 +790,11 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 							href = node.fields.url	
 							break
 						case 'internal':
+							let linkedDoc = {}
 							switch (node.fields.doc.relationTo) {
 								// link -> pages
 								case 'pages':
-									const linkedDoc = pages.find(page => (typeof node.fields.doc.value === 'string') 
+									linkedDoc = pages.find(page => (typeof node.fields.doc.value === 'string') 
 										? page.id === node.fields.doc.value 
 										: page.id === node.fields.doc.value.id
 									)
@@ -806,7 +807,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 									break;
 								// link -> documents
 								case 'documents':
-									const linkedDoc = documents.find(doc => (typeof node.fields.doc.value === 'string') 
+									linkedDoc = documents.find(doc => (typeof node.fields.doc.value === 'string') 
 										? doc.id === node.fields.doc.value 
 										: doc.id === node.fields.doc.value.id
 									)
@@ -817,7 +818,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 									break
 								// link -> images
 								case 'images':
-									const linkedDoc = images.find(img => (typeof node.fields.doc.value === 'string') 
+									linkedDoc = images.find(img => (typeof node.fields.doc.value === 'string') 
 										? img.id === node.fields.doc.value
 										: img.id === node.fields.doc.value.id
 									)
