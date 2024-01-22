@@ -15,7 +15,6 @@ import getDoc from '../../hooks/getDoc';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import iterateBlocks from '../../hooks/iterateBlocks';
 import getCol from '../../hooks/_getCol';
-import cpFile from '../../hooks/_cpFile';
 import hasChanged from '../../hooks/_hasChanged';
 import createElementsFields from '../../fields/createPageElementsField';
 import renderHTMLHead from '../../hooks/renderHTMLHead';
