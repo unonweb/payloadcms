@@ -20,7 +20,8 @@ const nav = {
 					name: 'enableSplit',
 					defaultValue: false,
 					admin: {
-						width: '25%'
+						width: '25%',
+						condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 					}
 				},
 			]
@@ -34,7 +35,8 @@ const nav = {
 					name: 'sticky',
 					defaultValue: 'false',
 					admin: {
-						width: '25%'
+						width: '25%',
+						condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 					},
 					options: ['true', 'false', 'smart']
 				},
@@ -44,7 +46,8 @@ const nav = {
 					name: 'isDropDown',
 					defaultValue: 'false',
 					admin: {
-						width: '25%'
+						width: '25%',
+						condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 					},
 					options: ['breakpoint', 'false', 'true']
 				},
