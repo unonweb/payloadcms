@@ -8,6 +8,7 @@ import mailError from '../../mailError'
 export default async function afterChangeHook(col = '', { req, doc, previousDoc, operation, context }) {
 	try {
 		const user = req?.user?.shortName ?? 'internal'
+		const host = process.env.HOST
 		context.site ??= await getRelatedDoc('sites', doc.site, user)
 		context.updatedBy = `${col}` // currently not used
 		context.updatedByPageElement = true
@@ -37,7 +38,7 @@ export default async function afterChangeHook(col = '', { req, doc, previousDoc,
 		}
 
 		/* update pages */
-		if (mode === 'dev' || doc.html !== previousDoc.html) {
+		if (host === 'lem' || doc.html !== previousDoc.html) {
 			//  || doc?.imgs?.toSorted()?.toString() !== previousDoc?.imgs?.toSorted()?.toString()
 			if (operation === 'update') {
 				// doesn't make sense during creating as it can't be referenced by a page at this point

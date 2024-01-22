@@ -12,11 +12,12 @@ export default async function beforeChangeHook(col = '', { data, req, operation,
 		context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
 		context.site ??= await getRelatedDoc('sites', data.site, user)
 		const site = context.site
+		const host = process.env.HOST
 		const mode = getAppMode()
 		log('--- beforeChange ---', user, __filename, 7)
 
 		if (data.blocks && data.blocks.length > 0) {
-			if (mode === 'dev' || operation === 'create' || (operation === 'update' && hasChanged(data.blocks, originalDoc?.blocks, user))) {
+			if (host === 'lem' || operation === 'create' || (operation === 'update' && hasChanged(data.blocks, originalDoc?.blocks, user))) {
 
 				/* iterate blocks */
 				const images = await getCol('images', user, {
