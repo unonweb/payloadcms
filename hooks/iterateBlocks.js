@@ -783,32 +783,44 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 				// --- link
 				case 'link':
 
-					let href
+					let href = ''
 					// --- linkType
 					switch (node.fields.linkType) {
 						case 'custom':
 							href = node.fields.url	
 							break
 						case 'internal':
-							let linkedDoc = {}
 							switch (node.fields.doc.relationTo) {
+								// link -> pages
 								case 'pages':
-									linkedDoc = pages.find(page => page.id === node.fields.doc.value)
+									const linkedDoc = pages.find(page => (typeof node.fields.doc.value === 'string') 
+										? page.id === node.fields.doc.value 
+										: page.id === node.fields.doc.value.id
+									)
 									href = linkedDoc.url
 									break;
+								// link -> posts
 								case 'posts':
-										// linkedDoc = await getDoc('posts', node.fields.doc.value, user, { depth: 0, locale: locale }) <-- FIX!
-										log('Link to posts in rich-text not implemented yet', user, __filename, 5)
-										break;
+									// const linkedDoc = await getDoc('posts', node.fields.doc.value, user, { depth: 0, locale: locale }) <-- FIX!
+									log('Link to posts in rich-text not implemented yet', user, __filename, 5)
+									break;
+								// link -> documents
 								case 'documents':
-									linkedDoc = documents.find(doc => doc.id === node.fields.doc.value)
+									const linkedDoc = documents.find(doc => (typeof node.fields.doc.value === 'string') 
+										? doc.id === node.fields.doc.value 
+										: doc.id === node.fields.doc.value.id
+									)
 									if (linkedDoc?.filename) {
 										docFiles.push(linkedDoc.filename)
 										href = `${pathWebDocs}/${linkedDoc.filename}`
 									}
 									break
+								// link -> images
 								case 'images':
-									linkedDoc = images.find(img => img.id === node.fields.doc.value)
+									const linkedDoc = images.find(img => (typeof node.fields.doc.value === 'string') 
+										? img.id === node.fields.doc.value
+										: img.id === node.fields.doc.value.id
+									)
 									if (linkedDoc?.filename) {
 										imgFiles.push(linkedDoc.filename)
 										href = `${pathWebImgs}/${linkedDoc.filename}`
