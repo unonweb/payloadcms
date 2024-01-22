@@ -168,6 +168,7 @@ export const Pages = {
 
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
+					mailError(err, req)
 				}
 			}
 		],
@@ -191,7 +192,7 @@ export const Pages = {
 					const nav = (doc.nav) ? await getDoc('navs', doc.nav, user, { depth: 0, locale: req.locale }) : null
 					const footer = (doc.footer) ? await getDoc('footers', doc.footer, user, { depth: 0, locale: req.locale }) : null
 
-					/* site assets */
+					/* assets */
 					// --------------------
 					const docFilesUnique = Array.from(new Set(
 						[
@@ -283,7 +284,7 @@ export const Pages = {
 
 					/* sites */
 					// update site.urls
-					if (mode === 'dev' || operation === 'create' || doc.url !== previousDoc.url) {
+					if (operation === 'create' || doc.url !== previousDoc.url) {
 						
 						site.urls[doc.id] ??= {}
 						site.urls[doc.id][req.locale] = doc.url
