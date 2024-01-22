@@ -9,7 +9,7 @@ export default function hasChanged(a, b, user = '', { ignoreKeys = [], method = 
 	
 	if (typeof b === 'undefined') {
 		hasChanged === true
-		log(`previousDoc is undefined`, '', __filename, 7)
+		log(`previousDoc is undefined`, user, __filename, 7)
 	}
 	else {
 		hasChanged = !areObjEqual(a, b, ignoreKeys, user, { method: method })
