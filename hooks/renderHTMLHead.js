@@ -78,37 +78,37 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 					: ''
 				}
 				${(mode === 'prod')
-				? /* html */`
-							<!--- PROD ASSETS --->
-							<link href="${webPathAssets}/site.css" rel="stylesheet" type="text/css">
-							<style>${await readFile(`${fsPathAssets}/user.css`, 'utf-8')}</style>
-							<style>${await readFile(`${fsPathAssets}/fonts.css`, 'utf-8')}</style>
-							<script src=${`${webPathCElements}/bundle-celements.js`} type="module"></script>
-							<link href="${`${webPathCElements}/bundle-celements.css`}" rel="stylesheet" type="text/css">`
-				// inline "user.css" (will not be cached)
-				// inline "font.css" (will not be cached)
-				// link 'bundle.js' 
-				// link 'bundle.css'
-				: ''
-			}
+					? /* html */`
+						<!--- PROD ASSETS --->
+						<link href="${webPathAssets}/site.css" rel="stylesheet" type="text/css">
+						<style>${await readFile(`${fsPathAssets}/user.css`, 'utf-8')}</style>
+						<style>${await readFile(`${fsPathAssets}/fonts.css`, 'utf-8')}</style>
+						<script src=${`${webPathCElements}/bundle-celements.js`} type="module"></script>
+						<link href="${`${webPathCElements}/bundle-celements.css`}" rel="stylesheet" type="text/css">`
+						// inline "user.css" (will not be cached)
+						// inline "font.css" (will not be cached)
+						// link 'bundle.js' 
+						// link 'bundle.css'
+					: ''
+				}
 
 				${(mode === 'dev')
-				? /* html */`
+					? /* html */`
 							<!--- DEV ASSETS --->
 							<link rel="stylesheet" type="text/css" href="${webPathAssets}/site.css">
 							<link rel="stylesheet" type="text/css" href="${webPathAssets}/user.css">
 							<link rel="stylesheet" type="text/css" href="${webPathAssets}/fonts.css">` // link
-				: ''
-			}
+					: ''
+				}
 					
 				${(mode === 'dev')
-				? cElementFilesCSS.map(fn => /* html */`<link rel="stylesheet" type="text/css" href="${webPathCElements}/${fn}">`).join(' ')
-				: ''
-			}
+					? cElementFilesCSS.map(fn => /* html */`<link rel="stylesheet" type="text/css" href="${webPathCElements}/${fn}">`).join(' ')
+					: ''
+				}
 				${(mode === 'dev')
-				? cElementFilesJS.map(fn => /* html */`<script ${module ? 'type="module"' : ''} src="${webPathCElements}/${fn}"></script>`).join(' ')
-				: ''
-			}
+					? cElementFilesJS.map(fn => /* html */`<script ${module ? 'type="module"' : ''} src="${webPathCElements}/${fn}"></script>`).join(' ')
+					: ''
+				}
 
 			</head>`
 
