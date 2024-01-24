@@ -10,13 +10,12 @@ export default async function afterChangeHook(col = '', { req, doc, previousDoc,
 		const user = req?.user?.shortName ?? 'internal'
 		const host = process.env.HOST
 		context.site ??= await getRelatedDoc('sites', doc.site, user)
-		context.updatedBy = `${col}` // currently not used
-		context.updatedByPageElement = true
 		const site = context.site
 		const mode = getAppMode()
 		const colSingular = (col[col.length - 1] === 's') ? col.slice(0, col.length - 1) : null
+		/* checks */
 		if (!colSingular) log(`Can't create singular version of ${col}`, user, __filename, 5)
-
+		/* log */
 		log('--- afterChange ---', user, __filename, 7)
 
 		/* cp assets */
@@ -55,7 +54,10 @@ export default async function afterChangeHook(col = '', { req, doc, previousDoc,
 							updatedBy: `${col}-${Date.now()}`
 						},
 						locale: loc,
-						context: context,
+						context: {
+							updatedByPageElement: true, // may be overwriten by former context
+							context,
+						},
 					})
 
 					for (const doc of result.docs) {
