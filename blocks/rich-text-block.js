@@ -166,13 +166,9 @@ export default function createRichTextBlock() {
 				}),
 				admin: {
 					description: {
-						en: 'Type "/" to open editor menu',
-						de: 'Schrägstrich "/" öffnet ein Editor Menü'
+						en: 'Type "/" to open editor menu. "Ctrl + Shift + v" inserts text without formating.',
+						de: 'Schrägstrich "/" öffnet ein Editor Menü. "Strg + Shift + v" fügt Text ohne Formatierung ein.'
 					}
-					/* description: {
-						de: 'Benutze "Strg + Shift + v" um Text ohne Formatierung einzufügen.',
-						en: 'Use "Ctrl + Shift + v" to insert text without formating.'
-					}, */
 				}
 			}
 		]
