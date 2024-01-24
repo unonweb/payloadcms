@@ -182,6 +182,8 @@ export const Pages = {
 					const mode = getAppMode()
 					const pathSite = `${site.paths.fs.site}/${mode}`
 					const defLang = site.locales.default
+					const currSiteID = (typeof doc.site === 'string') ? doc.site : doc.site.id
+					const prevSiteID = (typeof previousDoc.site === 'string') ? previousDoc.site : previousDoc.site.id
 
 					//if (mode === 'dev' || doc.html !== previousDoc.html || doc.title !== previousDoc.title || doc.description !== previousDoc.description || doc.isHome !== previousDoc.isHome || doc.header !== previousDoc.header || doc.nav !== previousDoc.nav || doc.footer !== previousDoc.footer) {}
 
@@ -242,7 +244,8 @@ export const Pages = {
 					}
 
 					/* remove previous page if site changes */
-					if (doc.site !== previousDoc.site) {
+
+					if (currSiteID !== prevSiteID) {
 						// slug has changed and is not empty
 						const prevSite = await getDoc('sites', previousDoc.site, user, { depth: 0 })
 						for (const loc of site.locales.used) {
