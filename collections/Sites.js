@@ -838,8 +838,9 @@ export const Sites = {
 									label: 'site.fonts.css',
 									localized: false,
 									admin: {
+										condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
 										language: 'css',
-										readOnly: true
+										readOnly: true,
 									},
 								},
 							],
