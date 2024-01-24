@@ -61,6 +61,7 @@ export const Fonts = {
 				}
 			}
 		],
+		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => {
 				try {
@@ -123,9 +124,7 @@ export const Fonts = {
 			},
 			hooks: {
 				beforeValidate: [
-					(args) => {
-						return insertFromFilename(args)
-					}
+					(args) => (args.value) ? args.value : insertFromFilename(args)
 				]
 			}
 		},
