@@ -233,11 +233,21 @@ export const Pages = {
 						}
 					}
 
-					/* remove previous page */
+					/* remove previous page if slug changes */
 					if (doc.slug !== previousDoc.slug && previousDoc.slug !== '') {
 						// slug has changed and is not empty
 						for (const loc of site.locales.used) {
 							await rmFile(`${pathSite}/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory if slug has changed
+						}
+					}
+
+					/* remove previous page if site changes */
+					if (doc.site !== previousDoc.site) {
+						// slug has changed and is not empty
+						const prevSite = await getDoc('sites', previousDoc.site, user, { depth: 0 })
+						for (const loc of site.locales.used) {
+							await rmFile(`${prevSite.paths.fs.site}/dev/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory
+							await rmFile(`${prevSite.paths.fs.site}/prod/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory
 						}
 					}
 
