@@ -38,7 +38,7 @@ export const imgGalleryBlock = {
 								en: 'What happens when an image is clicked?',
 								de: 'Was passiert wenn ein Bild anbeklickt wird?'
 							},
-							defaultValue: 'modal',
+							defaultValue: '',
 							admin: {
 								width: '25%',
 							},
