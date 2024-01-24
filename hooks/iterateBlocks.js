@@ -661,7 +661,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 
 		html = /* html */`<un-rt ${attributes}>${serializeLexical(block.contentRichText.root.children)}</un-rt>`;
 
-		return html
+		return html.replace(/\s+/g, " ").trim()
 	}
 
 	function renderUnST(block = {}) {
@@ -730,41 +730,49 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			children = children.children
 		}
 
-		return children.map((node) => {
+		const htmlArray = children.map((node) => {
 
-			// node is text
+			// get classes
+			let classes = [
+				(node.format && typeof node.format === 'string') ? node.format : '',
+				(node.format & IS_STRIKETHROUGH) ? 'line-through' : '',
+				(node.format & IS_UNDERLINE) ? 'underline' : '',
+				(node.indent > 0) ? `indent-${node.indent}` : '',
+			].filter(item => item)
+
+			// node.type === text
 			if (node.type === 'text') {
+				
+				let attributes = [
+					(classes.length > 0) ? ` class="${classes.join(' ')}"` : ''
+				].filter(item => item).join(' ')
+
 				//let text = `${escapeHTML(node.text)}`;
+
 				let text = `${node.text}`;
-
-				if (node.format & IS_BOLD) {
-					text = `<strong>${text}</strong>`;
-				}
-				if (node.format & IS_ITALIC) {
-					text = `<em>${text}</em>`;
-				}
-
-				if (node.format & IS_STRIKETHROUGH) {
-					text = `<span class="line-through">${text}</span>`;
-				}
-
-				if (node.format & IS_UNDERLINE) {
-					text = `<span class="underline">${text}</span>`;
-				}
-
-				if (node.format & IS_CODE) {
-					text = `<code>${text}</code>`;
+				let tag = ''
+				
+				// get tag
+				if (node.format) {
+					if (node.format & IS_BOLD) tag = 'strong'
+					//text = `<strong class="${classes}">${text}</strong>`;
+					if (node.format & IS_ITALIC) tag = 'em'
+					//text = /* html */`<em class="${classes}">${text}</em>`;
+					if (node.format & IS_CODE) tag = 'code'
+					//text = /* html */`<code class="${classes}">${text}</code>`;
+					if (node.format & IS_SUBSCRIPT) tag = 'sub'
+					//text = /* html */`<sub class="${classes}">${text}</sub>`;
+					if (node.format & IS_SUPERSCRIPT) tag = 'sup'
+					//text = /* html */`<sup>${text}</sup>`;
+					if (node.format & IS_STRIKETHROUGH || node.format & IS_UNDERLINE) tag = 'span'	
 				}
 
-				if (node.format & IS_SUBSCRIPT) {
-					text = `<sub>${text}</sub>`;
+				if (tag) {
+					return `<${tag}${attributes}>${text}</${tag}>`;	
+				} 
+				else {
+					return `${text}`;
 				}
-
-				if (node.format & IS_SUPERSCRIPT) {
-					text = `<sup>${text}</sup>`;
-				}
-
-				return `${text}`;
 			}
 
 			// node is null
@@ -772,10 +780,14 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 				return null;
 			}
 
-			const serializedChildren = (node.children) ? serializeLexical(node.children) : null;
+			// serialize innerHTML
+			const innerHTML = (node.children) ? serializeLexical(node.children) : null;
 
+			// serialize outerHTML
+			let classStr = ''
+			let attributes = []
 			switch (node.type) {
-				
+
 				// --- linebreak
 				case 'linebreak':
 					return /* html */`<br>`
@@ -832,204 +844,50 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 
 					if (!href) throw Error(`href is "${href}"`)
 
-					const attributes = [
+					attributes = [
 						`href="${href}"`,
 						(node.fields?.isDownload === true) ? `download=""` : '',
 						(node.fields.newTab === true) ? 'target="_blank"' : '',
 						(node.fields?.rel) ? `rel="${node.fields?.rel}"` : '',
-					].join(' ')
+						(classes.length > 0) ? ` class="${classes.join(' ')}"` : ''
+					].filter(item => item).join(' ')
 
-					return /* html */`<a ${attributes}>${serializedChildren}</a>`
+					return /* html */`<a ${attributes}>${innerHTML}</a>`
 
 				// --- list
-				case 'list': //TODO handle properly, especially nested lists
+				case 'list': // <-- !IMP: handle properly, especially nested lists
 					if (node.listType === 'bullet') {
-						return /* html */`<ul>${serializedChildren}</ul>`
+						return /* html */`<ul>${innerHTML}</ul>`
 					} else {
-						return /* html */`<ol>${serializedChildren}</ol>`
+						return /* html */`<ol>${innerHTML}</ol>`
 					}
 
 				// --- listitem
 				case 'listitem':
-					return /* html */`<li>${serializedChildren}</li>`
+					return /* html */`<li>${innerHTML}</li>`
 
 				// --- heading
 				case 'heading':
-					return `<${node.tag}>${serializedChildren}</${node.tag}>`
+					classStr = (classes.length > 0) ? `class="${classes.join(' ')}"` : ''
+					return `<${node.tag} ${classStr}>${innerHTML}</${node.tag}>`
 				
 				// --- upload
 				case 'upload':
 					return /* html */`<un-img data-float="left">${renderImageset(node.value.id)}</un-img>` // <-- ATT: hard-coded value
-
+				
+				// --- paragraph
+				case 'paragraph':
+					classStr = (classes.length > 0) ? `class="${classes.join(' ')}"` : ''
+					return /* html */`<p ${classStr}>${innerHTML ? innerHTML : '<br>'}</p>`;
+				
+				// --- default
 				default: 
 					// Probably just a normal paragraph
-					return /* html */`<p>${serializedChildren ? serializedChildren : '<br>'}</p>`;
+					return /* html */`<p class="${classes}">${innerHTML ? innerHTML : '<br>'}</p>`;
 			}
-		}).filter((node) => node !== null).join('') // no space!
-	}
+		}).filter((node) => node)
 
-	function convertLexicalToHTML(root) {
-		// receives lexical richtText content
-		// returns a html string
-
-		// main
-		if (Array.isArray(root)) {
-			// [children]...
-			return root.children.reduce((output, node) => {
-				// returns a single value which is calculated based on the array
-				const isTextNode = _isText(node);
-				//const isTextNode = (node.type) ? false : true
-
-				const { text, bold, code, italic, underline, strikethrough } = node // erstellt sechs Variablen mit dem Inhalt von node.text, node.bold,...
-
-				if (isTextNode) {
-					// convert straight single quotations to curly
-					// "\u201C" is starting double curly
-					// "\u201D" is ending double curly
-					let html = text?.replace(/'/g, "\u2019"); // single quotes
-
-					if (bold) {
-						html = `<strong>${html}</strong>`;
-					}
-
-					if (code) {
-						html = `<code>${html}</code>`;
-					}
-
-					if (italic) {
-						html = `<em>${html}</em>`;
-					}
-
-					if (underline) {
-						html = `<span style="text-decoration: underline;">${html}</span>`;
-					}
-
-					if (strikethrough) {
-						html = `<span style="text-decoration: line-through;">${html}</span>`;
-					}
-
-					//console.log('adding html: ', html)
-					return `${output}${html}`;
-				}
-
-				if (node) {
-					let nodeHTML;
-					// check node.type
-					switch (node.type) {
-						case "h1":
-							nodeHTML = `<h1>${convertSlateRTtoHTML(node.children)}</h1>`;
-							break;
-
-						case "h2":
-							nodeHTML = `<h2>${convertSlateRTtoHTML(node.children)}</h2>`;
-							break;
-
-						case "h3":
-							nodeHTML = `<h3>${convertSlateRTtoHTML(node.children)}</h3>`;
-							break;
-
-						case "h4":
-							nodeHTML = `<h4>${convertSlateRTtoHTML(node.children)}</h4>`;
-							break;
-
-						case "h5":
-							nodeHTML = `<h5>${convertSlateRTtoHTML(node.children)}</h5>`;
-							break;
-
-						case "h6":
-							nodeHTML = `<h6>${convertSlateRTtoHTML(node.children)}</h6>`;
-							break;
-
-						case "ul":
-							nodeHTML = `<ul>${convertSlateRTtoHTML(node.children)}</ul>`;
-							break;
-
-						case "ol":
-							nodeHTML = `<ol>${convertSlateRTtoHTML(node.children)}</ol>`;
-							break;
-
-						case "li":
-							nodeHTML = `<li>${convertSlateRTtoHTML(node.children)}</li>`;
-							break;
-
-						case "link":
-							if (node.linkType === 'internal') {
-								// internal link
-								const attributes = [
-									(node?.fields?.isDownloadLink === true) ? `download=""` : '',
-									(node.doc.value.filename) ? `href="${pathWebAssets}/${node.doc.value.filename}"` : '',
-								].filter(item => item).join(' ')
-
-								nodeHTML = `<a ${attributes}>${convertSlateRTtoHTML(node.children)}</a>`;
-							}
-							else {
-								// external link
-								nodeHTML = `<a href="${node.url}">${convertSlateRTtoHTML(node.children)}</a>`;
-							}
-							break;
-
-						case "relationship":
-							nodeHTML = `<strong>Relationship to ${node.relationTo}: ${node.value}</strong><br/>`;
-							break;
-
-						/* IMAGE */
-
-						case "upload":
-							//nodeHTML = `<un-img>${_createImgSrcSetEl(node.value, webImgDir)}</un-img>`
-							nodeHTML = renderImageset(node.value);
-							break;
-
-						case "p":
-						case undefined:
-							nodeHTML = `<p>${convertSlateRTtoHTML(node.children)}</p>`;
-							break;
-
-						default:
-							nodeHTML = `<strong>${node.type}</strong>:<br/>${JSON.stringify(node)}`;
-							break;
-					}
-
-					return `${output}${nodeHTML}\n`;
-				}
-
-				return output;
-				// end of content.reduce()
-			}, "");
-		}
-
-		function _isText(value) {
-			// copied from Slate
-
-			function isPlainObject(o) {
-				var ctor, prot;
-
-				if (isObject(o) === false) return false;
-
-				// If has modified constructor
-				ctor = o.constructor;
-				if (ctor === undefined) return true;
-
-				// If has modified prototype
-				prot = ctor.prototype;
-				if (isObject(prot) === false) return false;
-
-				// If constructor does not have an Object-specific method
-				if (prot.hasOwnProperty("isPrototypeOf") === false) {
-					return false;
-				}
-
-				// Most likely a plain Object
-				return true;
-			}
-
-			function isObject(o) {
-				return Object.prototype.toString.call(o) === "[object Object]";
-			}
-
-			return isPlainObject(value) && typeof value.text === "string";
-		}
-
-		return ''
+		return htmlArray.join('') // no space!
 	}
 
 	function convertSlateRTtoHTML(rtContent) {
