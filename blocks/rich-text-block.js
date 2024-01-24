@@ -1,4 +1,3 @@
-//import { slateEditor } from '@payloadcms/richtext-slate'
 import {
 	BlocksFeature,
 	LinkFeature,
@@ -17,7 +16,7 @@ export default function createRichTextBlock() {
 		},
 		fields: [
 			// --- [layout options]
-			{
+			/* {
 				type: 'collapsible',
 				label: {
 					en: 'Layout Options',
@@ -27,57 +26,8 @@ export default function createRichTextBlock() {
 					initCollapsed: true,
 					condition: (data) => (data.editingMode === 'layout') ? true : false
 				},
-				fields: [
-					{
-						type: 'row',
-						fields: [
-							// --- block.textAlign
-							{
-								type: 'select',
-								name: 'textAlign',
-								label: {
-									de: 'Text Ausrichtung',
-									en: 'Text Alignment'
-								},
-								admin: {
-									width: '25%',
-								},
-								defaultValue: 'left',
-								options: [
-									{
-										value: 'left',
-										label: {
-											de: 'Linksbündig',
-											en: 'Rechts'
-										}
-									},
-									{
-										value: 'center',
-										label: {
-											de: 'Zentriert',
-											en: 'Center'
-										}
-									},
-									{
-										value: 'justify',
-										label: {
-											de: 'Blocksatz',
-											en: 'Justify'
-										}
-									},
-									{
-										value: 'right',
-										label: {
-											de: 'Rechtsbündig',
-											en: 'Right'
-										}
-									},
-								]
-							},
-						]
-					},
-				]
-			},
+				fields: []
+			}, */
 			// --- [style options]
 			/* {
 				type: 'collapsible',
@@ -169,6 +119,8 @@ export default function createRichTextBlock() {
 				editor: lexicalEditor({
 					features: ({ defaultFeatures }) => [
 						...defaultFeatures,
+						// The HTMLConverter Feature is the feature which manages the HTML serializers. If you do not pass any arguments to it, it will use the default serializers.
+						// HTMLConverterFeature({}),
 						LinkFeature({
 							fields: [
 								{
@@ -179,7 +131,7 @@ export default function createRichTextBlock() {
 										de: 'Download-Link'
 									},
 									defaultValue: false,
-								}
+								},
 								/* {
 									type: 'relationship',
 									relationTo: ['posts', 'events'],
@@ -205,12 +157,11 @@ export default function createRichTextBlock() {
 						}), */
 						// This is incredibly powerful. You can re-use your Payload blocks
 						// directly in the Lexical editor as follows:
-						/* BlocksFeature({
+						BlocksFeature({
 							blocks: [
-								Banner,
-								CallToAction,
+								//createImgBlock()
 							],
-						}), */
+						}),
 					]
 				}),
 				admin: {
@@ -218,47 +169,11 @@ export default function createRichTextBlock() {
 						en: 'Type "/" to open editor menu',
 						de: 'Schrägstrich "/" öffnet ein Editor Menü'
 					}
-				}
-				/* editor: slateEditor({
-					admin: {
-						elements: ['h3', 'h4', 'h5', 'h6', 'link', 'ol', 'ul', 'indent', 'relationship', 'upload', 'blockquote'],
-						link: {
-							fields: [
-								{
-									type: 'checkbox',
-									name: 'isDownloadLink',
-									label: {
-										en: 'Download-Link',
-										de: 'Download-Link'
-									},
-									defaultValue: false,
-								}
-							]
-						},
-						upload: {
-							collections: {
-								documents: {
-									fields: [
-										{
-											type: 'text',
-											name: 'title',
-											label: {
-												en: 'Title',
-												de: 'Titel'
-											}
-										}
-									]
-								}
-							}
-						}
-					},
-				}), */
-				/* admin: {
-					description: {
+					/* description: {
 						de: 'Benutze "Strg + Shift + v" um Text ohne Formatierung einzufügen.',
 						en: 'Use "Ctrl + Shift + v" to insert text without formating.'
-					},
-				}, */
+					}, */
+				}
 			}
 		]
 	}
