@@ -657,8 +657,13 @@ export const Pages = {
 							type: 'relationship',
 							maxDepth: 0, // only return id
 							relationTo: 'headers',
+							filterOptions: ({ data }) => {
+								return {
+									site: { equals: data.site }, // only elements associated with this site
+								}
+							},
 							required: false,
-							defaultValue: async ({ user }) => await getDefaultDocID('headers', user.shortName),
+							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('headers', user.shortName) : '',
 						},
 						// --- page.nav
 						{
@@ -666,8 +671,13 @@ export const Pages = {
 							type: 'relationship',
 							maxDepth: 0, // only return id
 							relationTo: 'navs',
+							filterOptions: ({ data }) => {
+								return {
+									site: { equals: data.site }, // only elements associated with this site
+								}
+							},
 							required: false,
-							defaultValue: async ({ user }) => await getDefaultDocID('navs', user.shortName),
+							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('navs', user.shortName) : '',
 						},
 						// --- page.footer
 						{
@@ -675,8 +685,13 @@ export const Pages = {
 							type: 'relationship',
 							maxDepth: 0, // only return id
 							relationTo: 'footers',
+							filterOptions: ({ data }) => {
+								return {
+									site: { equals: data.site }, // only elements associated with this site
+								}
+							},
 							required: false,
-							defaultValue: async ({ user }) => await getDefaultDocID('footers', user.shortName),
+							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('footers', user.shortName) : '',
 						},
 					]
 				},
