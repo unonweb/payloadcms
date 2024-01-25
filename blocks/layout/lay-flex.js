@@ -117,53 +117,98 @@ export default function createColumnsFlex() {
 			}
 		},
 		fields: [
-			// --- block.layout
 			{
-				type: 'select',
-				name: 'layout',
-				label: 'Layout',
-				admin: {
-					width: '100%',
-					description: {
-						de: 'Das Spalten-Layout für den Hauptteil der Seite. Es können bis zu 3 Spalten erzeugt werden. Die tatsächliche Darstellung hängt jedoch von der Bildschirmgröße des Endgeräts ab.',
-						en: 'The column layout for the main part of the page. Up to 3 columns may be generated. The resulting layout however will be dependend of the screen size.'
-					}
-				},
-				defaultValue: '100',
-				//options: [ '100', '5050', '3366', '6633', '7525', '2575', '333333' ] /* Option values should be strings that do not contain hyphens or special characters due to GraphQL enumeration naming constraints. Underscores are allowed. If you determine you need your option values to be non-strings or contain special characters, they will be formatted accordingly before being used as a GraphQL enum. */
-				validate: () => true,
-				options: [
+				type: 'row',
+				fields: [
+					// --- block.layout
 					{
-						label: {
-							en: 'One Column',
-							de: 'Eine Spalte'
+						type: 'select',
+						name: 'layout',
+						label: 'Layout',
+						admin: {
+							width: '100%',
+							description: {
+								de: 'Das Spalten-Layout für den Hauptteil der Seite. Es können bis zu 3 Spalten erzeugt werden. Die tatsächliche Darstellung hängt jedoch von der Bildschirmgröße des Endgeräts ab.',
+								en: 'The column layout for the main part of the page. Up to 3 columns may be generated. The resulting layout however will be dependend of the screen size.'
+							}
 						},
-						value: '100'
+						defaultValue: '100',
+						//options: [ '100', '5050', '3366', '6633', '7525', '2575', '333333' ] /* Option values should be strings that do not contain hyphens or special characters due to GraphQL enumeration naming constraints. Underscores are allowed. If you determine you need your option values to be non-strings or contain special characters, they will be formatted accordingly before being used as a GraphQL enum. */
+						validate: () => true,
+						options: [
+							{
+								label: {
+									en: 'One Column',
+									de: 'Eine Spalte'
+								},
+								value: '100'
 
+							},
+							{
+								label: '1/2 + 1/2',
+								value: '50_50',
+							},
+							{
+								label: '2/3 + 1/3',
+								value: '66_33',
+							},
+							{
+								label: '1/3 + 2/3',
+								value: '33_66',
+							},
+							{
+								label: '3/4 + 1/4',
+								value: '75_25',
+							},
+							{
+								label: '1/4 + 3/4',
+								value: '25_75',
+							},
+							{
+								label: '1/3 + 1/3 + 1/3',
+								value: '33_33_33',
+							},
+						]
 					},
+					// --- block.justify
 					{
-						label: '1/2 + 1/2',
-						value: '50_50',
-					},
-					{
-						label: '2/3 + 1/3',
-						value: '66_33',
-					},
-					{
-						label: '1/3 + 2/3',
-						value: '33_66',
-					},
-					{
-						label: '3/4 + 1/4',
-						value: '75_25',
-					},
-					{
-						label: '1/4 + 3/4',
-						value: '25_75',
-					},
-					{
-						label: '1/3 + 1/3 + 1/3',
-						value: '33_33_33',
+						type: 'select',
+						name: 'justify',
+						label: {
+							en: 'Justify horizontally',
+							de: 'Horizontale Ausrichtung'
+						},
+						required: true,
+						admin: {
+							width: '25%',
+							/* description: {
+								en: 'Default setting for all columns',
+								de: 'Voreinstellung für alle Spalten'
+							} */
+						},
+						defaultValue: 'left',
+						options: [
+							{
+								label: 'Left',
+								value: 'left',
+							},
+							{
+								label: 'Center',
+								value: 'center',
+							},
+							{
+								label: 'Right',
+								value: 'right',
+							},
+							{
+								label: 'Space-Around',
+								value: 'space-around',
+							},
+							{
+								label: 'Space-Between',
+								value: 'space-between',
+							},
+						],
 					},
 				]
 			},
@@ -186,46 +231,6 @@ export default function createColumnsFlex() {
 					{
 						type: 'row',
 						fields: [
-							// --- block.justify
-							{
-								type: 'select',
-								name: 'justify',
-								label: {
-									en: 'Justify horizontally',
-									de: 'Horizontale Ausrichtung'
-								},
-								required: true,
-								admin: {
-									width: '25%',
-									/* description: {
-										en: 'Default setting for all columns',
-										de: 'Voreinstellung für alle Spalten'
-									} */
-								},
-								defaultValue: 'left',
-								options: [
-									{
-										label: 'Left',
-										value: 'left',
-									},
-									{
-										label: 'Center',
-										value: 'center',
-									},
-									{
-										label: 'Right',
-										value: 'right',
-									},
-									{
-										label: 'Space-Around',
-										value: 'space-around',
-									},
-									{
-										label: 'Space-Between',
-										value: 'space-between',
-									},
-								],
-							},
 							// --- block.align
 							{
 								type: 'select',
