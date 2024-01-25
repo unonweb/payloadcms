@@ -166,40 +166,46 @@ export const Sites = {
 					// data contains the current values
 					// originalDoc contains the previous values
 					// seems to work with bulk operations, too
-					const user = req?.user?.shortName ?? 'internal'
 					log('--- beforeChange ---', user, __filename, 7)
-
 					/* update context */
-					context.user = user
+					context.user = req?.user?.shortName ?? 'internal'
 					context.mode = getAppMode()
 					context.site = data
 					context.pathSite = `${data.paths.fs.site}/${context.mode}`
+					const user = context.user
+					const mode = context.mode
 
 					/* update data.assets.fonts */
 					const fontBody = (data.fonts?.body) ? await getRelatedDoc('fonts', data.fonts.body, user, { depth: 0 }) : null
 					const fontHeadings = (data.fonts?.headings) ? await getRelatedDoc('fonts', data.fonts.headings, user, { depth: 0 }) : null
-
 					data.assets.fonts = [
 						fontBody?.filename ?? '',
 						fontHeadings?.filename ?? ''
 					]
 
+					/* update data.assets.imgs */
+					if (data.background?.img) {
+						if (mode === 'dev' || operation === 'create' || data.background.img !== originalDoc.background.img) {
+							const img = await getRelatedDoc('images', data.background.img, user, { depth: 0 })
+							data.assets.imgs = [img.filename]
+						}
+					}
+
+					/* update data.fonts.css */
 					const fontFaces = [
 						fontBody.face ?? '',
 						fontHeadings.face ?? ''
 					]
-
-					/* update data.fonts.css */
 					data.fonts.css = createFontCSS(fontFaces, fontBody, fontHeadings)
 
-					/* update data.css */
-					if (hasChanged(data.colors, originalDoc?.colors, user)) {
-						let newCSS
-						newCSS = updateCSSObj(data.css, 'html', '--primary', data.colors.primary)
-						newCSS = updateCSSObj(newCSS, 'html', '--secondary', data.colors.secondary)
-						data.css = newCSS
-					}
-
+					/* update data.css (user.css) */
+					let newCSS = ''
+					newCSS = updateCSSObj(data.css, 'html', '--primary', data.colors.primary)
+					newCSS = updateCSSObj(newCSS, 'html', '--secondary', data.colors.secondary)
+					newCSS = updateCSSObj(newCSS, 'body', 'background-image', `url("/assets/imgs/${img.filename}")`)
+					
+					data.css = newCSS
+					
 					if (data.fullUpdate) {
 						context.fullUpdate = true
 						data.fullUpdate = false
@@ -219,9 +225,11 @@ export const Sites = {
 				try {
 					const user = context.user
 					const pathSite = context.pathSite
+					const mode = context.mode
 
 					/* cp font files */
 					await cpAssets(`${process.cwd()}/upload/fonts`, `${pathSite}/assets`, doc.assets.fonts, user)
+					await cpAssets(`${process.cwd()}/upload/images`, `${pathSite}/assets/imgs`, doc.assets.imgs, user)
 
 					/* write font.css */
 					if (doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
@@ -465,6 +473,15 @@ export const Sites = {
 									type: 'json',
 									name: 'fonts',
 									label: 'site.assets.fonts',
+									defaultValue: [],
+								},
+								// --- site.assets.imgs
+								// 	* updated in beforeChange
+								//	* required for cleanUpSite()
+								{
+									type: 'json',
+									name: 'imgs',
+									label: 'site.assets.imgs',
 									defaultValue: [],
 								},
 							]
@@ -895,8 +912,30 @@ export const Sites = {
 						{
 							type: 'json',
 							name: 'css',
-							defaultValue: defaultUserCSS
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							defaultValue: defaultUserCSS,
 						},
+						// --- site.background
+						{
+							type: 'group',
+							name: 'background',
+							label: 'Background',
+							fields: [
+								// --- site.background.img
+								{
+									type: 'upload',
+									name: 'img',
+									label: {
+										de: 'Hintergrundbild',
+										en: 'Background Image'
+									},
+									relationTo: 'images',
+								}
+
+							]
+						}
 						// --- site.backend
 						/* {
 							type: 'group',
