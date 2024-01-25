@@ -6,19 +6,26 @@ import getRelatedDoc from '../../hooks/getRelatedDoc'
 import log from '../../customLog'
 
 export default async function beforeChangeHook(col = '', { data, req, operation, originalDoc, context }) {
-	/* 
-		update:
+	/*
+		Update:
 		- data.html
 		- data.assets.imgs
+		Requires:
+		- col.html
+		- col.assets.imgs
 	*/
-
 	try {
-		const user = req?.user?.shortName ?? 'internal'
-		context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
+		/* update context */
+		context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null // try to find site in context.sites
 		context.site ??= await getRelatedDoc('sites', data.site, user)
+		context.user = req?.user?.shortName ?? 'internal'
+		context.mode = getAppMode()
+		context.host = process.env.HOST
+		context.pathSite = `${context.site.paths.fs.site}/${context.mode}`
+		const user = context.user
 		const site = context.site
-		const host = process.env.HOST
-		const mode = getAppMode()
+		const host = context.host
+		const mode = context.mode
 		log('--- beforeChange ---', user, __filename, 7)
 
 		if (data.blocks && data.blocks.length > 0) {

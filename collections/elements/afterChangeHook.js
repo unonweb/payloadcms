@@ -6,12 +6,18 @@ import log from '../../customLog'
 import mailError from '../../mailError'
 
 export default async function afterChangeHook(col = '', { req, doc, previousDoc, operation, context }) {
+	/* 
+		Tasks:
+		- copy assets
+		- update pages
+	*/
 	try {
-		const user = req?.user?.shortName ?? 'internal'
-		const host = process.env.HOST
 		context.site ??= await getRelatedDoc('sites', doc.site, user)
+		const user = context.user
+		const host = context.host
 		const site = context.site
-		const mode = getAppMode()
+		const mode = context.mode
+		
 		const colSingular = (col[col.length - 1] === 's') ? col.slice(0, col.length - 1) : null
 		/* checks */
 		if (!colSingular) log(`Can't create singular version of ${col}`, user, __filename, 5)
