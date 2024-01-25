@@ -67,8 +67,8 @@ export default async function cleanUpSite(site = {}, user = '', {
 		})
 
 		/* assets */
-		// get all assets IDs in use from all elements AND the pages themselves
-		const allDocs = [...navs.docs, ...headers.docs, ...footers.docs, ...pages.docs, ...posts.docs]
+		// get all assets IDs in use from 1) all elements 2) the pages 3) the site collection
+		const allDocs = [...navs.docs, ...headers.docs, ...footers.docs, ...pages.docs, ...posts.docs, site]
 		let assetIDs = new Set()
 		for (const doc of allDocs) {
 			if (Array.isArray(doc?.imgs)) {
