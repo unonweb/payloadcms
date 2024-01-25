@@ -48,6 +48,7 @@ export const Users = {
 			de: 'Admin',
 			en: 'Admin'
 		},
+		hideAPIURL: true,
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
 	},
@@ -75,6 +76,7 @@ export const Users = {
 				}
 			}
 		],
+		// --- afterLogout
 		afterLogout: [
 			async ({ req }) => {
 				try {
@@ -94,6 +96,7 @@ export const Users = {
 				}
 			}
 		],
+		// --- afterRefresh
 		afterRefresh: [
 			async ({ req }) => {
 				try {
