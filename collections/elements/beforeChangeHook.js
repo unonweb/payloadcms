@@ -7,7 +7,7 @@ import log from '../../customLog'
 
 export default async function beforeChangeHook(col = '', { data, req, operation, originalDoc, context }) {
 	/*
-		Update:
+		Iterate blocks and update:
 		- data.html
 		- data.assets.imgs
 		Requires:
@@ -28,10 +28,10 @@ export default async function beforeChangeHook(col = '', { data, req, operation,
 		const mode = context.mode
 		log('--- beforeChange ---', user, __filename, 7)
 
+		/* iterate blocks */
 		if (data.blocks && data.blocks.length > 0) {
 			if (host === 'lem' || operation === 'create' || (operation === 'update' && hasChanged(data.blocks, originalDoc?.blocks, user))) {
 
-				/* iterate blocks */
 				const images = await getCol('images', user, {
 					depth: 0,
 					where: {
