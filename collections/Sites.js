@@ -29,6 +29,9 @@ import getAppMode from '../hooks/_getAppMode';
 import canAccess from '../hooks/_canAccess';
 import capitalizeWords from '../hooks/_capitalizeWords';
 import updateDocsMany from '../hooks/updateDocsMany';
+import cpFile from '../hooks/_cpFile';
+import getDoc from '../hooks/getDoc';
+import updateCSSObj from '../hooks/_updateCSSObj';
 
 const defaultUserCSS = {
 	"html": {
@@ -71,10 +74,6 @@ export const Sites = {
 		},
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
-		/* preview: async (doc) => {
-			const mode = getAppMode()
-			return `${doc.origin[mode]}`;
-		}, */
 	},
 	// --- access
 	access: {
@@ -170,6 +169,12 @@ export const Sites = {
 					const user = req?.user?.shortName ?? 'internal'
 					log('--- beforeChange ---', user, __filename, 7)
 
+					/* update context */
+					context.user = user
+					context.mode = getAppMode()
+					context.site = data
+					context.pathSite = `${data.paths.fs.site}/${context.mode}`
+
 					/* update data.assets.fonts */
 					const fontBody = (data.fonts?.body) ? await getRelatedDoc('fonts', data.fonts.body, user, { depth: 0 }) : null
 					const fontHeadings = (data.fonts?.headings) ? await getRelatedDoc('fonts', data.fonts.headings, user, { depth: 0 }) : null
@@ -212,11 +217,8 @@ export const Sites = {
 		afterChange: [
 			async ({ req, doc, operation, previousDoc, context }) => {
 				try {
-					const user = req?.user?.shortName ?? 'internal'
-
-					context.site = doc
-					const mode = getAppMode()
-					const pathSite = `${doc.paths.fs.site}/${mode}`
+					const user = context.user
+					const pathSite = context.pathSite
 
 					/* cp font files */
 					await cpAssets(`${process.cwd()}/upload/fonts`, `${pathSite}/assets`, doc.assets.fonts, user)
@@ -332,7 +334,7 @@ export const Sites = {
 		afterDelete: [
 			async ({ req, id, doc, context }) => {
 				try {
-					const user = req?.user?.shortName ?? 'internal'
+					const user = context.user
 					log(`--- afterDelete ---`, user, __filename, 7)
 					context.siteIsDeleted = true
 
@@ -688,12 +690,12 @@ export const Sites = {
 							}
 						},
 						// --- site.urls
-						//  * updated by page
-						//  * object with key = page.id and value = page.url
-						/* 	{ 
-								"65534215e9026f928a66c756": {
-									de: "/de/veroffentlichungen" 
-							} 
+						/*  updated by page
+							object with {
+								page.id: {
+									locale: page.url
+								}
+							}
 						*/
 						{
 							type: 'json',
@@ -888,6 +890,8 @@ export const Sites = {
 							]
 						},
 						// --- site.css
+						/* 	- updated by site.colors
+						*/
 						{
 							type: 'json',
 							name: 'css',
@@ -1102,28 +1106,6 @@ function updateJSONField(args, payloadPath = '', jsonPath = 'id') {
 
 		return previousField
 	}
-}
-
-function updateCSSObj(css = {}, selector = '', key = '', val = '') {
-
-	if (typeof css === 'undefined') {
-		css = {}
-	}
-	if (typeof css === 'string') {
-		css = JSON.parse(css)
-	}
-
-	if (css.hasOwnProperty(selector)) {
-		css[selector][key] = val // css[selector][key] already exist - overwrite
-	}
-	else {
-		// create new selector with that key: value
-		css[selector] = {
-			[key]: val
-		}
-	}
-
-	return css
 }
 
 function updateJSONFieldBackup1(args, payloadPath = '', jsonPath = 'id') {
