@@ -10,19 +10,11 @@ import createRichTextBlock from '../../blocks/rich-text-block';
 import createImgBlock from '../../blocks/img-block';
 
 /* HOOKS & HELPERS */
-import hasChanged from '../../hooks/_hasChanged';
 import iterateBlocks from '../../hooks/iterateBlocks';
 import log from '../../customLog';
 import getCol from '../../hooks/_getCol';
-import updateDocSingle from '../../hooks/updateDocSingle';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
-import mailError from '../../mailError';
-import saveToDisk from '../../hooks/_saveToDisk';
-import rmFile from '../../hooks/_rmFile';
-import getDoc from '../../hooks/getDoc';
-import renderHTMLPage from '../../hooks/renderHTMLPage';
 import createElementsFields from '../../fields/createPageElementsField';
-import cpAssets from '../../hooks/_cpAssets';
 import getAppMode from '../../hooks/_getAppMode';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterOperationHook from './afterOperationHook';
@@ -48,6 +40,7 @@ export const Events = {
 		pagination: {
 			defaultLimit: 30,
 		},
+		hidden: ({ user}) => ['hhaerer'].includes(user.shortName)
 	},
 	versions: false,
 	access: {
