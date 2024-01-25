@@ -1,6 +1,8 @@
 export default async function validateIsDefault(fieldValue, data, payload, colSlug = '') {
-	// return either true or a string error message
-
+	/* 
+		- called on the backend
+		- return either true or a string error message 
+	*/
 	if (fieldValue === false) {
 		return true
 	} 
