@@ -188,6 +188,7 @@ export const Sites = {
 						if (mode === 'dev' || operation === 'create' || data.background.img !== originalDoc.background.img) {
 							const img = await getRelatedDoc('images', data.background.img, user, { depth: 0 })
 							data.assets.imgs = [img.filename]
+							context.updatePages = true
 						}
 					}
 
@@ -293,6 +294,21 @@ export const Sites = {
 									footer: footer.id
 								}
 							}) */
+						}
+					}
+
+					/* update pages */
+					if (context.updatePages) {
+						for (const loc of doc.locales.used) {
+							await updateDocsMany('pages', user, {
+								where: {
+									site: { equals: doc.id }
+								},
+								data: { updatedBy: `sites-${Date.now()}` },
+								depth: 0,
+								locale: loc,
+								context: { site: doc }
+							})
 						}
 					}
 
