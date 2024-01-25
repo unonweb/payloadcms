@@ -175,37 +175,32 @@ export const Sites = {
 					const user = context.user
 					const mode = context.mode
 
-					/* update data.assets.fonts */
+					/* data.fonts */
 					const fontBody = (data.fonts?.body) ? await getRelatedDoc('fonts', data.fonts.body, user, { depth: 0 }) : null
 					const fontHeadings = (data.fonts?.headings) ? await getRelatedDoc('fonts', data.fonts.headings, user, { depth: 0 }) : null
-					data.assets.fonts = [
+					data.assets.fonts = [ // update data.assets.fonts
 						fontBody?.filename ?? '',
 						fontHeadings?.filename ?? ''
 					]
-
-					/* update data.assets.imgs */
-					if (data.background?.img) {
-						if (mode === 'dev' || operation === 'create' || data.background.img !== originalDoc.background.img) {
-							const img = await getRelatedDoc('images', data.background.img, user, { depth: 0 })
-							data.assets.imgs = [img.filename]
-							context.updatePages = true
-						}
-					}
-
-					/* update data.fonts.css */
 					const fontFaces = [
 						fontBody.face ?? '',
 						fontHeadings.face ?? ''
 					]
-					data.fonts.css = createFontCSS(fontFaces, fontBody, fontHeadings)
+					data.fonts.css = createFontCSS(fontFaces, fontBody, fontHeadings) // update data.fonts.css
 
-					/* update data.css (user.css) */
-					let newCSS = ''
-					newCSS = updateCSSObj(data.css, 'html', '--primary', data.colors.primary)
-					newCSS = updateCSSObj(newCSS, 'html', '--secondary', data.colors.secondary)
-					newCSS = updateCSSObj(newCSS, 'body', 'background-image', `url("/assets/imgs/${img.filename}")`)
-					
-					data.css = newCSS
+					/* data.background.img */
+					if (data.background?.img) {
+						if (mode === 'dev' || operation === 'create' || data.background.img !== originalDoc.background.img) {
+							const img = await getRelatedDoc('images', data.background.img, user, { depth: 0 })
+							data.assets.imgs = [img.filename] // update data.assets.imgs
+							data.css = updateCSSObj(data.css, 'body', 'background-image', `url("/assets/imgs/${img.filename}")`) // update data.css
+							context.updatePages = true
+						}
+					}
+
+					/* data.colors */
+					data.css = updateCSSObj(data.css, 'html', '--primary', data.colors.primary) // update data.css
+					data.css = updateCSSObj(data.css, 'html', '--secondary', data.colors.secondary) // update data.css
 					
 					if (data.fullUpdate) {
 						context.fullUpdate = true
