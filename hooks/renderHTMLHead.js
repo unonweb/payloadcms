@@ -3,6 +3,7 @@ import canAccess from './_canAccess';
 import getAppMode from './_getAppMode'
 import { readFile } from 'fs/promises'
 import { readdir } from 'fs/promises';
+import getRelatedDoc from './getRelatedDoc';
 
 export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 	// renders a <head> corresponding to the given page
@@ -52,6 +53,9 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 			hrefLangHTML = ctHrefLangLinks(page.url, altLocaleURLs, origin)	
 		}
 
+		/* background image */
+		const backgroundImg = (site.background?.img) ? await getRelatedDoc('images', site.background.img, user, { depth: 0 }) : null
+
 		const headHTML = /* html */`
 			<head>
 				<title>${site.brandName ?? site.domainShort} | ${page.title}</title>
@@ -64,6 +68,7 @@ export default async function renderHTMLHead(page = {}, site = {}, user = '') {
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<link rel="canonical" href="https://${site.domain}${page.url}"/>
 				${hrefLangHTML}
+				${(backgroundImg) ? /* html */`<link rel="preload" as="image" href="/assets/imgs/${backgroundImg.filename}">` : '' }
 				
 				<!--- ALWAYS --->
 				${(pathsLibFilesCSS.length > 0)
