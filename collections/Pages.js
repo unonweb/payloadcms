@@ -693,6 +693,20 @@ export const Pages = {
 							required: false,
 							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('footers', user.shortName) : '',
 						},
+						// --- page.background
+						{
+							name: 'background',
+							type: 'relationship',
+							maxDepth: 0, // only return id
+							relationTo: 'backgrounds',
+							filterOptions: ({ data }) => {
+								return {
+									site: { equals: data.site }, // only elements associated with this site
+								}
+							},
+							required: false,
+							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('backgrounds', user.shortName) : '',
+						},
 					]
 				},
 				// --- CONTENT [tab-3] ---
