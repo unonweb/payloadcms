@@ -23,7 +23,11 @@ export default async function getRandomDocID(colSlug = '', user = '') {
 }
 
 async function getRandomDocIDFetch(colSlug = '', user = '') {
-	// returns a random doc id from the given collection
+	/*
+		Tasks: Return a random doc id from the given collection
+		Limits: Works only if called in the frontend admin panel (defaultValue)
+	*/
+	
 	try {
 		if (user) {
 			const res = await fetch(`/api/${colSlug}`)
