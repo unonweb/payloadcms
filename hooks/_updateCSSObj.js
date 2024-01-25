@@ -1,4 +1,7 @@
 export default function updateCSSObj(css = {}, selector = '', key = '', val = '') {
+	/*	
+		- returns the updated css obj 
+	*/
 
 	if (typeof css === 'undefined') {
 		css = {}
