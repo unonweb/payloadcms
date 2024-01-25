@@ -23,15 +23,20 @@ import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterOperationHook from './afterOperationHook';
 import beforeOperationHook from './beforeOperationHook';
+import afterDeleteHook from './afterDeleteHook';
+
+const COLPLURAL = 'headers'
+const COLSINGULAR = 'header'
 
 export const Headers = {
-	slug: 'headers',
+	slug: COLPLURAL,
 	admin: {
 		group: {
 			en: 'Elements',
 			de: 'Elemente'
 		},
 		useAsTitle: 'title',
+		hideAPIURL: true,
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
 	},
@@ -45,7 +50,7 @@ export const Headers = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook('headers', { args, operation })
+			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
 		],
 		// --- beforeValidate
 		beforeValidate: [
@@ -75,45 +80,19 @@ export const Headers = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook('headers', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook('headers', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
-			async ({ req, doc, context }) => {
-				const user = req?.user?.shortName ?? 'internal'
-				log('--- afterDelete ---', user, __filename, 7)
-
-				const siteID = (typeof doc.site === 'string') ? doc.site : doc.site.id
-				await updateDocsMany('pages', user, {
-					where: {
-						and: [
-							{ site: { equals: siteID } },
-							{ header: { equals: doc.id } },
-						]
-					},
-					data: {
-						header: ''
-					}
-				})
-				await updateDocsMany('posts', user, {
-					where: {
-						and: [
-							{ site: { equals: siteID } },
-							{ hasOwnPage: { equals: true } },
-							{ header: { equals: doc.id } },
-						]
-					},
-					data: { header: '' }
-				})
-			}
+			async ({ req, doc, context }) => afterDeleteHook(COLSINGULAR, { req, doc, context }),
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ operation, args }) => afterOperationHook('headers', { operation, args })
+			async ({ operation, args }) => afterOperationHook(COLPLURAL, { operation, args })
 		],
 	},
 	// --- fields
@@ -164,8 +143,8 @@ export const Headers = {
 									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one header may be set as default.'
 								}
 							},
-							defaultValue: async ({ user }) => await firstDefaultsToTrue('headers', user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'headers'),
+							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
+							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, COLPLURAL),
 						},
 						// --- header.html
 						{
@@ -215,7 +194,6 @@ export const Headers = {
 							], */
 							blocks: [
 								headerBanner,
-								createImgBlock(),
 							]
 						},
 					]

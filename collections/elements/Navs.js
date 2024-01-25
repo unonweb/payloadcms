@@ -21,9 +21,13 @@ import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
+import afterDeleteHook from './afterDeleteHook';
+
+const COLPLURAL = 'navs'
+const COLSINGULAR = 'nav'
 
 export const Navs = {
-	slug: 'navs',
+	slug: COLPLURAL,
 	labels: {
 		singular: {
 			de: 'Navigation',
@@ -40,6 +44,7 @@ export const Navs = {
 			en: 'Elements',
 			de: 'Elemente'
 		},
+		hideAPIURL: true,
 		useAsTitle: 'title',
 		defaultColumns: ['title', 'site'],
 		enableRichTextLink: false,
@@ -64,7 +69,7 @@ export const Navs = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook('headers', { args, operation })
+			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
 		],
 		// --- beforeValidate
 		beforeValidate: [
@@ -91,46 +96,19 @@ export const Navs = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook('navs', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange 
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook('navs', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
-			async ({ req, doc, context }) => {
-				const user = req?.user?.shortName ?? 'internal'
-				log('--- afterDelete ---', user, __filename, 7)
-
-				const siteID = (typeof doc.site === 'string') ? doc.site : doc.site.id
-				await updateDocsMany('pages', user, {
-					where: {
-						and: [
-							{ site: { equals: siteID } },
-							{ nav: { equals: doc.id } },
-						]
-					},
-					data: {
-						nav: ''
-					}
-				})
-
-				await updateDocsMany('posts', user, {
-					where: {
-						and: [
-							{ site: { equals: siteID } },
-							{ hasOwnPage: { equals: true } },
-							{ nav: { equals: doc.id } },
-						]
-					},
-					data: { nav: '' }
-				})
-			}
+			async ({ req, doc, context }) => afterDeleteHook(COLSINGULAR, { req, doc, context }),
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ operation, args }) => afterOperationHook('headers', { operation, args })
+			async ({ operation, args }) => afterOperationHook(COLPLURAL, { operation, args })
 		],
 	},
 	// --- fields
@@ -204,8 +182,8 @@ export const Navs = {
 									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one navigation may be set as default.'
 								}
 							},
-							defaultValue: async ({ user }) => await firstDefaultsToTrue('navs', user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'navs'),
+							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
+							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, COLPLURAL),
 						},
 						// --- nav.html
 						{

@@ -1,34 +1,41 @@
 /* ACCESS */
-import { isAdmin } from '../../access/isAdmin';
 import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
 import { isLoggedIn } from '../../access/isLoggedIn';
-
-/* BLOCKS */
-import footerDefault from '../../blocks/footers/footer-default';
 
 /* FIELDS */
 import editingModeField from '../../fields/editingMode';
 
-/*  HOOKS */
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import log from '../../customLog';
-import mailError from '../../mailError';
-import updateDocsMany from '../../hooks/updateDocsMany';
-import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
-import validateIsDefault from '../../hooks/validate/validateIsDefault';
+/* HOOKS STANDARD */
 import afterChangeHook from './afterChangeHook';
 import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
+import getRelatedDoc from '../../hooks/getRelatedDoc';
+import log from '../../customLog';
+import mailError from '../../mailError';
+
+/* BLOCKS */
+import footerDefault from '../../blocks/footers/footer-default';
+
+/*  HOOKS ADD */
+import updateDocsMany from '../../hooks/updateDocsMany';
+import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
+import validateIsDefault from '../../hooks/validate/validateIsDefault';
+import createRichTextBlock from '../../blocks/rich-text-block';
+import afterDeleteHook from './afterDeleteHook';
+
+const COLPLURAL = 'footers'
+const COLSINGULAR = 'footer'
 
 export const Footers = {
-	slug: 'footers',
+	slug: COLPLURAL,
 	admin: {
 		group: {
 			en: 'Elements',
 			de: 'Elemente'
 		},
+		hideAPIURL: true,
 		useAsTitle: 'title',
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
@@ -43,7 +50,7 @@ export const Footers = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook('footers', { args, operation })
+			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
 		],
 		// --- beforeValidate
 		beforeValidate: [
@@ -70,45 +77,19 @@ export const Footers = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook('footers', { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook('footers', { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
-			async ({ req, doc, context }) => {
-				const user = req?.user?.shortName ?? 'internal'
-				log('--- afterDelete ---', user, __filename, 7)
-
-				const siteID = (typeof doc.site === 'string') ? doc.site : doc.site.id
-				await updateDocsMany('pages', user, {
-					where: {
-						and: [
-							{ site: { equals: siteID } },
-							{ footer: { equals: doc.id } },
-						]
-					},
-					data: {
-						footer: ''
-					}
-				})
-				await updateDocsMany('posts', user, {
-					where: {
-						and: [
-							{ site: { equals: siteID } },
-							{ hasOwnPage: { equals: true } },
-							{ footer: { equals: doc.id } },
-						]
-					},
-					data: { footer: '' }
-				})
-			}
+			async ({ req, doc, context }) => afterDeleteHook(COLSINGULAR, { req, doc, context }),
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ operation, args }) => afterOperationHook('footers', { operation, args })
+			async ({ operation, args }) => afterOperationHook(COLPLURAL, { operation, args })
 		],
 	},
 	// --- fields
@@ -159,8 +140,8 @@ export const Footers = {
 									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one navigation may be set as default.'
 								}
 							},
-							defaultValue: async ({ user }) => await firstDefaultsToTrue('footers', user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, 'footers'),
+							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
+							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, COLPLURAL),
 						},
 						// --- footer.html
 						{
@@ -209,7 +190,7 @@ export const Footers = {
 								}
 							], */
 							blocks: [
-								footerDefault
+								createRichTextBlock()
 							]
 						},
 					]
