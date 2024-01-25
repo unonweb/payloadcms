@@ -27,6 +27,7 @@ import { Products } from './collections/dynamic/Products';
 import { Fonts } from './collections/assets/Fonts';
 import { _FontFamilies } from './collections/assets/_FontFamilies';
 import { Tags } from './collections/Tags';
+import { Backgrounds } from './collections/elements/Backgrounds';
 
 //const mockModulePath = path.resolve(__dirname, 'mocks/emptyObject.js')
 //const mockModulePath = '/home/payload/cms/src/mocks/emptyObject.js'
@@ -131,8 +132,9 @@ export default buildConfig({
 		Tags,
 		/* elements */
 		Headers,
-		Footers,
 		Navs,
+		Footers,
+		Backgrounds,
 		/* upload */
 		Images,
 		Documents,
