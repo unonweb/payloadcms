@@ -32,7 +32,7 @@ export const Backgrounds = {
 		useAsTitle: 'title',
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
-		disabled: true,
+		hidden: true,
 	},
 	access: {
 		create: isLoggedIn,
