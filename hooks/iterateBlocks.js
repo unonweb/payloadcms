@@ -116,6 +116,8 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 						return renderUnImgSlides(block);
 					case 'img-gallery':
 						return renderUnImgGallery(block);
+					//case 'img-background':
+						//return renderUnImgBackground(block);
 
 					// --- DEFAULT ---
 					default:
@@ -578,11 +580,9 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 	}
 
 	function renderUnImg(block = {}) {
-		// blockType: 'img'
-		// blockType: 'image-featured'
-		// NOTES
-		// * not working with images in RichText content
-		// * because they're only referenced
+		/* NOTES:
+			- not working with images in RichText content because they're only referenced 
+		*/
 
 		const attributes = [
 			(block.size) ? `data-size=${block.size}` : '',
@@ -628,6 +628,17 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		}
 
 		return html
+	}
+
+	function renderUnImgBackground(block = {}) {
+		const attributes = [
+			(theme) ? `data-theme="${theme}"` : '',
+			(slug) ? `data-page="${slug}"` : '',
+		].filter(item => item).join(' ')
+
+		const html = /* html */`
+			<un-background><un-background>
+		`
 	}
 
 	// #TEXT
