@@ -134,10 +134,12 @@ export const Footers = {
 								de: 'Standard-Navigation',
 								en: 'Default Navigation'
 							},
+							unique: false,
+							required: false,
 							admin: {
 								description: {
-									en: 'Is automatically picked when creating new pages/posts. Es kann nur eine Navigation als Standard gesetzt werden.',
-									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one navigation may be set as default.'
+									en: 'Is automatically picked when creating new pages/posts. Only one element out of this collection may be set as default.',
+									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Es kann nur ein Element aus dieser Kollektion als Standard gesetzt werden.'
 								}
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
