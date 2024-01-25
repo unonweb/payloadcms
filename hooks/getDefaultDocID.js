@@ -68,6 +68,7 @@ export default async function getDefaultDocID(colSlug = '', user = '') {
 			}
 		}
 	} catch (err) {
+		console.error(`Error in getDefaultDocID()`)
 		console.error(err.stack)
 	}
 }
