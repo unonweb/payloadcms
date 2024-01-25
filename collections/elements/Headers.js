@@ -10,20 +10,23 @@ import createImgBlock from '../../blocks/img-block';
 /* FIELDS */
 import editingModeField from '../../fields/editingMode';
 
-/*  HOOKS & HELPERS */
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import log from '../../customLog';
-import mailError from '../../mailError';
+/* HOOKS STANDARD */
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import validateIsDefault from '../../hooks/validate/validateIsDefault';
-import updateDocsMany from '../../hooks/updateDocsMany';
-import getUserSites from '../../hooks/getUserSites';
 import afterChangeHook from './afterChangeHook';
 import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterOperationHook from './afterOperationHook';
 import beforeOperationHook from './beforeOperationHook';
 import afterDeleteHook from './afterDeleteHook';
+import log from '../../customLog';
+import mailError from '../../mailError';
+
+/*  HOOKS & HELPERS */
+import getRelatedDoc from '../../hooks/getRelatedDoc';
+import updateDocsMany from '../../hooks/updateDocsMany';
+import getUserSites from '../../hooks/getUserSites';
+
 
 const COLPLURAL = 'headers'
 const COLSINGULAR = 'header'
@@ -173,17 +176,17 @@ export const Headers = {
 							type: 'blocks',
 							name: 'blocks',
 							label: {
-								de: 'Header Layout',
-								en: 'Header Layout'
+								de: 'Header Block',
+								en: 'Header Block'
 							},
 							labels: { // Customize the block row labels appearing in the Admin dashboard.
 								singular: {
-									de: 'Header Layout',
-									en: 'Header Layout'
+									de: 'Header Block',
+									en: 'Header Block'
 								},
 								plural: {
-									de: 'Header Layout',
-									en: 'Header Layout'
+									de: 'Header Block',
+									en: 'Header Block'
 								},
 							},
 							maxRows: 1,
