@@ -14,7 +14,7 @@ import getRelatedDoc from '../../hooks/getRelatedDoc';
 import log from '../../customLog';
 import mailError from '../../mailError';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
-import validateIsDefault from '../../hooks/validate/validateIsDefault';
+import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
 import afterChangeHook from './afterChangeHook';
 import beforeChangeHook from './beforeChangeHook';
@@ -183,7 +183,7 @@ export const Navs = {
 								}
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, COLPLURAL),
+							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, COLPLURAL),
 						},
 						// --- nav.html
 						{

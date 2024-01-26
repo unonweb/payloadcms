@@ -21,7 +21,7 @@ import footerDefault from '../../blocks/footers/footer-default';
 /*  HOOKS ADD */
 import updateDocsMany from '../../hooks/updateDocsMany';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
-import validateIsDefault from '../../hooks/validate/validateIsDefault';
+import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import createRichTextBlock from '../../blocks/rich-text-block';
 import afterDeleteHook from './afterDeleteHook';
 
@@ -143,7 +143,7 @@ export const Footers = {
 								}
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, COLPLURAL),
+							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, COLPLURAL),
 						},
 						// --- footer.html
 						{

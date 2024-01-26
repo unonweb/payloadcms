@@ -12,7 +12,7 @@ import editingModeField from '../../fields/editingMode';
 
 /* HOOKS STANDARD */
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
-import validateIsDefault from '../../hooks/validate/validateIsDefault';
+import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import afterChangeHook from './afterChangeHook';
 import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
@@ -147,7 +147,7 @@ export const Headers = {
 								}
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, COLPLURAL),
+							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, COLPLURAL),
 						},
 						// --- header.html
 						{
