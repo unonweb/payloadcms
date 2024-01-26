@@ -6,7 +6,7 @@ import iterateBlocks from '../../hooks/iterateBlocks'
 import renderHTMLHead from '../../hooks/renderHTMLHead'
 import log from '../../customLog'
 
-export default async function(col = '', { data, req, operation, originalDoc, context }) {
+export default async function beforeChangeHook(col = '', { data, req, operation, originalDoc, context }) {
 	/*
 		Iterate blocks and update:
 		- data.html
@@ -16,12 +16,6 @@ export default async function(col = '', { data, req, operation, originalDoc, con
 		- col.assets.imgs
 	*/
 	try {
-		context.user ??= req?.user?.shortName ?? 'internal'
-		context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
-		context.site ??= await getRelatedDoc('sites', data.site, user)
-		context.mode = getAppMode()
-		context.host = process.env.HOST
-		context.pathSite = `${context.site.paths.fs.site}/${context.mode}`
 		const site = context.site
 		const user = context.user
 		const host = context.host
@@ -78,7 +72,7 @@ export default async function(col = '', { data, req, operation, originalDoc, con
 
 		return data
 
-	} catch (err) {
-		log(err.stack, user, __filename, 3)
+	} catch (error) {
+		log(error.stack, user, __filename, 3)
 	}
 }
