@@ -1,6 +1,12 @@
 import getDefaultDocID from '../../hooks/beforeValidate/getDefaultDocID'
 
 export default function createElementsFields() {
+	/* 
+		Used in:
+			- Post
+			- Events
+			- Products
+	*/
 	const field = {
 		type: 'group',
 		name: 'elements',
@@ -57,6 +63,11 @@ export default function createElementsFields() {
 				name: 'header',
 				maxDepth: 0, // only return id
 				relationTo: 'headers',
+				filterOptions: ({ data }) => {
+					return {
+						site: { equals: data.site }, // only elements associated with this site
+					}
+				},
 				required: false,
 				admin: {
 					condition: (data, siblingData, { user }) => (siblingData && siblingData.useHeader) ? true : false,
@@ -73,6 +84,11 @@ export default function createElementsFields() {
 				name: 'nav',
 				maxDepth: 0, // only return id
 				relationTo: 'navs',
+				filterOptions: ({ data }) => {
+					return {
+						site: { equals: data.site }, // only elements associated with this site
+					}
+				},
 				required: false,
 				admin: {
 					condition: (data, siblingData, { user }) => (siblingData && siblingData.useNav) ? true : false,
@@ -89,6 +105,11 @@ export default function createElementsFields() {
 				name: 'footer',
 				maxDepth: 0, // only return id
 				relationTo: 'footers',
+				filterOptions: ({ data }) => {
+					return {
+						site: { equals: data.site }, // only elements associated with this site
+					}
+				},
 				required: false,
 				admin: {
 					condition: (data, siblingData, { user }) => (siblingData && siblingData.useFooter) ? true : false,
