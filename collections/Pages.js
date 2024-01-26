@@ -143,17 +143,17 @@ export const Pages = {
 
 							/* iterate blocks */
 
-							const images = context?.images ?? await getCol('images', user, {
+							const images = context.images ?? await getCol('images', user, {
 								depth: 0,
 								where: { sites: { contain: site.id } }
 							})
 
-							const documents = context?.documents ?? await getCol('documents', user, {
+							const documents = context.documents ?? await getCol('documents', user, {
 								depth: 0,
 								where: { sites: { contain: site.id } }
 							})
 
-							const pages = context?.pages ?? await getCol('pages', user, {
+							const pages = context.pages ?? await getCol('pages', user, {
 								depth: 0,
 								where: { site: { equals: site.id } },
 							})
