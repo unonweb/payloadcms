@@ -12,7 +12,7 @@ import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
 import afterDeleteHook from './afterDeleteHook';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
-import validateIsDefault from '../../hooks/validate/validateIsDefault';
+import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import createAssetsFields from '../../fields/createAssetsFields';
 
 /* BLOCKS */
@@ -108,7 +108,7 @@ export const Backgrounds = {
 								}
 							},
 							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
-							validate: async (val, { data, payload }) => await validateIsDefault(val, data, payload, COLPLURAL),
+							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, COLPLURAL),
 						},
 						// --- background.html
 						{
