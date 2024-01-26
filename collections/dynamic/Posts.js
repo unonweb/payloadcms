@@ -24,9 +24,13 @@ import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
 import afterChangeHook from './afterChangeHook';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
+import beforeChangeHook from './beforeChangeHook';
+
+const COLSINGULAR = 'post'
+const COLPLURAL = 'posts'
 
 export const Posts = {
-	slug: 'posts',
+	slug: COLPLURAL,
 	admin: {
 		enableRichTextRelationship: false, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
 		enableRichTextLink: false,
@@ -58,92 +62,18 @@ export const Posts = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook('posts', { args, operation })
+			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					log('--- beforeChange ---', user, __filename, 7)
-
-					context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
-					context.site ??= await getRelatedDoc('sites', data.site, user)
-					const site = context.site
-
-					if (data.blocks && data.blocks.length > 0) {
-						if (!data.html.main || hasChanged(data.blocks, originalDoc?.blocks, user)) {
-							// data contains the current values
-							// originalDoc contains the previous values
-							// seems to work with bulk operations, too
-						}
-
-						/* iterate blocks */
-						const images = await getCol('images', user, {
-							depth: 0,
-							where: {
-								sites: { contain: site.id }
-							}
-						})
-
-						const documents = await getCol('documents', user, {
-							depth: 0,
-							where: {
-								sites: { contain: site.id }
-							}
-						})
-
-						const pages = await getCol('pages', user, {
-							depth: 0,
-							where: {
-								site: { equals: site.id }
-							}
-						})
-
-						const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, {
-							user: user,
-							locale: req.locale, // <-- ATT! Really?
-							blocks: data.blocks,
-							site: site,
-							images: images.docs, // collection data
-							documents: documents.docs, // collection data
-							pages: pages.docs, // collection data
-						})
-
-						/* for (const path of libPathsWeb) {
-							// '/assets/lib/leaflet-1.9.4.css'
-							// '/assets/custom-elements/un-map-leaflet.js'
-							if (path.startsWith('/assets/lib/')) {
-								// only care about lib files because separate c-elements files are copied via a standalone script
-								const dest = `${pathSite}${path}`
-								const src = `${site.paths.fs.admin.resources}${path}`
-								await cpFile(src, dest, user, { overwrite: false, ctParentPath: true })
-							}
-						} */
-
-						data.html.main = html // update post.html.main
-						data.assets.imgs = imgFiles // update post.assets.imgs
-						data.assets.docs = docFiles // update post.assets.docs
-						data.assets.head = libPathsWeb // update page.assets.head
-					}
-
-					if (data.hasOwnPage) {
-						data.html.head = await renderHTMLHead(data, site, user) // update post.html.head (do it always, because in prod it's cheap)
-					}
-
-					return data
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-				}
-			}
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook('posts', { req, doc, previousDoc, context, operation })
+			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, context, operation })
 		],
 		afterOperation: [
-			async ({ args, operation, result }) => afterOperationHook('posts', { args, operation, result })
+			async ({ args, operation, result }) => afterOperationHook(COLPLURAL, { args, operation, result })
 		],
 	},
 	fields: [
@@ -180,7 +110,7 @@ export const Posts = {
 							},
 							filterOptions: () => {
 								return {
-									relatedCollection: { equals: 'posts' },
+									relatedCollection: { equals: COLPLURAL },
 								}
 							},
 							hasMany: true,

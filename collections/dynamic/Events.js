@@ -10,20 +10,19 @@ import createRichTextBlock from '../../blocks/rich-text-block';
 import createImgBlock from '../../blocks/img-block';
 
 /* HOOKS & HELPERS */
-import iterateBlocks from '../../hooks/iterateBlocks';
-import log from '../../customLog';
-import getCol from '../../hooks/_getCol';
-import getRelatedDoc from '../../hooks/getRelatedDoc';
 import createElementsFields from './createPageElementsField';
-import getAppMode from '../../hooks/_getAppMode';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterOperationHook from './afterOperationHook';
 import beforeOperationHook from './beforeOperationHook';
 import afterChangeHook from './afterChangeHook';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
+import beforeChangeHook from './beforeChangeHook';
+
+const COLPLURAL = 'events'
+const COLSINGULAR = 'event'
 
 export const Events = {
-	slug: 'events',
+	slug: COLPLURAL,
 	admin: {
 		enableRichTextRelationship: true, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
 		enableRichTextLink: true,
@@ -40,7 +39,8 @@ export const Events = {
 		pagination: {
 			defaultLimit: 30,
 		},
-		hidden: ({ user}) => ['hhaerer'].includes(user.shortName)
+		//hidden: ({ user}) => ['hhaerer'].includes(user.shortName)
+		hidden: true,
 	},
 	versions: false,
 	access: {
@@ -52,77 +52,19 @@ export const Events = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook('events', { args, operation })
+			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					const mode = getAppMode()
-					log('--- beforeChange ---', user, __filename, 7)
-
-					if (data.blocks && data.blocks.length > 0) {
-						// && hasChanged(data.blocks, originalDoc?.blocks)
-						// data contains the current values
-						// originalDoc contains the previous values
-						// seems to work with bulk operations, too
-
-						/* iterate blocks */
-						context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
-						context.site ??= await getRelatedDoc('sites', data.site, user)
-						const site = context.site
-
-						const images = await getCol('images', user, {
-							depth: 0,
-							where: {
-								sites: { contain: site.id }
-							}
-						})
-
-						const documents = await getCol('documents', user, {
-							depth: 0,
-							where: {
-								sites: { contain: site.id }
-							}
-						})
-
-						const pages = await getCol('pages', user, {
-							depth: 0,
-							where: {
-								site: { equals: site.id }
-							}
-						})
-
-						const { html, imgFiles, docFiles } = iterateBlocks(data, {
-							user: user,
-							locale: req.locale, // <-- ATT! Really?
-							blocks: data.blocks,
-							site: site,
-							images: images.docs, // collection data
-							documents: documents.docs, // collection data
-							pages: pages.docs, // collection data
-						})
-
-						data.html = html
-						data.assets.imgs = imgFiles
-						data.assets.docs = docFiles
-
-						return data
-					}
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-				}
-			}
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook('events', { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, context, operation }),
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => afterOperationHook('events', { args, operation, result })
+			async ({ args, operation, result }) => afterOperationHook(COLPLURAL, { args, operation, result })
 		],
 	},
 	fields: [
