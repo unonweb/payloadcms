@@ -32,6 +32,10 @@ import cpAssets from '../hooks/_cpAssets';
 import canAccess from '../hooks/_canAccess';
 import createAssetsFields from '../fields/createAssetsFields';
 import initOtherLocaleField from '../fields/initOtherLocaleField'
+import resetBrokenRelationship from '../hooks/resetBrokenRelationship';
+
+const COLSINGULAR = 'page'
+const COLPLURAL = 'pages'
 
 export const Pages = {
 	slug: 'pages',
@@ -664,6 +668,11 @@ export const Pages = {
 							},
 							required: false,
 							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('headers', user.shortName) : '',
+							hooks: {
+								beforeValidate: [
+									async ({ value, field, req }) => resetBrokenRelationship(field.relationTo, value, COLPLURAL, req.user.shortName)
+								]
+							}
 						},
 						// --- page.nav
 						{
@@ -678,6 +687,11 @@ export const Pages = {
 							},
 							required: false,
 							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('navs', user.shortName) : '',
+							hooks: {
+								beforeValidate: [
+									async ({ value, field, req }) => resetBrokenRelationship(field.relationTo, value, COLPLURAL, req.user.shortName)
+								]
+							}
 						},
 						// --- page.footer
 						{
@@ -692,6 +706,11 @@ export const Pages = {
 							},
 							required: false,
 							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('footers', user.shortName) : '',
+							hooks: {
+								beforeValidate: [
+									async ({ value, field, req }) => resetBrokenRelationship(field.relationTo, value, COLPLURAL, req.user.shortName)
+								]
+							}
 						},
 						// --- page.background
 						/* {
