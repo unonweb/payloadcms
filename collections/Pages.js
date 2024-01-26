@@ -183,7 +183,7 @@ export const Pages = {
 					const pathSite = `${site.paths.fs.site}/${mode}`
 					const defLang = site.locales.default
 					const currSiteID = (typeof doc.site === 'string') ? doc.site : doc.site.id
-					const prevSiteID = (typeof previousDoc.site === 'string') ? previousDoc.site : previousDoc.site.id
+					const prevSiteID = (typeof previousDoc.site === 'string') ? previousDoc.site : (typeof previousDoc.site === 'object') ? previousDoc.site.id : null
 
 					//if (mode === 'dev' || doc.html !== previousDoc.html || doc.title !== previousDoc.title || doc.description !== previousDoc.description || doc.isHome !== previousDoc.isHome || doc.header !== previousDoc.header || doc.nav !== previousDoc.nav || doc.footer !== previousDoc.footer) {}
 
