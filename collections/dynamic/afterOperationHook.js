@@ -26,8 +26,8 @@ export default async function afterOperationHook(col = '', { args, operation, re
 			const res = await getCol(col, user, {
 				depth: 1,
 				locale: args.req.locale,
-				where: {
-					site: { equals: site.id }
+				where: { 
+					site: { equals: site.id } 
 				},
 			})
 
@@ -41,8 +41,8 @@ export default async function afterOperationHook(col = '', { args, operation, re
 					const res = await getCol(col, user, {
 						depth: 1,
 						locale: loc,
-						where: {
-							site: { equals: site.id }
+						where: { 
+							site: { equals: site.id } 
 						},
 					})
 
@@ -57,21 +57,21 @@ export default async function afterOperationHook(col = '', { args, operation, re
 	}
 }
 
-function createWebVersion(slug = '', docs = [], locale = '', user = {}) {
+function createWebVersion(col = '', docs = [], locale = '', user = {}) {
 
 	docs = (docs.docs) ? docs.docs : docs
 	docs = (!Array.isArray(docs)) ? [docs] : docs
 
 	let webVersion
 
-	if (['posts', 'events'].includes(slug)) {
+	if (['posts', 'events'].includes(col)) {
 		webVersion = docs.map(doc => {
 			return {
 				id: doc.id,
 				tags: doc.tags,
 				title: doc.title,
 				time: doc.time,
-				html: (typeof doc.html === 'string') ? doc.html : doc.html.main,
+				html: doc.html?.main,
 				author: `${user.firstName} ${user.lastName}`,
 				date: doc.date,
 				updatedAt: doc.updatedAt,
