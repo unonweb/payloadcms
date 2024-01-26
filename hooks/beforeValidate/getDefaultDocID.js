@@ -1,14 +1,14 @@
 import payload from 'payload'
 import log from '../../customLog'
 
-export default async function getDefaultDocID({ data, originalDoc, value, field, context }) {
+export default async function getDefaultDocID({ data, originalDoc, value, field, req }) {
 	/* 
 		Hook: 
 			beforeValidate
 		Order:
 			- after beforeOperation
 		Task: 
-			Get the id of the doc set as default in the given collection
+			Return a) the id of the doc set as default in the given collection or b) null
 		Limits: 
 			- Use only on top level fieldName
 		Arguments:
@@ -47,6 +47,6 @@ export default async function getDefaultDocID({ data, originalDoc, value, field,
 		}
 
 	} catch (error) {
-		log(error.stack, context.user, __filename, 3)
+		log(error.stack, req?.user?.shortName, __filename, 3)
 	}
 }

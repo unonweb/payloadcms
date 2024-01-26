@@ -1,12 +1,14 @@
 import log from '../../customLog'
 import payload from 'payload'
 
-export default async function resetBrokenRelationship(callingCollection = '', fieldName = '', { data, originalDoc, value, field, context } = {}) {
+export default async function resetBrokenRelationship(relationID = '', { data, originalDoc, value, field, collection, req } = {}) {
 	/* 
-		Hook: beforeValidate
-		Task: Resets the relationship value if it's broken
-		Limits: 
-			- Use only on top level fieldName
+		Hook: 
+			beforeValidate
+		Order:
+			- after beforeOperation
+		Task: 
+			- Reset the relationship value if it's broken
 		Arguments:
 			- value is not set in updates triggered externally
 			- data has the new values
@@ -15,7 +17,6 @@ export default async function resetBrokenRelationship(callingCollection = '', fi
 	
 	try {
 		const relationTo = field.relationTo
-		const relationID = value ?? data[fieldName] ?? originalDoc[fieldName] // required because see arguments
 
 		if (relationID) {
 			const result = await payload.findByID({
@@ -27,10 +28,10 @@ export default async function resetBrokenRelationship(callingCollection = '', fi
 	} catch (error) {
 		switch (error.name) {
 			case 'NotFound':
-				log(`Could not find "${relationID}" in "${relationTo}" referenced from "${callingCollection}"\n--> Reset relationship.`, context.user, __filename, 4)
+				log(`Could not find "${relationID}" in "${relationTo}" referenced from "${collection.slug}"\n--> Reset relationship.`, req?.user?.shortName, __filename, 4)
 				return null
 			default:
-				log(error.stack, context.user, __filename, 3)
+				log(error.stack, req?.user?.shortName, __filename, 3)
 		}
 	}
 }

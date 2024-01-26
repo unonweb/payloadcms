@@ -675,8 +675,8 @@ export const Pages = {
 									type: 'checkbox',
 									name: 'useHeader',
 									label: {
-										de: 'Header',
-										en: 'Header'
+										de: 'Verwende Header',
+										en: 'Use Header'
 									},
 									defaultValue: true,
 									admin: {
@@ -688,8 +688,8 @@ export const Pages = {
 									type: 'checkbox',
 									name: 'useNav',
 									label: {
-										de: 'Navigation',
-										en: 'Navigation'
+										de: 'Verwende Navigation',
+										en: 'Use Navigation'
 									},
 									defaultValue: true,
 									admin: {
@@ -701,8 +701,8 @@ export const Pages = {
 									type: 'checkbox',
 									name: 'useFooter',
 									label: {
-										de: 'Footer',
-										en: 'Footer'
+										de: 'Verwende Footer',
+										en: 'Use Footer'
 									},
 									defaultValue: true,
 									admin: {
@@ -724,12 +724,23 @@ export const Pages = {
 							},
 							required: false,
 							admin: {
-								condition: (data, siblingData, { user }) => (siblingData && siblingData.useHeader) ? true : false,
+								condition: (data, siblingData) => (siblingData && siblingData.useHeader) ? true : false,
 							},
 							hooks: {
 								beforeValidate: [
-									async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context }),
-									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'headers', { data, originalDoc, value, field, context })
+									async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+										// return null if field is hidden by condition
+										if (siblingData && !siblingData.useHeader) return null
+
+										const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+
+										if (!fieldValue) {
+											return await getDefaultDocID({ data, originalDoc, value, field, context, req })
+										}
+										else {
+											return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+										}
+									},
 								]
 							}
 						},
@@ -750,8 +761,19 @@ export const Pages = {
 							},
 							hooks: {
 								beforeValidate: [
-									async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context }),
-									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'navs', { data, originalDoc, value, field, context })
+									async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+										// return null if field is hidden by condition
+										if (siblingData && !siblingData.useNav) return null
+
+										const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+
+										if (!fieldValue) {
+											return await getDefaultDocID({ data, originalDoc, value, field, context, req })
+										}
+										else {
+											return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+										}
+									}
 								]
 							}
 						},
@@ -772,8 +794,19 @@ export const Pages = {
 							},
 							hooks: {
 								beforeValidate: [
-									async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context }),
-									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'footer', { data, originalDoc, value, field, context }),
+									async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+										// return null if field is hidden by condition
+										if (siblingData && !siblingData.useFooter) return null
+
+										const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+
+										if (!fieldValue) {
+											return await getDefaultDocID({ data, originalDoc, value, field, context, req })
+										}
+										else {
+											return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+										}
+									}
 								]
 							}
 						},

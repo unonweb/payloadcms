@@ -1,4 +1,5 @@
 import getDefaultDocID from '../../hooks/beforeValidate/getDefaultDocID'
+import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship'
 
 export default function createElementsFields() {
 	/* 
@@ -25,7 +26,7 @@ export default function createElementsFields() {
 			{
 				type: 'row',
 				fields: [
-					// --- element.useHeader
+					// --- post.elements.useHeader
 					{
 						type: 'checkbox',
 						name: 'useHeader',
@@ -35,7 +36,7 @@ export default function createElementsFields() {
 						},
 						defaultValue: true,
 					},
-					// --- element.useNav
+					// --- post.elements.useNav
 					{
 						type: 'checkbox',
 						name: 'useNav',
@@ -45,7 +46,7 @@ export default function createElementsFields() {
 						},
 						defaultValue: true,
 					},
-					// --- element.useFooter
+					// --- post.elements.useFooter
 					{
 						type: 'checkbox',
 						name: 'useFooter',
@@ -57,7 +58,7 @@ export default function createElementsFields() {
 					},
 				]
 			},
-			// --- element.header
+			// --- post.elements.header
 			{
 				type: 'relationship',
 				name: 'header',
@@ -74,11 +75,23 @@ export default function createElementsFields() {
 				},
 				hooks: {
 					beforeValidate: [
-						async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context })
+						async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+							// return null if field is hidden by condition
+							if (siblingData && !siblingData.useHeader) return null
+
+							const fieldValue = value ?? data?.elements?.[field.name] ?? originalDoc?.elements?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+
+							if (!fieldValue) {
+								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
+							}
+							else {
+								return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+							}
+						}
 					]
 				},
 			},
-			// --- element.nav
+			// --- post.elements.nav
 			{
 				type: 'relationship',
 				name: 'nav',
@@ -95,11 +108,23 @@ export default function createElementsFields() {
 				},
 				hooks: {
 					beforeValidate: [
-						async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context })
+						async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+							// return null if field is hidden by condition
+							if (siblingData && !siblingData.useNav) return null
+
+							const fieldValue = value ?? data?.elements?.[field.name] ?? originalDoc?.elements?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+
+							if (!fieldValue) {
+								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
+							}
+							else {
+								return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+							}
+						}
 					]
 				},
 			},
-			// --- element.footer
+			// --- post.elements.footer
 			{
 				type: 'relationship',
 				name: 'footer',
@@ -116,7 +141,19 @@ export default function createElementsFields() {
 				},
 				hooks: {
 					beforeValidate: [
-						async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context })
+						async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+							// return null if field is hidden by condition
+							if (siblingData && !siblingData.useFooter) return null
+
+							const fieldValue = value ?? data?.elements?.[field.name] ?? originalDoc?.elements?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+
+							if (!fieldValue) {
+								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
+							}
+							else {
+								return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+							}
+						}
 					]
 				},
 			},
