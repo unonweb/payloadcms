@@ -9,8 +9,7 @@ export default function createElementsFields() {
 			- Products
 	*/
 	const field = {
-		type: 'group',
-		name: 'elements',
+		type: 'collapsible',
 		label: {
 			de: 'Elemente',
 			en: 'Elements'
@@ -26,39 +25,39 @@ export default function createElementsFields() {
 			{
 				type: 'row',
 				fields: [
-					// --- post.elements.useHeader
+					// --- post.useHeader
 					{
 						type: 'checkbox',
 						name: 'useHeader',
 						label: {
-							de: 'Header',
-							en: 'Header'
+							de: 'Verwende Header',
+							en: 'Use Header'
 						},
 						defaultValue: true,
 					},
-					// --- post.elements.useNav
+					// --- post.useNav
 					{
 						type: 'checkbox',
 						name: 'useNav',
 						label: {
-							de: 'Navigation',
-							en: 'Navigation'
+							de: 'Verwende Navigation',
+							en: 'Use Navigation'
 						},
 						defaultValue: true,
 					},
-					// --- post.elements.useFooter
+					// --- post.useFooter
 					{
 						type: 'checkbox',
 						name: 'useFooter',
 						label: {
-							de: 'Footer',
-							en: 'Footer'
+							de: 'Verwende Footer',
+							en: 'Use Footer'
 						},
 						defaultValue: true,
 					},
 				]
 			},
-			// --- post.elements.header
+			// --- post.header
 			{
 				type: 'relationship',
 				name: 'header',
@@ -79,7 +78,7 @@ export default function createElementsFields() {
 							// return null if field is hidden by condition
 							if (siblingData && !siblingData.useHeader) return null
 
-							const fieldValue = value ?? data?.elements?.[field.name] ?? originalDoc?.elements?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+							const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
 
 							if (!fieldValue) {
 								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
@@ -91,7 +90,7 @@ export default function createElementsFields() {
 					]
 				},
 			},
-			// --- post.elements.nav
+			// --- post.nav
 			{
 				type: 'relationship',
 				name: 'nav',
@@ -112,7 +111,7 @@ export default function createElementsFields() {
 							// return null if field is hidden by condition
 							if (siblingData && !siblingData.useNav) return null
 
-							const fieldValue = value ?? data?.elements?.[field.name] ?? originalDoc?.elements?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+							const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
 
 							if (!fieldValue) {
 								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
@@ -124,7 +123,7 @@ export default function createElementsFields() {
 					]
 				},
 			},
-			// --- post.elements.footer
+			// --- post.footer
 			{
 				type: 'relationship',
 				name: 'footer',
@@ -145,7 +144,7 @@ export default function createElementsFields() {
 							// return null if field is hidden by condition
 							if (siblingData && !siblingData.useFooter) return null
 
-							const fieldValue = value ?? data?.elements?.[field.name] ?? originalDoc?.elements?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+							const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
 
 							if (!fieldValue) {
 								return await getDefaultDocID({ data, originalDoc, value, field, context, req })

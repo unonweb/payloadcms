@@ -264,10 +264,9 @@ export const Posts = {
 							defaultValue: false,
 							localized: false,
 						},
-						// --- post.elements
-						// --- post.elements.header
-						// --- post.elements.nav
-						// --- post.elements.footer
+						// --- post.header
+						// --- post.nav
+						// --- post.footer
 						createElementsFields(),
 						// post.html
 						createHTMLFields(),

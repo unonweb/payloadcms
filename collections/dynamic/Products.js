@@ -174,10 +174,9 @@ export const Products = {
 							},
 							defaultValue: true,
 						},
-						// --- product.elements
-						// --- product.elements.header
-						// --- product.elements.nav
-						// --- product.elements.footer
+						// --- product.header
+						// --- product.nav
+						// --- product.footer
 						createElementsFields(),
 					]
 				},

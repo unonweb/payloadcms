@@ -34,9 +34,9 @@ export default async function afterChangeHook(col = '', { req, doc, previousDoc,
 		/* save this as own page */
 		if (doc.hasOwnPage) {
 			/* compose html */
-			const header = (doc.elements.header) ? await getDoc('headers', doc.elements.header, user, { depth: 0, locale: req.locale }) : null
-			const nav = (doc.elements.nav) ? await getDoc('navs', doc.elements.nav, user, { depth: 0, locale: req.locale }) : null
-			const footer = (doc.elements.footer) ? await getDoc('footers', doc.elements.footer, user, { depth: 0, locale: req.locale }) : null
+			const header = (doc.header) ? await getDoc('headers', doc.header, user, { depth: 0, locale: req.locale }) : null
+			const nav = (doc.nav) ? await getDoc('navs', doc.nav, user, { depth: 0, locale: req.locale }) : null
+			const footer = (doc.footer) ? await getDoc('footers', doc.footer, user, { depth: 0, locale: req.locale }) : null
 
 			const postHTML = renderHTMLPage(req.locale, doc, user, {
 				// pass html or undefined:

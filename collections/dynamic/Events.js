@@ -249,10 +249,9 @@ export const Events = {
 							},
 							defaultValue: false,
 						},
-						// --- event.elements
-						// --- event.elements.header
-						// --- event.elements.nav
-						// --- event.elements.footer
+						// --- event.header
+						// --- event.nav
+						// --- event.footer
 						createElementsFields(),
 						// --- event.assets
 						createAssetsFields(),
