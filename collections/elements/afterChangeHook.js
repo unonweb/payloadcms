@@ -71,7 +71,7 @@ export default async function afterChangeHook(col = '', { req, doc, previousDoc,
 					}
 			
 					for (const error of result.errors) {
-						throw new Error(`${error.message} (while updating "${error.id}")`)
+						throw new Error(`${error.message}\nUpdating "${error.id}" in "pages")`)
 					}
 
 					if (result.docs.length === 0) {
