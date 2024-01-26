@@ -1,4 +1,4 @@
-import getDefaultDocID from '../../hooks/getDefaultDocID'
+import getDefaultDocID from '../../hooks/beforeValidate/getDefaultDocID'
 
 export default function createElementsFields() {
 	const field = {
@@ -9,9 +9,50 @@ export default function createElementsFields() {
 			en: 'Elements'
 		},
 		admin: {
-			condition: (data) => data.hasOwnPage
+			condition: (data) => data.hasOwnPage,
+			admin: {
+				description: {
+					en: 'Leave empty for default values',
+					de: 'Leer lassen um Standard Werte zu setzen.'
+				},
+			},
 		},
 		fields: [
+			{
+				type: 'row',
+				fields: [
+					// --- element.useHeader
+					{
+						type: 'checkbox',
+						name: 'useHeader',
+						label: {
+							de: 'Header',
+							en: 'Header'
+						},
+						defaultValue: true,
+					},
+					// --- element.useNav
+					{
+						type: 'checkbox',
+						name: 'useNav',
+						label: {
+							de: 'Navigation',
+							en: 'Navigation'
+						},
+						defaultValue: true,
+					},
+					// --- element.useFooter
+					{
+						type: 'checkbox',
+						name: 'useFooter',
+						label: {
+							de: 'Footer',
+							en: 'Footer'
+						},
+						defaultValue: true,
+					},
+				]
+			},
 			// --- element.header
 			{
 				type: 'relationship',
@@ -19,7 +60,14 @@ export default function createElementsFields() {
 				maxDepth: 0, // only return id
 				relationTo: 'headers',
 				required: false,
-				defaultValue: async ({ user }) => (user) ? await getDefaultDocID('headers', user.shortName) : '',
+				admin: {
+					condition: (data, siblingData, { user }) => (siblingData && siblingData.useHeader) ? true : false,
+				},
+				hooks: {
+					beforeValidate: [
+						async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context })
+					]
+				},
 			},
 			// --- element.nav
 			{
@@ -28,7 +76,14 @@ export default function createElementsFields() {
 				maxDepth: 0, // only return id
 				relationTo: 'navs',
 				required: false,
-				defaultValue: async ({ user }) => (user) ? await getDefaultDocID('navs', user.shortName) : '',
+				admin: {
+					condition: (data, siblingData, { user }) => (siblingData && siblingData.useNav) ? true : false,
+				},
+				hooks: {
+					beforeValidate: [
+						async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context })
+					]
+				},
 			},
 			// --- element.footer
 			{
@@ -37,8 +92,14 @@ export default function createElementsFields() {
 				maxDepth: 0, // only return id
 				relationTo: 'footers',
 				required: false,
-				defaultValue: async ({ user }) => (user) ? await getDefaultDocID('footers', user.shortName) : '',
-
+				admin: {
+					condition: (data, siblingData, { user }) => (siblingData && siblingData.useFooter) ? true : false,
+				},
+				hooks: {
+					beforeValidate: [
+						async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context })
+					]
+				},
 			},
 		]
 	}
