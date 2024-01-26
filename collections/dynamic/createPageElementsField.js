@@ -10,11 +10,9 @@ export default function createElementsFields() {
 		},
 		admin: {
 			condition: (data) => data.hasOwnPage,
-			admin: {
-				description: {
-					en: 'Leave empty for default values',
-					de: 'Leer lassen um Standard Werte zu setzen.'
-				},
+			description: {
+				en: 'Leave empty for default values',
+				de: 'Leer lassen um Standard Werte zu setzen.'
 			},
 		},
 		fields: [
