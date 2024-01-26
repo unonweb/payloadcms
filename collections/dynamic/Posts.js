@@ -25,6 +25,7 @@ import afterOperationHook from './afterOperationHook';
 import afterChangeHook from './afterChangeHook';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
 import beforeChangeHook from './beforeChangeHook';
+import beforeValidateHook from './beforeValidateHook';
 
 const COLSINGULAR = 'post'
 const COLPLURAL = 'posts'
@@ -63,6 +64,10 @@ export const Posts = {
 		// --- beforeOperation
 		beforeOperation: [
 			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
+		],
+		// --- beforeValidate
+		beforeValidate: [
+			async ({ data, req, operation, originalDoc }) => beforeValidateHook(COLPLURAL, { data, req, operation, originalDoc })
 		],
 		// --- beforeChange
 		beforeChange: [
