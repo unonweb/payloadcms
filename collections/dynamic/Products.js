@@ -16,7 +16,7 @@ import getDoc from '../../hooks/getDoc';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import mailError from '../../mailError';
 import saveToDisk from '../../hooks/_saveToDisk';
-import createElementsFields from '../../fields/createPageElementsField';
+import createElementsFields from './createPageElementsField';
 import getUserSites from '../../hooks/getUserSites';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
 import afterChangeHook from './afterChangeHook';
