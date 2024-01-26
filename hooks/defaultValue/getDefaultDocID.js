@@ -1,4 +1,4 @@
-import log from '../customLog'
+import log from '../../customLog'
 import payload from 'payload'
 
 async function getDefaultDocIDLocalAPI(colSlug = '', user = {}) {
