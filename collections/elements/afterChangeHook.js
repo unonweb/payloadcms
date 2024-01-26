@@ -1,6 +1,5 @@
 import payload from 'payload'
 import cpAssets from '../../hooks/_cpAssets'
-import getAppMode from '../../hooks/_getAppMode'
 import getRelatedDoc from '../../hooks/getRelatedDoc'
 import log from '../../customLog'
 import mailError from '../../mailError'
