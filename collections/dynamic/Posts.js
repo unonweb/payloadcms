@@ -16,7 +16,7 @@ import getRelatedDoc from '../../hooks/getRelatedDoc';
 import iterateBlocks from '../../hooks/iterateBlocks';
 import getCol from '../../hooks/_getCol';
 import hasChanged from '../../hooks/_hasChanged';
-import createElementsFields from '../../fields/createPageElementsField';
+import createElementsFields from './createPageElementsField';
 import renderHTMLHead from '../../hooks/renderHTMLHead';
 import createAssetsFields from '../../fields/createAssetsFields';
 import createHTMLFields from '../../fields/createHTMLFields';
@@ -192,7 +192,7 @@ export const Posts = {
 							// * if changed renderHTMLFromBlocks has to be changed, too
 							admin: {
 								description: {
-									de: 'Ein Posts kann mithilfe von Tagsn in eine oder mehrere deiner Sub(Seiten) eingebunden werden.',
+									de: 'Ein Posts kann mithilfe von Tags in eine oder mehrere deiner Sub(Seiten) eingebunden werden.',
 									en: 'By the means of tags a post may be included in one or multiple pages.'
 								},
 								disableBulkEdit: false, // must be disabled if updatePostCategories() is used

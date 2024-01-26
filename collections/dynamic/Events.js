@@ -14,7 +14,7 @@ import iterateBlocks from '../../hooks/iterateBlocks';
 import log from '../../customLog';
 import getCol from '../../hooks/_getCol';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
-import createElementsFields from '../../fields/createPageElementsField';
+import createElementsFields from './createPageElementsField';
 import getAppMode from '../../hooks/_getAppMode';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterOperationHook from './afterOperationHook';
