@@ -25,7 +25,6 @@ import getDoc from '../hooks/getDoc';
 import validatePageTitle from '../hooks/validate/validatePageTitle';
 import slugify from '../hooks/_slugify';
 import renderHTMLPage from '../hooks/renderHTMLPage';
-import getDefaultDocID from '../hooks/defaultValue/getDefaultDocID';
 import getAppMode from '../hooks/_getAppMode';
 import getUserSites from '../hooks/getUserSites';
 import cpAssets from '../hooks/_cpAssets';
@@ -33,6 +32,7 @@ import canAccess from '../hooks/_canAccess';
 import createAssetsFields from '../fields/createAssetsFields';
 import initOtherLocaleField from '../fields/initOtherLocaleField'
 import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship';
+import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID';
 
 const COLSINGULAR = 'page'
 const COLPLURAL = 'pages'
@@ -118,22 +118,22 @@ export const Pages = {
 				2. if successful, beforeValidate runs on the server
 				3. validate runs on the server 
 			*/
-			/* async ({ data, req, operation, originalDoc, }) => {
-				await resetBrokenRelationship(field.relationTo, value, COLPLURAL, context)
-			} */
+			async ({ data, req, operation, originalDoc, }) => {
+				req.context.user ??= req?.user?.shortName ?? 'internal'
+				req.context.site ??= (typeof data.site === 'string' && req.context.sites) ? req.context.sites.find(item => item.id === data.site) : null
+				req.context.site ??= await getRelatedDoc('sites', data.site, req.context.user)
+				req.context.mode = getAppMode()
+				req.context.host = process.env.HOST
+				req.context.pathSite = `${req.context.site.paths.fs.site}/${req.context.mode}`
+			}
 		],
 		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => {
 				try {
 					if (!context.updatedByPageElement) {
-						context.user = req?.user?.shortName ?? 'internal'
-						context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
-						context.site ??= await getRelatedDoc('sites', data.site, user)
-						context.pathSite = `${site.paths.fs.site}/${mode}`
-						context.mode = getAppMode()
 						const user = context.user
-						const mode = context.mode 
+						const mode = context.mode
 						const site = context.site
 
 						log('--- beforeChange ---', user, __filename, 7)
@@ -174,7 +174,7 @@ export const Pages = {
 							data.assets.docs = docFiles	// update page.assets.docs
 							data.assets.head = libPathsWeb // update page.assets.head
 						}
-						
+
 						data.html.head = await renderHTMLHead(data, site, user) // update page.html.head; is called even if there's no doc.main.html
 
 						return data
@@ -192,7 +192,7 @@ export const Pages = {
 				try {
 					const user = req?.user?.shortName ?? 'internal'
 					log('--- afterChange ---', user, __filename, 7)
-					context.site ??= (typeof doc.site === 'string' && context.sites) ? context.sites.find(item => item.id === doc.site) : null 
+					context.site ??= (typeof doc.site === 'string' && context.sites) ? context.sites.find(item => item.id === doc.site) : null
 					context.site ??= await getRelatedDoc('sites', doc.site, user)
 					const site = context.site
 					const mode = getAppMode()
@@ -312,7 +312,7 @@ export const Pages = {
 					/* sites */
 					// update site.urls
 					if (operation === 'create' || doc.url !== previousDoc.url) {
-						
+
 						site.urls[doc.id] ??= {}
 						site.urls[doc.id][req.locale] = doc.url
 
@@ -329,7 +329,7 @@ export const Pages = {
 							data: {
 								updatedBy: `pages-${Date.now()}`
 							}
-						})	
+						})
 					}
 
 				} catch (err) {
@@ -355,7 +355,7 @@ export const Pages = {
 							// if site still exists
 							// if afterDelete is triggered because site is deleted - there won't be not site anymore (surprise!)
 							delete site.urls[doc.id]
-	
+
 							updateDocSingle('sites', site.id, user, {
 								data: {
 									urls: site.urls
@@ -542,7 +542,7 @@ export const Pages = {
 													let titleKey = Object.keys(data.title)[0]
 													slug = `${slugify(data.title[titleKey])}`
 													context.slug = slug
-													
+
 												} else {
 													// title is a string 
 													slug = `${slugify(data.title)}`
@@ -667,6 +667,50 @@ export const Pages = {
 						de: 'Hier werden der Seite Elemente wie Header, Footer, Menü zugeordnet. Diese Elemente können im entsprechnenden Menüpunkt auf der Seitenleiste konfiguriert werden.'
 					},
 					fields: [
+						{
+							type: 'row',
+							fields: [
+								// --- element.useHeader
+								{
+									type: 'checkbox',
+									name: 'useHeader',
+									label: {
+										de: 'Header',
+										en: 'Header'
+									},
+									defaultValue: true,
+									admin: {
+										width: '25%'
+									}
+								},
+								// --- element.useNav
+								{
+									type: 'checkbox',
+									name: 'useNav',
+									label: {
+										de: 'Navigation',
+										en: 'Navigation'
+									},
+									defaultValue: true,
+									admin: {
+										width: '25%'
+									}
+								},
+								// --- element.useFooter
+								{
+									type: 'checkbox',
+									name: 'useFooter',
+									label: {
+										de: 'Footer',
+										en: 'Footer'
+									},
+									defaultValue: true,
+									admin: {
+										width: '25%'
+									}
+								},
+							]
+						},
 						// --- page.header
 						{
 							name: 'header',
@@ -679,9 +723,12 @@ export const Pages = {
 								}
 							},
 							required: false,
-							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('headers', user.shortName) : '',
+							admin: {
+								condition: (data, siblingData, { user }) => (siblingData && siblingData.useHeader) ? true : false,
+							},
 							hooks: {
 								beforeValidate: [
+									async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context }),
 									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'headers', { data, originalDoc, value, field, context })
 								]
 							}
@@ -698,9 +745,12 @@ export const Pages = {
 								}
 							},
 							required: false,
-							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('navs', user.shortName) : '',
+							admin: {
+								condition: (data, siblingData, { user }) => (siblingData && siblingData.useNav) ? true : false,
+							},
 							hooks: {
 								beforeValidate: [
+									async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context }),
 									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'navs', { data, originalDoc, value, field, context })
 								]
 							}
@@ -717,10 +767,13 @@ export const Pages = {
 								}
 							},
 							required: false,
-							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('footers', user.shortName) : '',
+							admin: {
+								condition: (data, siblingData, { user }) => (siblingData && siblingData.useFooter) ? true : false,
+							},
 							hooks: {
 								beforeValidate: [
-									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'footer', { data, originalDoc, value, field, context })
+									async ({ data, originalDoc, value, field, context }) => await getDefaultDocID({ data, originalDoc, value, field, context }),
+									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'footer', { data, originalDoc, value, field, context }),
 								]
 							}
 						},
