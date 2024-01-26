@@ -4,14 +4,10 @@ import createImgBlock from '../img-block'
 import { imgGalleryBlock } from '../img-gallery'
 import { imgSlidesBlock } from '../img-slideshow'
 import { socialMediaIcons } from '../social-media-icons'
-import createTextBlock from '../text-block'
-import createTextAreaBlock from '../textarea'
 import createIncludePostsBlock from '../include-posts'
 
 const blocksAvailable = [
 	createRichTextBlock(),
-	//createTextBlock(),
-	//createTextAreaBlock(),
 	createImgBlock(),
 	imgGalleryBlock,
 	imgSlidesBlock,
