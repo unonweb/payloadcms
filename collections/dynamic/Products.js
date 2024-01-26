@@ -43,6 +43,7 @@ export const Products = {
 		pagination: {
 			defaultLimit: 30,
 		},
+		hidden: true
 	},
 	versions: false,
 	access: {
