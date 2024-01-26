@@ -25,14 +25,14 @@ import getDoc from '../hooks/getDoc';
 import validatePageTitle from '../hooks/validate/validatePageTitle';
 import slugify from '../hooks/_slugify';
 import renderHTMLPage from '../hooks/renderHTMLPage';
-import getDefaultDocID from '../hooks/getDefaultDocID';
+import getDefaultDocID from '../hooks/defaultValue/getDefaultDocID';
 import getAppMode from '../hooks/_getAppMode';
 import getUserSites from '../hooks/getUserSites';
 import cpAssets from '../hooks/_cpAssets';
 import canAccess from '../hooks/_canAccess';
 import createAssetsFields from '../fields/createAssetsFields';
 import initOtherLocaleField from '../fields/initOtherLocaleField'
-import resetBrokenRelationship from '../hooks/resetBrokenRelationship';
+import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship';
 
 const COLSINGULAR = 'page'
 const COLPLURAL = 'pages'
@@ -112,19 +112,31 @@ export const Pages = {
 
 			}
 		],
+		beforeValidate: [
+			/* 
+				1. validate runs on the client
+				2. if successful, beforeValidate runs on the server
+				3. validate runs on the server 
+			*/
+			/* async ({ data, req, operation, originalDoc, }) => {
+				await resetBrokenRelationship(field.relationTo, value, COLPLURAL, context)
+			} */
+		],
 		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => {
 				try {
 					if (!context.updatedByPageElement) {
-						const user = req?.user?.shortName ?? 'internal'
-						log('--- beforeChange ---', user, __filename, 7)
-						const mode = getAppMode()
+						context.user = req?.user?.shortName ?? 'internal'
 						context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
 						context.site ??= await getRelatedDoc('sites', data.site, user)
+						context.pathSite = `${site.paths.fs.site}/${mode}`
+						context.mode = getAppMode()
+						const user = context.user
+						const mode = context.mode 
 						const site = context.site
-						const pathSite = `${site.paths.fs.site}/${mode}`
 
+						log('--- beforeChange ---', user, __filename, 7)
 						/* render html.main from blocks and update assets */
 						if (data.main.blocks && data.main.blocks.length > 0) {
 							//if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {}
@@ -670,7 +682,7 @@ export const Pages = {
 							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('headers', user.shortName) : '',
 							hooks: {
 								beforeValidate: [
-									async ({ value, field, req }) => resetBrokenRelationship(field.relationTo, value, COLPLURAL, req.user.shortName)
+									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'headers', { data, originalDoc, value, field, context })
 								]
 							}
 						},
@@ -689,7 +701,7 @@ export const Pages = {
 							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('navs', user.shortName) : '',
 							hooks: {
 								beforeValidate: [
-									async ({ value, field, req }) => resetBrokenRelationship(field.relationTo, value, COLPLURAL, req.user.shortName)
+									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'navs', { data, originalDoc, value, field, context })
 								]
 							}
 						},
@@ -708,7 +720,7 @@ export const Pages = {
 							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('footers', user.shortName) : '',
 							hooks: {
 								beforeValidate: [
-									async ({ value, field, req }) => resetBrokenRelationship(field.relationTo, value, COLPLURAL, req.user.shortName)
+									async ({ data, originalDoc, value, field, context }) => await resetBrokenRelationship(COLPLURAL, 'footer', { data, originalDoc, value, field, context })
 								]
 							}
 						},
