@@ -30,8 +30,6 @@ import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
 import afterChangeHook from './afterChangeHook';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
-import createTextBlock from '../../blocks/posts_flex/text-block';
-import createTimeBlock from '../../blocks/posts_flex/time-block';
 
 export const PostsFlex = {
 	slug: 'posts-flex',
