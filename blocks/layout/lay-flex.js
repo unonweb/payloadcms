@@ -5,6 +5,7 @@ import { imgGalleryBlock } from '../img-gallery'
 import { imgSlidesBlock } from '../img-slideshow'
 import { socialMediaIcons } from '../social-media-icons'
 import createIncludePostsBlock from '../include-posts'
+import createIncludePostsFlexBlock from '../include-posts-flex'
 
 const blocksAvailable = [
 	createRichTextBlock(),
@@ -13,7 +14,8 @@ const blocksAvailable = [
 	imgSlidesBlock,
 	socialMediaIcons,
 	mapLeafletBlock,
-	createIncludePostsBlock()
+	createIncludePostsBlock(),
+	createIncludePostsFlexBlock(),
 ]
 
 /* const columnOptions = {

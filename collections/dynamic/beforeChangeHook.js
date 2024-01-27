@@ -9,11 +9,11 @@ import log from '../../customLog'
 export default async function beforeChangeHook(col = '', { data, req, operation, originalDoc, context }) {
 	/*
 		Iterate blocks and update:
-		- data.html
+		- data.html.main
+		- data.html.head
 		- data.assets.imgs
-		Requires:
-		- col.html
-		- col.assets.imgs
+		- data.assets.docs
+		- data.assets.head
 	*/
 	try {
 		const site = context.site

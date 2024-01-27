@@ -28,6 +28,7 @@ import { Fonts } from './collections/assets/Fonts';
 import { _FontFamilies } from './collections/assets/_FontFamilies';
 import { Tags } from './collections/Tags';
 import { Backgrounds } from './collections/elements/Backgrounds';
+import { PostsFlex } from './collections/dynamic/PostsFlex';
 
 //const mockModulePath = path.resolve(__dirname, 'mocks/emptyObject.js')
 //const mockModulePath = '/home/payload/cms/src/mocks/emptyObject.js'
@@ -127,6 +128,7 @@ export default buildConfig({
 		Pages, // everything downwards will not be linkable from richText fields
 		/* dynamic content */
 		Posts,
+		PostsFlex,
 		Events,
 		Products,
 		Tags,
