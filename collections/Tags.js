@@ -85,6 +85,10 @@ export const Tags = {
 					label: 'Libraries',
 					value: 'lib'
 				},
+				{
+					label: 'Posts Flex',
+					value: 'postsFlex'
+				},
 			],
 		},
 		// --- tag.name
