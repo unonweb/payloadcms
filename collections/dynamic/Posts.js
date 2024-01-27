@@ -28,10 +28,10 @@ import beforeChangeHook from './beforeChangeHook';
 import beforeValidateHook from './beforeValidateHook';
 
 const COLSINGULAR = 'post'
-const COLPLURAL = 'posts'
+const SLUG = 'posts'
 
 export const Posts = {
-	slug: COLPLURAL,
+	slug: SLUG,
 	admin: {
 		enableRichTextRelationship: false, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
 		enableRichTextLink: false,
@@ -63,22 +63,22 @@ export const Posts = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
+			async ({ args, operation }) => await beforeOperationHook(SLUG, { args, operation })
 		],
 		// --- beforeValidate
 		beforeValidate: [
-			async ({ data, req, operation, originalDoc }) => beforeValidateHook(COLPLURAL, { data, req, operation, originalDoc })
+			async ({ data, req, operation, originalDoc }) => await beforeValidateHook(SLUG, { data, req, operation, originalDoc })
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => await beforeChangeHook(SLUG, { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, context, operation })
+			async ({ req, doc, previousDoc, context, operation }) => await afterChangeHook(SLUG, { req, doc, previousDoc, context, operation })
 		],
 		afterOperation: [
-			async ({ args, operation, result }) => afterOperationHook(COLPLURAL, { args, operation, result })
+			async ({ args, operation, result }) => await afterOperationHook(SLUG, { args, operation, result })
 		],
 	},
 	fields: [
@@ -115,7 +115,7 @@ export const Posts = {
 							},
 							filterOptions: () => {
 								return {
-									relatedCollection: { equals: COLPLURAL },
+									relatedCollection: { equals: SLUG },
 								}
 							},
 							hasMany: true,

@@ -18,11 +18,11 @@ import afterChangeHook from './afterChangeHook';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
 import beforeChangeHook from './beforeChangeHook';
 
-const COLPLURAL = 'events'
+const SLUG = 'events'
 const COLSINGULAR = 'event'
 
 export const Events = {
-	slug: COLPLURAL,
+	slug: SLUG,
 	admin: {
 		enableRichTextRelationship: true, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
 		enableRichTextLink: true,
@@ -52,19 +52,19 @@ export const Events = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
+			async ({ args, operation }) => beforeOperationHook(SLUG, { args, operation })
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(SLUG, { data, req, operation, originalDoc, context })
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook(SLUG, { req, doc, previousDoc, context, operation }),
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => afterOperationHook(COLPLURAL, { args, operation, result })
+			async ({ args, operation, result }) => afterOperationHook(SLUG, { args, operation, result })
 		],
 	},
 	fields: [
