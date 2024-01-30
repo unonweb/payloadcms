@@ -17,7 +17,6 @@ import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
 import updateRelations from '../../hooks/afterChange/updateRelations';
-import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterDeleteHook from './afterDeleteHook';
 import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
@@ -25,6 +24,7 @@ import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
 import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
 import copyAssets from '../../hooks/afterChange/copyAssets';
 import setMainHTML from '../../hooks/beforeChange/setMainHTML';
+import createHTMLFields from '../../fields/createHTMLFields';
 
 const SLUG = 'navs'
 const COLSINGULAR = 'nav'
@@ -65,31 +65,10 @@ export const Navs = {
 		// --- beforeOperation
 		beforeOperation: [
 			async ({ args, operation }) => startConsoleTime(SLUG, { args, operation }),
-			async ({ args, operation }) => populateContextBeforeOp({ args, operation }, ['sites']),
+			async ({ args, operation }) => populateContextBeforeOp({ args, operation }, ['sites', 'images', 'pages', 'documents']),
 		],
 		// --- beforeValidate
-		beforeValidate: [
-			async ({ data, req, operation, originalDoc, context }) => {
-				try {
-					if (operation === 'create' || operation === 'update') {
-						const user = req?.user?.shortName ?? 'internal'
-						log('--- beforeValidate ---', user, __filename, 7)
-						/* default values */
-						if (!data.title) {
-							const user = req?.user?.shortName ?? 'internal'
-							context.site ??= await getRelatedDoc('sites', data.site, user)
-							const site = context.site
-							data.title = `${(data.blocks && data.blocks?.length > 0) ? data.blocks[0].blockType : 'default'} (${site.domainShort})` // title of this menu
-						}
-
-						return data
-					}
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			}
-		],
+		beforeValidate: [],
 		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
@@ -128,7 +107,7 @@ export const Navs = {
 							required: true,
 							// If user is not admin, set the site by default
 							// to the first site that they have access to
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
+							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
 						},
 						// --- nav.title
 						{
@@ -141,30 +120,18 @@ export const Navs = {
 									en: 'Leave blank for automatic insertion',
 									de: 'Frei lassen für automatische Bezeichnung'
 								}
+							},
+							hooks: {
+								beforeValidate: [
+									({ value, data, context }) => {
+										/* default title */
+										if (!value) {
+											return `${ (data.blocks && data.blocks?.length > 0) ? data.blocks[0].blockType : 'default' } (${context.site.domainShort})` // title of this menu
+										}
+									}
+								]
 							}
 						},
-						/* // --- nav.area
-						{
-							type: 'select',
-							name: 'area',
-							hasMany: false,
-							required: true,
-							options: [
-								{
-									label: 'header',
-									value: 'header'
-								},
-								{
-									label: 'aside',
-									value: 'aside',
-								},
-								{
-									label: 'bottom',
-									value: 'bottom'
-								},
-							],
-							defaultValue: 'header'
-						}, */
 						// --- nav.isDefault
 						{
 							type: 'checkbox',
@@ -182,16 +149,8 @@ export const Navs = {
 							defaultValue: async ({ user }) => await firstDefaultsToTrue(SLUG, user.shortName),
 							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, SLUG),
 						},
-						// --- nav.html
-						{
-							type: 'code',
-							name: 'html',
-							admin: {
-								language: 'html',
-								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-							},
-							localized: true,
-						},
+						// --- nav.html.main
+						createHTMLFields('main'),
 						// --- nav.assets.imgs
 						// updated in beforeChange hook
 						createAssetsFields('imgs'),

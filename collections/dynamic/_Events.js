@@ -86,7 +86,7 @@ export const Events = {
 							relationTo: 'sites',
 							required: true,
 							maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
+							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
 						},
 						// --- event.tags
 						{

@@ -14,22 +14,14 @@ import createColumnsFlex from '../blocks/layout/lay-flex';
 /* HOOKS & HELPERS */
 import getRelatedDoc from '../hooks/getRelatedDoc';
 import validateIsHome from '../hooks/validate/validateIsHome';
-import saveToDisk from '../hooks/_saveToDisk';
-import rmFile from '../hooks/_rmFile';
 import log from '../customLog';
 import mailError from '../mailError';
-import renderHeadHTML from '../helpers/renderHeadHTML';
 import updateDocSingle from '../hooks/updateDocSingle';
-import getDoc from '../hooks/getDoc';
 import validatePageTitle from '../hooks/validate/validatePageTitle';
 import slugify from '../hooks/_slugify';
-import renderPageHTML from '../helpers/renderPageHTML';
 import getAppMode from '../hooks/_getAppMode';
-import getUserSites from '../hooks/getUserSites';
-import cpAssets from '../hooks/_cpAssets';
 import canAccess from '../hooks/_canAccess';
 import createAssetsFields from '../fields/createAssetsFields';
-import initOtherLocaleField from '../fields/initOtherLocaleField'
 import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship';
 import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID';
 import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
@@ -39,6 +31,11 @@ import setMainHTML from '../hooks/beforeChange/setMainHTML';
 import createHTMLFields from '../fields/createHTMLFields';
 import setHeadHTML from '../hooks/beforeChange/setHeadHTML';
 import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
+import copyAssets from '../hooks/afterChange/copyAssets';
+import setPageHTML from '../hooks/beforeChange/setPageHTML';
+import otherLocaleField from '../fields/otherLocaleField';
+import savePage from '../hooks/afterChange/savePage';
+import removePrevPage from '../hooks/afterChange/removePrevPage';
 
 const commonFields = createCommonFields()
 const SLUG = 'pages'
@@ -67,11 +64,6 @@ export const Pages = {
 		enableRichTextRelationship: false, // <-- IMP: enable
 		enableRichTextLink: true,
 		hideAPIURL: true,
-		/* livePreview: {
-			//url: 'http://localhost:8000/index.html', // The URL to your front-end, this can also be a function (see below)
-			url: 'http://localhost:3000/preview.html'
-			//url: '/home/payload/preview/dist/index.html'
-		}, */
 		pagination: {
 			defaultLimit: 30,
 		},
@@ -97,9 +89,13 @@ export const Pages = {
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }),
 			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, originalDoc, context }), // data.html.main 
 		],
 		// --- afterChange 
 		afterChange: [
+			async ({ req, doc, previousDoc, context, operation }) => await copyAssets(['images', 'documents'], { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, context, operation }) => await savePage({ doc, req, context }),
+			async ({ req, doc, previousDoc, context, operation }) => await removePrevPage({ doc, previousDoc, req, context }),
 			async ({ req, doc, previousDoc, operation, context }) => {
 				try {
 					const user = req?.user?.shortName ?? 'internal'
@@ -109,121 +105,17 @@ export const Pages = {
 					const site = context.site
 					const mode = getAppMode()
 					const pathSite = `${site.paths.fs.site}/${mode}`
-					const defLang = site.locales.default
-					const currSiteID = (typeof doc.site === 'string') ? doc.site : doc.site.id
-					const prevSiteID = (typeof previousDoc.site === 'string') ? previousDoc.site : (typeof previousDoc.site === 'object') ? previousDoc.site.id : null
-
-					//if (mode === 'dev' || doc.html !== previousDoc.html || doc.title !== previousDoc.title || doc.description !== previousDoc.description || doc.isHome !== previousDoc.isHome || doc.header !== previousDoc.header || doc.nav !== previousDoc.nav || doc.footer !== previousDoc.footer) {}
-
-					/* elements html */
-					const header = (doc.header) ? await getDoc('headers', doc.header, user, { depth: 0, locale: req.locale }) : null
-					const nav = (doc.nav) ? await getDoc('navs', doc.nav, user, { depth: 0, locale: req.locale }) : null
-					const footer = (doc.footer) ? await getDoc('footers', doc.footer, user, { depth: 0, locale: req.locale }) : null
-
-					/* assets */
-					// --------------------
-					const docFilesUnique = Array.from(new Set(
-						[
-							...doc.assets.docs ?? ''
-						]
-					))
-					const imgFilesUnique = Array.from(new Set(
-						[
-							...doc.assets.imgs ?? '',
-							...header?.imgs ?? '',
-							...nav?.imgs ?? '',
-							...footer?.imgs ?? '',
-						]
-					))
-
-					/* cp assets */
-					await cpAssets(`${process.cwd()}/upload/documents/`, `${pathSite}/assets/docs`, docFilesUnique, user) // cp docs from src to dest
-					await cpAssets(`${process.cwd()}/upload/images/`, `${pathSite}/assets/imgs`, imgFilesUnique, user) // cp imgs from src to dest
-
-					/* compose html */
-					const pageHTML = renderPageHTML(req.locale, doc, user, {
-						// pass html or undefined:
-						navHTML: nav?.html,
-						headerHTML: header?.html,
-						footerHTML: footer?.html,
-					})
-
-					/* save subpage */
-					if (doc.isHome === false) {
-						const path = `${pathSite}/${req.locale}/${doc.slug}/index.html`
-						await saveToDisk(path, pageHTML, user) // save current locale page
-					}
-
-					/* save homepage */
-					if (doc.isHome === true) {
-						const path = `${pathSite}/${req.locale}/index.html` // '/home/payload/sites/manueldieterich/en/index.html'
-						await saveToDisk(path, pageHTML, user) // save current localized home
-						if (req.locale === defLang) {
-							await saveToDisk(`${pathSite}/index.html`, pageHTML, user) // save additional non-localized home
-						}
-					}
-
-					/* remove previous page if slug changes */
-					if (doc.slug !== previousDoc.slug && previousDoc.slug !== '') {
-						// slug has changed and is not empty
-						for (const loc of site.locales.used) {
-							await rmFile(`${pathSite}/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory if slug has changed
-						}
-					}
-
-					/* remove previous page if site changes */
-					if (operation === 'update' && currSiteID !== prevSiteID) {
-						// slug has changed and is not empty
-						const prevSite = await getDoc('sites', previousDoc.site, user, { depth: 0 })
-						for (const loc of site.locales.used) {
-							await rmFile(`${prevSite.paths.fs.site}/dev/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory
-							await rmFile(`${prevSite.paths.fs.site}/prod/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory
-						}
-					}
-
-					// update other locales of this doc
-					// any non-localized layout or style property may have changed
-					if (operation === 'update') {
-						if ((site.locales.updateOthers || doc.slug !== previousDoc.slug) && site.locales.used.length > 1 && context.buildOtherLocale !== false) {
-							// is also executed if slug has changed
-							for (const loc of site.locales.used.filter(item => item !== req.locale)) {
-
-								const updatedDoc = updateDocSingle('pages', doc.id, user, {
-									data: { updatedBy: `${user}-${Date.now()}` },
-									locale: loc,
-									context: {
-										// set a flag to prevent from running again
-										buildOtherLocale: false,
-										sites: context.sites,
-										site: site,
-										nav: nav,
-										header: header,
-										footer: footer
-									},
-								})
-							}
-						}
-					}
-
-					/* sites */
-					// update site.urls
-					if (operation === 'create' || doc.url !== previousDoc.url) {
-
-						site.urls[doc.id] ??= {}
-						site.urls[doc.id][req.locale] = doc.url
-
-						updateDocSingle('sites', site.id, user, {
-							data: {
-								urls: site.urls
-							}
-						})
-					}
 
 					// update site if 'user.css' or 'fonts.css' are missing
 					if (!await canAccess(`${pathSite}/assets/fonts.css`) || !await canAccess(`${pathSite}/assets/user.css`)) {
-						updateDocSingle('sites', site.id, user, {
+						await updateDocSingle('sites', context.site.id, context.user, {
 							data: {
 								updatedBy: `pages-${Date.now()}`
+							},
+							context: {
+								isUpdatedByCode: true,
+								updatedBy: 'pages',
+								...context,
 							}
 						})
 					}
@@ -250,11 +142,18 @@ export const Pages = {
 						if (site) {
 							// if site still exists
 							// if afterDelete is triggered because site is deleted - there won't be not site anymore (surprise!)
+
+							/* update site.urls */
 							delete site.urls[doc.id]
 
-							updateDocSingle('sites', site.id, user, {
+							await updateDocSingle('sites', site.id, user, {
 								data: {
-									urls: site.urls
+									urls: site.urls,
+								},
+								context: {
+									isUpdatedByCode: true,
+									updatedBy: 'pages',
+									...context,
 								}
 							})
 						}
@@ -287,7 +186,7 @@ export const Pages = {
 							required: true,
 							// If user is not admin, set the site by default
 							// to the first site that they have access to
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
+							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
 						},
 						// --- page.title
 						{
@@ -397,16 +296,13 @@ export const Pages = {
 									en: `ATTENTION: It's important after publishing the website that the URL remains constant.`,
 									de: 'ACHTUNG: Nach Veröffentlichung der Website ist es wichtig, dass die URL konstant bleibt.'
 								},
+								disableBulkEdit: true,
 							},
 							hooks: {
 								beforeChange: [
 									({ data, value, req, operation, context }) => {
 										try {
-											const user = req?.user?.shortName ?? 'internal'
-											log('--- beforeChange [slug] ---', user, __filename, 7)
-
-											let slug = ''
-
+											/* set and retun slug */
 											if (data.isHome === true) {
 												return ''
 											}
@@ -468,14 +364,13 @@ export const Pages = {
 									en: '... is generated automatically during the creation of the site from the first title. Later it may only be changed via "Functional Options". However this is not recommended after puplication of this page.',
 									de: '... wird bei der Erstellung der Website vom ersten Titel abgeleitet. Später kann die URL nur über "Funktionale Optionen" geändert werden. Es wird jedoch empfohlen die URL nach der Veröffentlichung der Seite konstant zu halten.'
 								},
+								disableBulkEdit: true,
 							},
 							hooks: {
 								beforeChange: [
 									async ({ data, req, operation, context }) => {
 										try {
-											const user = req?.user?.shortName ?? 'internal'
-											log('--- beforeChange [url] ---', user, __filename, 7)
-
+											/* return url */
 											if (data.isHome === true) {
 												return '/'
 											}
@@ -489,7 +384,44 @@ export const Pages = {
 											}
 
 										} catch (error) {
-											log(error.stack, user, __filename, 3)
+											log(error.stack, context.user, __filename, 3)
+										}
+									}
+								],
+								afterChange: [
+									async ({ operation, originalDoc, previousDoc, data, previousValue, value, context, req, field }) => {
+										/*
+											Attention:
+												In bulk operation previousDoc doesn't refere to previous version of the same doc
+												but to the previous doc in the bulk!
+												(value === previousValue) is always true
+											Arguments:
+												- current: originalDoc.url
+												- previous: data.url
+										*/
+										try {
+											// update site.urls
+											if (!req.user) return // return in bulk ops (we've disableBulkEdit)
+
+											//const hasChanged = (operation === 'update' && data[field.name] !== originalDoc[field.name]) ? true : false // works only with top-lvl fields! // works only in single ops
+											context.site.urls[originalDoc.id] ??= {}
+											context.site.urls[originalDoc.id][req.locale] = originalDoc.url
+
+											await updateDocSingle('sites', context.site.id, context.user, {
+												data: {
+													urls: context.site.urls,
+												},
+												context: {
+													isUpdatedByCode: true,
+													updatedBy: 'pages',
+													...context,
+												},
+												overrideAccess: false,
+												user: req.user,
+											})
+											
+										} catch (error) {
+											log(error.stack, context.user, __filename, 3)
 										}
 									}
 								]
@@ -870,7 +802,8 @@ export const Pages = {
 		// --- SIDEBAR ---
 		// --- editingMode
 		editingModeField,
-		initOtherLocaleField,
+		otherLocaleField,
+		//initOtherLocaleField,
 		/* {
 			type: 'text',
 			name: 'preview',

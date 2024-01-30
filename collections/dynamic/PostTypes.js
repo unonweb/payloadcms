@@ -72,7 +72,7 @@ export const PostTypes = {
 			index: true,
 			required: true,
 			maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
-			defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : '',
+			//defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
 		},
 		// --- postType.name
 		{
@@ -200,7 +200,7 @@ export const PostTypes = {
 			name: 'createdByID',
 			maxDepth: 0,
 			hasMany: false,
-			defaultValue: ({ user }) => (user) ? user.id : '',
+			defaultValue: ({ user }) => (user) ? user.id : null,
 			admin: {
 				hidden: true,
 			},

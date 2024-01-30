@@ -12,7 +12,7 @@ export default async function setHeadHTML({ data, req, context }) {
 	try {
 
 		if (data.hasOwnPage === undefined || data.hasOwnPage === true) {
-			data.html.head = await renderHeadHTML(data, context.site, context.user)
+			data.html.head = await renderHeadHTML(data, context)
 		}
 
 		return data

@@ -20,24 +20,15 @@ export default async function setMainHTML({ data, req, operation, originalDoc, c
 		const host = context.host
 
 		const blocks = (data.main?.blocks) ? data.main.blocks : data.blocks
-		const prevBlocks = (originalDoc.main?.blocks) ? originalDoc.main.blocks : originalDoc.blocks
-
+		const prevBlocks = (operation === 'update') ? originalDoc.main?.blocks ?? originalDoc.blocks : null
+		
 		if (blocks && blocks.length > 0) {
 			if (host === 'lem' || operation === 'create' || (operation === 'update' && hasChanged(blocks, prevBlocks, user))) {
-					// data contains the current values
-					// originalDoc contains the previous values
-					// seems to work with bulk operations, too
-
+				
 				/* iterate blocks */
 				const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, blocks, context)
 
-				if (typeof data.html === 'object') {
-					data.html.main = html // update post.html.main	
-				} 
-				if (typeof data.html === 'string') {
-					data.html = html // update post.html		
-				}
-				
+				data.html.main = html // update post.html.main	
 				data.assets.imgs = imgFiles // update post.assets.imgs
 				data.assets.docs = docFiles // update post.assets.docs
 				data.assets.head = libPathsWeb // update page.assets.head

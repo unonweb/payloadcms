@@ -3,6 +3,7 @@ import log from '../customLog'
 import mailError from '../mailError'
 
 const otherLocaleField = {
+	/*  */
 	type: 'radio',
 	name: 'otherLocaleField',
 	label: {

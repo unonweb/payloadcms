@@ -161,34 +161,7 @@ export const Sites = {
 			}
 		],
 		// --- beforeChange
-		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => {
-				try {
-					// data contains the current values
-					// originalDoc contains the previous values
-					// seems to work with bulk operations, too
-					log('--- beforeChange ---', user, __filename, 7)
-					/* update context */
-					context.user = req?.user?.shortName ?? 'internal'
-					context.mode = getAppMode()
-					context.site = data
-					context.pathSite = `${data.paths.fs.site}/${context.mode}`
-					const user = context.user
-					const mode = context.mode
-
-					if (data.fullUpdate) {
-						context.fullUpdate = true
-						data.fullUpdate = false
-					}
-
-					return data
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			}
-		],
+		beforeChange: [],
 		// --- afterChange
 		afterChange: [
 			async ({ req, doc, operation, previousDoc, context }) => {
@@ -272,7 +245,7 @@ export const Sites = {
 					]
 
 					/* update pages */
-					if (context.updatePages) {
+					if (!context.isUpdatedByCode && context.updatePages) {
 						for (const loc of doc.locales.used) {
 							await updateDocsMany('pages', user, {
 								where: {
@@ -725,6 +698,7 @@ export const Sites = {
 						{
 							type: 'json',
 							name: 'urls',
+							localized: false,
 							label: 'site.urls',
 							defaultValue: {},
 						},
@@ -885,7 +859,10 @@ export const Sites = {
 									},
 									hooks: {
 										beforeChange: [
-											async ({ data, context, value }) => {
+											async ({ data, context, value, req }) => {
+
+												if (!req.user) return // is undefined when updated by localAPI - even with overrideAccess: false and user: req.user 
+
 												value = ''
 												context.fonts ??= {}
 												let fontFaces = []
@@ -965,7 +942,11 @@ export const Sites = {
 									relationTo: 'images',
 									hooks: {
 										beforeValidate: [
-											async ({ value, context, operation, data, siblingData, previousValue }) => {
+											// Runs before the update operation
+											async ({ value, context, operation, data, originalDoc, siblingData }) => {
+												
+												if (context.isUpdatedByCode) return
+
 												if (value) {
 													const img = await getRelatedDoc('images', value, context.user, { depth: 0 })
 													siblingData.img_filename = img.filename
@@ -1082,6 +1063,16 @@ export const Sites = {
 			admin: {
 				position: 'sidebar',
 				condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+			},
+			hooks: {
+				beforeChange: [
+					({ value, context }) => {
+						if (value === true) {
+							context.fullUpdate = true	
+						}
+						return false
+					}
+				]
 			}
 		},
 	]

@@ -37,7 +37,9 @@ export default async function updateRelations(destSlug = '', destFieldName = '',
 						},
 						locale: loc,
 						context: {
+							isUpdatedByCode: true,
 							updatedByPageElement: true, // may be overwriten by former context
+							[destFieldName]: doc,
 							...context,
 						},
 					})

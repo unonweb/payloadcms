@@ -10,8 +10,11 @@ beforeValidate:
 */
 
 export default async function populateContextBeforeVal({ data, req }) {
-	/* 
-		Runs before 'create' and 'update' operations
+	/*	
+		Type:
+			beforeValidate collection hook
+		Operations:
+			Before 'create' and 'update'
 		Order:
 			- after beforeValidate field lvl
 		Task:
@@ -22,7 +25,7 @@ export default async function populateContextBeforeVal({ data, req }) {
 	*/
 	try {
 		// site
-		req.context.site ??= (req.collection.config.slug === 'sites') ? data : null // if this is the 'sites' collection
+		req.context.site ??= (req.collection?.config?.slug === 'sites') ? data : null // if this is the 'sites' collection
 		req.context.site ??= (typeof data.site === 'string' && req.context.sites) ? req.context.sites.find(item => item.id === data.site) : null
 		req.context.site ??= await getRelatedDoc('sites', data.site, req.context.user)
 		req.context.pathSite ??= `${req.context.site.paths.fs.site}/${req.context.mode}`

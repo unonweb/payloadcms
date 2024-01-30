@@ -5,7 +5,7 @@ import { readFile } from 'fs/promises'
 import { readdir } from 'fs/promises';
 import getRelatedDoc from '../hooks/getRelatedDoc';
 
-export default async function renderHeadHTML(page = {}, site = {}, user = '') {
+export default async function renderHeadHTML(data, context) {
 	// renders a <head> corresponding to the given page
 
 	// should be called when one of the following changes:
@@ -14,7 +14,8 @@ export default async function renderHeadHTML(page = {}, site = {}, user = '') {
 	// * page.title
 
 	try {
-		const mode = getAppMode()
+		const mode = context.mode
+		const site = context.site
 		const webPathAssets = '/assets'
 		const webPathCElements = `${webPathAssets}/custom-elements`
 		const fsPathSite = `${site.paths.fs.site}/${mode}`
@@ -31,8 +32,8 @@ export default async function renderHeadHTML(page = {}, site = {}, user = '') {
 		}
 
 		/* lib & separate c-element files */
-		const pathsLibFilesJS = (page.assets.head?.length > 0) ? page.assets.head.filter(fn => fn.endsWith('.js')) : []
-		const pathsLibFilesCSS = (page.assets.head?.length > 0) ? page.assets.head.filter(fn => fn.endsWith('.css')) : [] // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
+		const pathsLibFilesJS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.js')) : []
+		const pathsLibFilesCSS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.css')) : [] // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
 
 		/* prod */
 		if (mode === 'prod') {
@@ -48,9 +49,9 @@ export default async function renderHeadHTML(page = {}, site = {}, user = '') {
 			// --- extract allURLs
 			let allURLs = []
 			Object.values(site.urls).map(item => Object.values(item).forEach(item => allURLs.push(item)))
-			const altLocaleURLs = getAltLocaleURLs(page.url, allURLs)
+			const altLocaleURLs = getAltLocaleURLs(data.url, allURLs)
 			const origin = getOrigin(mode, site)
-			hrefLangHTML = ctHrefLangLinks(page.url, altLocaleURLs, origin)	
+			hrefLangHTML = ctHrefLangLinks(data.url, altLocaleURLs, origin)	
 		}
 
 		/* background image */
@@ -58,15 +59,15 @@ export default async function renderHeadHTML(page = {}, site = {}, user = '') {
 
 		const headHTML = /* html */`
 			<head>
-				<title>${site.brandName ?? site.domainShort} | ${page.title}</title>
+				<title>${site.brandName ?? site.domainShort} | ${data.title}</title>
 				<meta charset="utf-8">
-				${page.description ? /* html */`<meta name="description" content="${page.description}"/>` : ''}
+				${data.description ? /* html */`<meta name="description" content="${data.description}"/>` : ''}
 				<meta name="author" content="Udo Nonner" />
 				<meta name="copyright" content="Udo Nonner" />
 				<meta name="robots" content="index,follow" />
 				<meta name="viewport" content="width=device-width, initial-scale=1"/>
 				<meta name="apple-mobile-web-app-capable" content="yes" />
-				<link rel="canonical" href="https://${site.domain}${page.url}"/>
+				<link rel="canonical" href="https://${site.domain}${data.url}"/>
 				${hrefLangHTML}
 				${(backgroundImg) ? /* html */`<link rel="preload" as="image" href="/assets/imgs/${backgroundImg.filename}">` : '' }
 				

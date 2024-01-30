@@ -36,13 +36,19 @@ export default async function cleanUpSite(site = {}, user = '', {
 			},
 		})
 
-		/* page elements */
-		// get the element IDs that are used on some page
+		/* page element IDs*/
+		// get the IDs that are used on any page
 		let elementIDs = new Set()
 		for (const doc of pages.docs) {
 			if (doc.nav) elementIDs.add(doc.nav)
 			if (doc.header) elementIDs.add(doc.header)
 			if (doc.footer) elementIDs.add(doc.footer)
+		}
+		// get the element IDs that are used on any post
+		for (const post of posts.docs) {
+			if (post.nav) elementIDs.add(post.nav)
+			if (post.header) elementIDs.add(post.header)
+			if (post.footer) elementIDs.add(post.footer)
 		}
 		elementIDs = Array.from(elementIDs)
 

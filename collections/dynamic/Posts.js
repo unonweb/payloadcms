@@ -73,8 +73,7 @@ export const Posts = {
 		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }),
-			// data.html.main
-			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, originalDoc, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, originalDoc, context }), // data.html.main
 
 		],
 		// --- afterChange
@@ -110,7 +109,7 @@ export const Posts = {
 							index: true,
 							required: true,
 							maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
+							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
 						},
 						// --- post.tags
 						{

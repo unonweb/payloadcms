@@ -175,7 +175,6 @@ export const Images = {
 			required: true,
 			hasMany: true,
 			maxDepth: 0,
-			//defaultValue: ({ user }) => (user?.sites) ? user.sites[0] : [],
 			defaultValue: ({ user }) => (user && !user?.roles?.includes('admin') && user?.sites?.[0]) ? user.sites[0] : [],
 			admin: {
 				condition: (data, siblingData, { user }) => (siblingData.allSites === true) ? false : true,

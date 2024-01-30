@@ -1,6 +1,4 @@
 import log from '../customLog'
-import CustomError from '../customError'
-import getAppMode from './_getAppMode'
 import getDoc from './getDoc';
 import renderLexicalHTML from '../helpers/renderLexicalHTML';
 import renderImageset from '../helpers/renderImageset';
@@ -18,27 +16,30 @@ export default function iterateBlocks(doc, blocks = [], context) {
 	context.pathWebDocs = '/assets/docs'
 	context.pathFSLib = `${context.site.paths.fs.admin.resources}/assets/lib`
 
+	const pages = context.pages.docs
+	const images = context.images.docs
+	const documents = context.documents.docs
 	const slug = context.slug
 	const origin = context.origin
 	const locale = context.locale
 	const user = context.user
-	const pathWebImgs = context.pathWebImgs
+	const theme = context.theme
 	const title = context.title
 	const mode = context.mode
-	const theme = context.theme
+	const pathWebImgs = context.pathWebImgs
+	const pathWebPosts = context.pathWebPosts
 	const pathWebAssets = '/assets'
 	const pathWebDocs = context.pathWebDocs
-	const pathWebPosts = context.pathWebPosts
 	const pathFSLib = context.pathFSLib
 
 	/* checks */
-	if (context.documents.length === 0) {
+	if (!context.documents || context.documents?.length === 0) {
 		log('empty array: "documents"', user, __filename, 5)
 	}
-	if (context.images.length === 0) {
+	if (!context.images || context.images?.length === 0) {
 		log('empty array: "images"', user, __filename, 5)
 	}
-	if (context.pages.length === 0) {
+	if (!context.pages || context.pages?.length === 0) {
 		log('empty array: "pages"', user, __filename, 5)
 	}
 
@@ -362,7 +363,7 @@ export default function iterateBlocks(doc, blocks = [], context) {
 		// 2. look for a page that matches by id
 
 		const linkedDoc = pages.find(p => p.id === block.link.rel.value)
-		const title = (block.link.autoTitle === true) ? linkedDoc?.title[locale] : block.link.title
+		const title = (block.link.autoTitle === false) ? block.link.title : (typeof linkedDoc.title === 'string') ? linkedDoc.title : linkedDoc?.title[locale]
 
 		const attributes = [
 			(theme) ? `data-theme="${theme}"` : '',

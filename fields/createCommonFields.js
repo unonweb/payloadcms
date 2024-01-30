@@ -11,7 +11,7 @@ export default function createCommonFields() {
 			},
 			maxDepth: 0,
 			hasMany: false,
-			defaultValue: ({ user }) => (user) ? user.id : '',
+			defaultValue: ({ user }) => (user) ? user.id : null,
 			admin: {
 				condition: (data, siblingData, { user }) => user && user.roles.includes('admin'),
 			},

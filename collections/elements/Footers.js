@@ -7,7 +7,6 @@ import editingModeField from '../../fields/editingMode';
 
 /* HOOKS STANDARD */
 import updateRelations from '../../hooks/afterChange/updateRelations';
-import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import log from '../../customLog';
@@ -27,6 +26,7 @@ import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext
 import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
 import copyAssets from '../../hooks/afterChange/copyAssets';
 import setMainHTML from '../../hooks/beforeChange/setMainHTML';
+import createHTMLFields from '../../fields/createHTMLFields';
 
 const SLUG = 'footers'
 const COLSINGULAR = 'footer'
@@ -57,28 +57,7 @@ export const Footers = {
 			async ({ args, operation }) => populateContextBeforeOp({ args, operation }, ['sites']),
 		],
 		// --- beforeValidate
-		beforeValidate: [
-			async ({ data, req, operation, originalDoc, context }) => {
-				try {
-					if (operation === 'create' || operation === 'update') {
-						const user = req?.user?.shortName ?? 'internal'
-						log('--- beforeValidate ---', user, __filename, 7)
-						/* default values */
-						if (!data.title) {
-							const user = req?.user?.shortName ?? 'internal'
-							context.site ??= await getRelatedDoc('sites', data.site, user)
-							const site = context.site
-							data.title = `${(data.blocks && data.blocks.length > 0) ? data.blocks[0].blockType : 'default'} (${site.domainShort})` // title of this menu
-						}
-
-						return data
-					}
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			}
-		],
+		beforeValidate: [],
 		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
@@ -116,7 +95,7 @@ export const Footers = {
 							required: true,
 							// If user is not admin, set the site by default
 							// to the first site that they have access to
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
+							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
 						},
 						// --- footer.title
 						{
@@ -150,16 +129,8 @@ export const Footers = {
 							defaultValue: async ({ user }) => await firstDefaultsToTrue(SLUG, user.shortName),
 							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, SLUG),
 						},
-						// --- footer.html
-						{
-							type: 'code',
-							name: 'html',
-							admin: {
-								language: 'html',
-								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-							},
-							localized: true,
-						},
+						// --- footer.html.main
+						createHTMLFields('main'),
 						// --- footer.assets.imgs
 						// updated in beforeChange hook
 						createAssetsFields('imgs'),
