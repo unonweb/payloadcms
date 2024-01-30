@@ -1,11 +1,11 @@
 import log from '../customLog'
-import canAccess from './_canAccess';
-import getAppMode from './_getAppMode'
+import canAccess from '../hooks/_canAccess';
+import getAppMode from '../hooks/_getAppMode'
 import { readFile } from 'fs/promises'
 import { readdir } from 'fs/promises';
-import getRelatedDoc from './getRelatedDoc';
+import getRelatedDoc from '../hooks/getRelatedDoc';
 
-export default async function renderHTMLHead(page = {}, site = {}, user = '') {
+export default async function renderHeadHTML(page = {}, site = {}, user = '') {
 	// renders a <head> corresponding to the given page
 
 	// should be called when one of the following changes:

@@ -31,7 +31,12 @@ import capitalizeWords from '../hooks/_capitalizeWords';
 import updateDocsMany from '../hooks/updateDocsMany';
 import cpFile from '../hooks/_cpFile';
 import getDoc from '../hooks/getDoc';
-import updateCSSObj from '../hooks/_updateCSSObj';
+import CSSObjUpdate from '../helpers/CSSObjUpdate';
+import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
+import endConsoleTime from '../hooks/afterOperation/endConsoleTime';
+import CSSObjRemoveKey from '../helpers/CSSObjRemoveKey';
+import populateContextBeforeOp from '../hooks/beforeOperation/populateContext';
+import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
 
 const defaultUserCSS = {
 	"html": {
@@ -49,6 +54,8 @@ const defaultUserCSS = {
 		"--split-complementary-2": "color-mix(in oklch longer hue, var(--primary) 58.333%, var(--primary-clone))"
 	}
 }
+
+const SLUG = 'sites'
 
 export const Sites = {
 	slug: 'sites',
@@ -110,18 +117,14 @@ export const Sites = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => {
-				if (['create', 'update', 'delete'].includes(operation)) {
-					args.req.context.timeID ??= Date.now()
-					console.time(`<7>[time] [sites] "${args.req.context.timeID}"`)
-				}
-
-			}
+			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['images', 'documents']),
 		],
 		// --- beforeValidate
 		beforeValidate: [
 			// runs after client-side validation
 			// runs before server-side validation
+			async ({ data, req, operation, originalDoc }) => populateContextBeforeVal({ data, req }),
 			async ({ data, req, operation, originalDoc }) => {
 				try {
 					if (operation === 'create') {
@@ -144,9 +147,7 @@ export const Sites = {
 						data.paths.fs.admin.sites = admin.paths.fs.sites
 						data.paths.fs.admin.customElements = admin.paths.fs.customElements
 
-						// init fonts
-						data.fonts.body ??= await getRandomDocID('fonts', user)
-						data.fonts.headings ??= await getRandomDocID('fonts', user)
+
 
 						// update site paths
 						data = initSitePaths(data)
@@ -175,33 +176,6 @@ export const Sites = {
 					const user = context.user
 					const mode = context.mode
 
-					/* data.fonts */
-					const fontBody = (data.fonts?.body) ? await getRelatedDoc('fonts', data.fonts.body, user, { depth: 0 }) : null
-					const fontHeadings = (data.fonts?.headings) ? await getRelatedDoc('fonts', data.fonts.headings, user, { depth: 0 }) : null
-					data.assets.fonts = [ // update data.assets.fonts
-						fontBody?.filename ?? '',
-						fontHeadings?.filename ?? ''
-					]
-					const fontFaces = [
-						fontBody.face ?? '',
-						fontHeadings.face ?? ''
-					]
-					data.fonts.css = createFontCSS(fontFaces, fontBody, fontHeadings) // update data.fonts.css
-
-					/* data.background.img */
-					if (data.background?.img) {
-						if (mode === 'dev' || operation === 'create' || data.background.img !== originalDoc.background.img) {
-							const img = await getRelatedDoc('images', data.background.img, user, { depth: 0 })
-							data.assets.imgs = [img.filename] // update data.assets.imgs
-							data.css = updateCSSObj(data.css, 'body', 'background-image', `url("/assets/imgs/${img.filename}")`) // update data.css
-							context.updatePages = true
-						}
-					}
-
-					/* data.colors */
-					data.css = updateCSSObj(data.css, 'html', '--primary', data.colors.primary) // update data.css
-					data.css = updateCSSObj(data.css, 'html', '--secondary', data.colors.secondary) // update data.css
-					
 					if (data.fullUpdate) {
 						context.fullUpdate = true
 						data.fullUpdate = false
@@ -228,12 +202,12 @@ export const Sites = {
 					await cpAssets(`${process.cwd()}/upload/images`, `${pathSite}/assets/imgs`, doc.assets.imgs, user)
 
 					/* write font.css */
-					if (doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
+					if (mode === 'dev' || doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
 						saveToDisk(`${pathSite}/assets/fonts.css`, doc.fonts.css, user)
 					}
 
 					/* write user.css */
-					if (JSON.stringify(doc?.css) !== JSON.stringify(previousDoc?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
+					if (mode === 'dev' || JSON.stringify(doc?.css) !== JSON.stringify(previousDoc?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
 						let userCSS = convertJSONToCSS(doc.css)
 						await saveToDisk(`${pathSite}/assets/user.css`, userCSS, user)
 					}
@@ -292,6 +266,11 @@ export const Sites = {
 						}
 					}
 
+					/* update site.assets.imgs */
+					doc.assets.imgs = [
+						doc.background.img_filename ?? ''
+					]
+
 					/* update pages */
 					if (context.updatePages) {
 						for (const loc of doc.locales.used) {
@@ -302,7 +281,10 @@ export const Sites = {
 								data: { updatedBy: `sites-${Date.now()}` },
 								depth: 0,
 								locale: loc,
-								context: { site: doc }
+								context: {
+									site: doc,
+									...context,
+								}
 							})
 						}
 					}
@@ -410,11 +392,7 @@ export const Sites = {
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => {
-				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
-					console.timeEnd(`<7>[time] [sites] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation, result }) => await endConsoleTime(SLUG, { args, operation }),
 		],
 	},
 	// --- fields
@@ -485,6 +463,25 @@ export const Sites = {
 									name: 'fonts',
 									label: 'site.assets.fonts',
 									defaultValue: [],
+									hooks: {
+										beforeChange: [
+											async ({ value, data, context }) => {
+												value = []
+												context.fonts ??= {}
+
+												if (data.fonts.body) {
+													context.fonts.body ??= await getRelatedDoc('fonts', data.fonts.body, context.user, { depth: 0 })
+													value.push(context.fonts.body.filename)
+												}
+												if (data.fonts.headings) {
+													context.fonts.headings ??= await getRelatedDoc('fonts', data.fonts.headings, context.user, { depth: 0 })
+													value.push(context.fonts.headings.filename)
+												}
+
+												return value
+											}
+										]
+									}
 								},
 								// --- site.assets.imgs
 								// 	* updated in beforeChange
@@ -844,8 +841,15 @@ export const Sites = {
 									},
 									maxDepth: 0,
 									required: false,
-									// defaultValue: async ({ user }) => (user) ? await getRandomDocID('fonts', user.shortName) : '', 
-									// defaultValue set by beforeValidate
+									hooks: {
+										beforeValidate: [
+											async ({ operation, context }) => {
+												if (operation === 'create') {
+													return await getRandomDocID('fonts', context.user)
+												}
+											}
+										],
+									}
 								},
 								// --- site.fonts.headings
 								{
@@ -858,8 +862,15 @@ export const Sites = {
 									},
 									maxDepth: 0,
 									required: false,
-									// defaultValue: async ({ user }) => (user) ? await getRandomDocID('fonts', user.shortName) : '',
-									// defaultValue set by beforeValidate
+									hooks: {
+										beforeValidate: [
+											async ({ operation }) => {
+												if (operation === 'create') {
+													return await getRandomDocID('fonts', user)
+												}
+											}
+										]
+									}
 								},
 								// --- site.fonts.css
 								{
@@ -872,6 +883,26 @@ export const Sites = {
 										language: 'css',
 										readOnly: true,
 									},
+									hooks: {
+										beforeChange: [
+											async ({ data, context, value }) => {
+												value = ''
+												context.fonts ??= {}
+												let fontFaces = []
+
+												if (data.fonts.body) {
+													context.fonts.body ??= await getRelatedDoc('fonts', data.fonts.body, context.user, { depth: 0 })
+													fontFaces.push(context.fonts.body.face)
+												}
+												if (data.fonts.headings) {
+													context.fonts.headings ??= await getRelatedDoc('fonts', data.fonts.headings, context.user, { depth: 0 })
+													fontFaces.push(context.fonts.headings.face)
+												}
+												
+												return createFontCSS(fontFaces, context.fonts.body, context.fonts.headings) // update data.fonts.css
+											}
+										]
+									}
 								},
 							],
 						},
@@ -917,17 +948,6 @@ export const Sites = {
 								}
 							]
 						},
-						// --- site.css
-						/* 	- updated by site.colors
-						*/
-						{
-							type: 'json',
-							name: 'css',
-							admin: {
-								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-							},
-							defaultValue: defaultUserCSS,
-						},
 						// --- site.background
 						{
 							type: 'group',
@@ -943,10 +963,60 @@ export const Sites = {
 										en: 'Background Image'
 									},
 									relationTo: 'images',
+									hooks: {
+										beforeValidate: [
+											async ({ value, context, operation, data, siblingData, previousValue }) => {
+												if (value) {
+													const img = await getRelatedDoc('images', value, context.user, { depth: 0 })
+													siblingData.img_filename = img.filename
+													//data.css = CSSObjUpdate(data.css, 'body', 'background-image', `url("/assets/imgs/${img.filename}")`) // update data.css	
+												}
+												else {
+													siblingData.img_filename = null
+													//data.css = CSSObjRemoveKey(data.css, 'body', 'background-image') // update data.css	
+												}
+												context.updatePages = true
+											}
+										]
+									}
+								},
+								// --- site.background.img_filename
+								{
+									type: 'text',
+									name: 'img_filename',
+									admin: {
+										hidden: true
+									}
 								}
 
 							]
-						}
+						},
+						// --- site.css
+						/* 	- updated by site.colors
+						*/
+						{
+							type: 'json',
+							name: 'css',
+							admin: {
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							},
+							defaultValue: defaultUserCSS,
+							hooks: {
+								beforeChange: [
+									({ value, data }) => {
+										// data.background.img
+										value = (data.background.img_filename)
+											? CSSObjUpdate(value, 'body', 'background-image', `url("/assets/imgs/${data.background.img_filename}")`)
+											: CSSObjRemoveKey(value, 'body', 'background-image') // update data.css	
+
+										// data.colors
+										value = CSSObjUpdate(value, 'html', '--primary', data.colors.primary) // update data.css
+										value = CSSObjUpdate(value, 'html', '--secondary', data.colors.secondary) // update data.css
+										return value
+									}
+								]
+							}
+						},
 						// --- site.backend
 						/* {
 							type: 'group',
@@ -1035,44 +1105,6 @@ function createFontCSS(fontFaces = [], fontBody = {}, fontHeadings = {}) {
 
 	return css
 }
-
-/* async function writeFontCSSFile(fontBody = {}, fontHeadings = {}, destPath = '', user = '') {
-
-	let content = ''
-
-	content += (fontBody) ? ctFontFace(fontBody) : ''
-	content += (fontHeadings) ? ctFontFace(fontHeadings) : ''
-	content += (fontBody) ? insertCSSRule('body', 'font-family', `'${fontBody.family.name}'`) : ''
-	content += (fontHeadings) ? insertCSSRule('h1, h2, h3, h4, h5', 'font-family', `'${fontHeadings.family.name}'`) : ''
-
-	// write fonts.css
-	if (content) {
-		saveToDisk(destPath, content, user)
-	}
-} */
-
-/* function ctFontFace(font = {}, fontAssetsDir = '/assets') {
-	const url = `${fontAssetsDir}/${font.filename}`
-	// defaults
-	let fontWeight = 400
-	let fontStyle = 'normal'
-
-	switch (font.variant) {
-		case 'light':
-			fontWeight = 300
-			break
-		case 'bold':
-			fontWeight = 700
-			break
-		case 'italic':
-			fontStyle = 'italic'
-		default:
-			break;
-	}
-
-	let content = `@font-face { \n\tfont-family: '${font.family.name}'; \n\tsrc: url('${url}') format('woff2'); \n\tfont-display: block; \n\tfont-weight: ${fontWeight}; \n\tfont-style: ${fontStyle};\n}\n`
-	return content
-} */
 
 function insertCSSRule(selector = '', key = '', value = '') {
 	return `${selector} { \n\t${key}: ${value};\n}\n`

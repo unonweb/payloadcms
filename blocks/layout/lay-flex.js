@@ -1,15 +1,16 @@
 import createRichTextBlock from '../rich-text-block'
 import { mapLeafletBlock } from '../map-leaflet'
-import createImgBlock from '../img-block'
-import { imgGalleryBlock } from '../img-gallery'
-import { imgSlidesBlock } from '../img-slideshow'
+import createUnImgBlock from '../img/un-img'
+import { imgGalleryBlock } from '../img/img-gallery'
+import { imgSlidesBlock } from '../img/img-slideshow'
 import { socialMediaIcons } from '../social-media-icons'
 import createIncludePostsBlock from '../include-posts'
 import createIncludePostsFlexBlock from '../include-posts-flex'
+import showOptionsField from '../../fields/showOptions'
 
 const blocksAvailable = [
 	createRichTextBlock(),
-	createImgBlock(),
+	createUnImgBlock(['caption', 'size', 'link', 'shape', 'filter']),
 	imgGalleryBlock,
 	imgSlidesBlock,
 	socialMediaIcons,
@@ -17,89 +18,6 @@ const blocksAvailable = [
 	createIncludePostsBlock(),
 	createIncludePostsFlexBlock(),
 ]
-
-/* const columnOptions = {
-	type: 'collapsible',
-	label: {
-		en: 'Spalten Optionen',
-		en: 'Column Options'
-	},
-	admin: {
-		initCollapsed: true,
-		condition: (data) => (data.editingMode === 'layout') ? true : false
-	},
-	fields: [
-		{
-			type: 'row',
-			fields: [
-				// --- justify
-				{
-					type: 'select',
-					name: 'justify',
-					label: {
-						en: 'Justify horizontally',
-						de: 'Horizontale Ausrichtung'
-					},
-					defaultValue: 'center',
-					required: true,
-					admin: {
-						width: '25%',
-						description: {
-							en: 'Default setting for all columns',
-							de: 'Voreinstellung für alle Spalten'
-						}
-					},
-					options: [
-						{
-							label: 'Left',
-							value: 'left',
-						},
-						{
-							label: 'Center',
-							value: 'center',
-						},
-						{
-							label: 'Right',
-							value: 'right',
-						},
-					],
-				},
-				// --- align
-				{
-					type: 'select',
-					name: 'align',
-					label: {
-						en: 'Align vertically',
-						de: 'Vertikale Ausrichtung'
-					},
-					defaultValue: 'start',
-					required: true,
-					admin: {
-						width: '25%',
-					},
-					options: [
-						{
-							label: 'Start',
-							value: 'start',
-						},
-						{
-							label: 'Center',
-							value: 'center',
-						},
-						{
-							label: 'Baseline',
-							value: 'baseline',
-						},
-						{
-							label: 'End',
-							value: 'end',
-						},
-					],
-				},
-			],
-		}
-	]
-} */
 
 export default function createColumnsFlex() {
 	const block = {
@@ -115,8 +33,13 @@ export default function createColumnsFlex() {
 			}
 		},
 		fields: [
+			// --- block.showOptions
+			showOptionsField,
 			{
 				type: 'row',
+				admin: {
+					condition: (data, siblingData) => siblingData.showOptions,
+				},
 				fields: [
 					// --- block.layout
 					{
@@ -124,15 +47,13 @@ export default function createColumnsFlex() {
 						name: 'layout',
 						label: 'Layout',
 						admin: {
-							width: '100%',
+							width: '25%',
 							description: {
 								de: 'Das Spalten-Layout für den Hauptteil der Seite. Es können bis zu 3 Spalten erzeugt werden. Die tatsächliche Darstellung hängt jedoch von der Bildschirmgröße des Endgeräts ab.',
 								en: 'The column layout for the main part of the page. Up to 3 columns may be generated. The resulting layout however will be dependend of the screen size.'
 							}
 						},
 						defaultValue: '100',
-						//options: [ '100', '5050', '3366', '6633', '7525', '2575', '333333' ] /* Option values should be strings that do not contain hyphens or special characters due to GraphQL enumeration naming constraints. Underscores are allowed. If you determine you need your option values to be non-strings or contain special characters, they will be formatted accordingly before being used as a GraphQL enum. */
-						validate: () => true,
 						options: [
 							{
 								label: {
@@ -210,78 +131,64 @@ export default function createColumnsFlex() {
 					},
 				]
 			},
-			// [layout options]
 			{
-				type: 'collapsible',
-				label: {
-					de: 'Layout Optionen',
-					en: 'Layout Options'
-				},
+				type: 'row',
 				admin: {
-					initCollapsed: true,
-					condition: (data) => (data.editingMode === 'layout') ? true : false,
-					description: {
-						en: 'Default settings for all columns',
-						de: 'Voreinstellungen für alle Spalten'
-					}
+					condition: (data, siblingData) => siblingData.showOptions,
 				},
 				fields: [
+					// --- block.align
 					{
-						type: 'row',
-						fields: [
-							// --- block.align
+						type: 'select',
+						name: 'align',
+						label: {
+							en: 'Align vertically',
+							de: 'Vertikale Ausrichtung'
+						},
+						defaultValue: 'start',
+						required: true,
+						admin: {
+							width: '25%',
+						},
+						options: [
 							{
-								type: 'select',
-								name: 'align',
-								label: {
-									en: 'Align vertically',
-									de: 'Vertikale Ausrichtung'
-								},
-								defaultValue: 'start',
-								required: true,
-								admin: {
-									width: '25%',
-								},
-								options: [
-									{
-										label: 'Start',
-										value: 'start',
-									},
-									{
-										label: 'Center',
-										value: 'center',
-									},
-									{
-										label: 'Baseline',
-										value: 'baseline',
-									},
-									{
-										label: 'End',
-										value: 'end',
-									},
-								],
+								label: 'Start',
+								value: 'start',
 							},
-							// --- block.gap
 							{
-								type: 'number',
-								name: 'gap',
-								label: {
-									en: 'Gap',
-									de: 'Abstand'
-								},
-								defaultValue: 5,
-								required: true,
-								admin: {
-									width: '25%',
-									description: {
-										en: '... between the content blocks (in % of the available space)',
-										de: '... zwischen den Inhaltsblöcken (in % des verfügbaren Raums)'
-									}
-								},
-								min: 2,
-								max: 15,
+								label: 'Center',
+								value: 'center',
 							},
-						]
+							{
+								label: 'Baseline',
+								value: 'baseline',
+							},
+							{
+								label: 'End',
+								value: 'end',
+							},
+						],
+					},
+					// --- block.gap
+					{
+						type: 'number',
+						name: 'gap',
+						label: {
+							en: 'Gap',
+							de: 'Abstand'
+						},
+						defaultValue: 5,
+						required: true,
+						admin: {
+							width: '25%',
+							description: {
+								en: '... between the content blocks (in % of the available space)',
+								de: '... zwischen den Inhaltsblöcken (in % des verfügbaren Raums)'
+							},
+							hidden: true,
+						},
+						min: 2,
+						max: 15,
 					},
 				]
 			},

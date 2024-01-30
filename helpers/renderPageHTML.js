@@ -1,6 +1,6 @@
 import log from '../customLog'
 
-export default function renderHTMLPage(locale = '', page = {}, user = '', { navHTML = '', headerHTML = '', footerHTML = '' } = {}) {
+export default function renderPageHTML(locale = '', page = {}, user = '', { navHTML = '', headerHTML = '', footerHTML = '' } = {}) {
 	// should be called when one of the following changes:
 	// * locale
 	// * page.title

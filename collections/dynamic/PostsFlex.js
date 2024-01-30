@@ -1,9 +1,4 @@
-import {
-	BlocksFeature,
-	LinkFeature,
-	UploadFeature,
-	lexicalEditor
-} from '@payloadcms/richtext-lexical'
+import * as React from "react";
 
 /* ACCESS */
 import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
@@ -11,28 +6,40 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 
 /* FIELDS */
 import editingModeField from '../../fields/editingMode';
+import createCommonFields from '../../fields/createCommonFields';
 
 /* BLOCKS */
 import createRichTextBlock from '../../blocks/rich-text-block';
-import createImgBlock from '../../blocks/img-block';
+import createUnImgBlock from '../../blocks/img/un-img';
 
 /* HOOKS & HELPERS */
 import log from '../../customLog';
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import iterateBlocks from '../../hooks/iterateBlocks';
-import getCol from '../../hooks/_getCol';
-import hasChanged from '../../hooks/_hasChanged';
 import createElementsFields from './createPageElementsField';
-import renderHTMLHead from '../../hooks/renderHTMLHead';
 import createAssetsFields from '../../fields/createAssetsFields';
 import createHTMLFields from '../../fields/createHTMLFields';
-import beforeOperationHook from './beforeOperationHook';
-import afterOperationHook from './afterOperationHook';
-import afterChangeHook from './afterChangeHook';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import savePostsJson from '../../hooks/afterOperation/savePostsJson';
+import copyAssets from '../../hooks/afterChange/copyAssets';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
+import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext';
+import createPostFields, { postFields } from './createPostFields';
+import getDoc from '../../hooks/getDoc';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
+import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship';
+import setHeadHTML from '../../hooks/beforeChange/setHeadHTML';
+import setPageHTML from '../../hooks/beforeChange/setPageHTML';
+import savePost from '../../hooks/afterChange/savePost';
+import iterateBlocks from '../../hooks/iterateBlocks';
+import getPosSubset from '../../helpers/getPosSubset';
+import setPostHTML from '../../helpers/renderPostHTML';
+import otherLocaleField from '../../fields/otherLocaleField';
+
+const commonFields = createCommonFields()
+const SLUG = 'posts-flex'
 
 export const PostsFlex = {
-	slug: 'posts-flex',
+	slug: SLUG,
 	admin: {
 		enableRichTextRelationship: false, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
 		enableRichTextLink: false,
@@ -47,8 +54,10 @@ export const PostsFlex = {
 			en: 'Dynamic Content'
 		},
 		pagination: {
-			defaultLimit: 30,
+			defaultLimit: 50,
 		},
+		hideAPIURL: true,
+		hidden: ({ user}) => !['unonner'].includes(user.shortName)
 	},
 	versions: false,
 	access: {
@@ -60,382 +69,169 @@ export const PostsFlex = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook('posts', { args, operation })
+			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages']),
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					log('--- beforeChange ---', user, __filename, 7)
-
-					context.site ??= (typeof data.site === 'string' && context.sites) ? context.sites.find(item => item.id === data.site) : null
-					context.site ??= await getRelatedDoc('sites', data.site, user)
-					const site = context.site
-
-					
-
-					return data
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-				}
-			}
+			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setPostHTML({ data, originalDoc, req, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, context }),
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook('posts', { req, doc, previousDoc, context, operation })
+			/* 
+				Attention:
+					Modifications to 'doc' are passed to the admin panel but not to the database 
+			*/
+			async ({ req, doc, previousDoc, context, operation }) => await copyAssets(['images', 'documents'], { req, doc, context }),
+			async ({ req, doc, previousDoc, context, operation }) => await savePost(SLUG, { req, doc, context }),
 		],
+		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => afterOperationHook('posts', { args, operation, result })
+			async ({ args, operation, result }) => await savePostsJson(SLUG, { args, operation, result }),
+			async ({ args, operation, result }) => await endConsoleTime(SLUG, { args, operation }),
 		],
 	},
 	fields: [
 		// --- editingMode
 		editingModeField,
-		initOtherLocaleField,
-		// --- post.fields
+		//initOtherLocaleField,
+		otherLocaleField,
+		// --- post.site
 		{
-			type: 'select',
-			name: 'fields',
+			type: 'relationship',
+			name: 'site',
+			relationTo: 'sites',
+			hasMany: false,
+			index: true,
+			required: true,
+			maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
+			defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
+		},
+		// --- post.type
+		{
+			type: 'relationship',
+			relationTo: 'post-types',
+			name: 'type',
 			label: {
-				de: 'Elemente',
-				en: 'Fields'
+				de: 'Type',
+				en: 'Typ'
+			},
+			hasMany: false,
+			localized: false,
+			required: false,
+			index: false,
+			admin: {
+				description: () => (<span>&#10132; Nach Auswahl des Post-Typs bitte einmal <strong>speichern</strong>!</span>)
+			},
+			hooks: {
+				beforeValidate: [
+					async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+						const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+						if (fieldValue) {
+							return await resetBrokenRelationship(fieldValue, { field, context, collection })
+						}
+					}
+				]
+			},
+		},
+		// --- post.tags
+		{
+			type: 'relationship',
+			relationTo: 'tags',
+			name: 'tags',
+			label: {
+				de: 'Tags',
+				en: 'Tags'
+			},
+			filterOptions: () => {
+				return {
+					relatedCollection: { equals: SLUG },
+				}
 			},
 			hasMany: true,
 			localized: false,
-			required: true,
+			required: false,
+			index: true,
+			maxDepth: 1,
+			// * if set to 1 then bulk operations include the entire doc in 'originalDoc'
+			// * if changed renderHTMLFromBlocks has to be changed, too
 			admin: {
 				description: {
-					de: 'Bestandteile des Posts',
-					en: 'Available fields'
+					de: 'Mithilfe von Tags können Post auf der Website von den Besuchern sortiert und gefiltert werden.',
+					en: 'With tags visitors of your website may sort and filter posts.'
 				},
 				disableBulkEdit: false,
-				position: 'sidebar',
 			},
-			options: ['title', 'subtitle', 'time', 'date', 'featuredImg', 'description', 'richText', 'location'],
-			defaultValue: [],
 		},
-		// --- TABS
+		// --- post.hasOwnPage
 		{
-			type: 'tabs',
-			tabs: [
-				// --- META [tab-1]
-				{
-					label: 'Meta',
-					fields: [
-						// --- post.site
-						{
-							type: 'relationship',
-							name: 'site',
-							relationTo: 'sites',
-							hasMany: false,
-							index: true,
-							required: true,
-							maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
-						},
-						// --- post.type
-						{
-							type: 'relationship',
-							relationTo: 'tags',
-							name: 'type',
-							label: {
-								de: 'Typ',
-								en: 'Typ'
-							},
-							filterOptions: () => {
-								return {
-									relatedCollection: { equals: 'postsFlex' },
-								}
-							},
-							hasMany: false,
-							localized: false,
-							required: false,
-							index: false,
-						},
-						// --- post.hasOwnPage
-						{
-							type: 'checkbox',
-							name: 'hasOwnPage',
-							label: {
-								de: 'Dieser Post bekommt seine eigene Seite/URL.',
-								en: 'This post gets its own page/URL.'
-							},
-							defaultValue: false,
-							localized: false,
-						},
-						// --- post.elements
-						// --- post.elements.header
-						// --- post.elements.nav
-						// --- post.elements.footer
-						createElementsFields(),
-						// post.html
-						createHTMLFields(),
-						// --- post.assets
-						createAssetsFields('imgs', 'docs', 'head'),
-						// meta: url
-					]
-				},
-				// --- CONTENT [tab-2] ---
-				{
-					label: {
-						de: 'Inhalt',
-						en: 'Content'
-					},
-					description: 'Wähle die Elemente des Blog-Posts.',
-					fields: [
-						// --- post.title
-						{
-							type: 'text',
-							name: 'title',
-							label: {
-								de: 'Titel',
-								en: 'Title'
-							},
-							required: true,
-							localized: true,
-							index: true,
-							admin: {
-								condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('title')) ? true : false,
-							}
-						},
-						// --- post.subtitle
-						{
-							type: 'text',
-							name: 'subtitle',
-							label: {
-								de: 'Untertitel',
-								en: 'Subtitle'
-							},
-							required: false,
-							localized: true,
-							admin: {
-								condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('subtitle')) ? true : false,
-							}
-						},
-						// --- post.description
-						{
-							type: 'textarea',
-							name: 'description',
-							label: {
-								de: 'Kurze Zusammenfassung',
-								en: 'Short Summary'
-							},
-							localized: true,
-							maxLength: 190,
-							admin: {
-								condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('description')) ? true : false,
-								description: {
-									de: 'Wichtig für Suchmaschinen. Voraussetzung für die Darstellungsform des Posts als verlinkte Zusammenfassung. Max. Länge: 190 Zeichen.'
-								}
-							}
-						},
-						{
-							type: 'row',
-							fields: [
-								// --- post.date
-								{
-									type: 'group',
-									name: 'date',
-									admin: {
-										condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && (data.fields.includes('date') || data.fields.includes('time'))) ? true : false,
-									},
-									fields: [
-										// --- post.date.start
-										{
-											type: 'date',
-											name: 'start',
-											label: {
-												de: 'Beginn',
-												en: 'Start'
-											},
-											localized: false,
-											defaultValue: () => new Date(),
-											admin: {
-												condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('date')) ? true : false,
-												date: {
-													pickerAppearance: 'dayOnly',
-													displayFormat: 'd.MM.yyyy'
-												},
-												width: '30%'
-											}
-										},
-										// --- post.date.end
-										{
-											type: 'date',
-											name: 'end',
-											label: {
-												de: 'Ende',
-												en: 'End'
-											},
-											localized: false,
-											defaultValue: () => new Date(),
-											admin: {
-												condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('dateEnd')) ? true : false,
-												date: {
-													pickerAppearance: 'dayOnly',
-													displayFormat: 'd.MM.yyyy'
-												},
-												width: '30%'
-											}
-										},
-										// --- post.date.time
-										{
-											type: 'date',
-											name: 'time',
-											label: {
-												de: 'Uhrzeit',
-												en: 'Time'
-											},
-											localized: false,
-											admin: {
-												condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('time')) ? true : false,
-												date: {
-													pickerAppearance: 'timeOnly',
-													timeIntervals: '15',
-													timeFormat: 'hh:mm'
-												},
-												width: '30%',
-												placeholder: '00:00',
-											},
-											defaultValue: () => new Date(),
-										},
-									]
-								},
-							]
-						},
-						// --- post.location
-						{
-							type: 'group',
-							name: 'location',
-							admin: {
-								condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('location')) ? true : false,
-							},
-							fields: [
-								{
-									type: 'row',
-									fields: [
-										// --- post.location.name
-										{
-											type: 'text',
-											name: 'name',
-											label: {
-												de: 'Ort',
-												en: 'Location'
-											},
-											required: true,
-											localized: true,
-											index: true,
-											admin: {
-												width: '25%',
-											}
-										},
-										// --- post.location.url
-										{
-											type: 'text',
-											name: 'url',
-											label: {
-												de: 'URL',
-												en: 'URL'
-											},
-											localized: false,
-											required: false,
-											admin: {
-												width: '25%',
-												placeholder: 'https://developer.mozilla.org/en-US/',
-											},
-										},
-									]
-								},
-								// --- post.location.coords
-								{
-									type: 'point',
-									name: 'coords',
-									label: {
-										de: 'Koordinaten',
-										en: 'Coordinates'
-									},
-									admin: {
-										width: '25%',
-										hidden: true
-									}
-								},
-							]
-						},
-						// --- post.featuredImg
-						{
-							type: 'upload',
-							name: 'featuredImg',
-							label: {
-								en: 'Featured Image',
-								de: 'Meta-Bild'
-							},
-							relationTo: 'images',
-							required: false,
-							localized: false,
-							admin: {
-								condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('featuredImg')) ? true : false,
-							}
-						},
-						// --- richText
-						{
-							type: 'richText',
-							name: 'richText',
-							label: 'Rich Text',
-							localized: true,
-							required: false,
-							editor: lexicalEditor({
-								features: ({ defaultFeatures }) => [
-									...defaultFeatures,
-									LinkFeature({
-										fields: [
-											{
-												type: 'checkbox',
-												name: 'isDownload',
-												label: {
-													en: 'Download-Link',
-													de: 'Download-Link'
-												},
-												defaultValue: false,
-											},
-										],
-									}),
-									/* UploadFeature({
-										collections: {
-											uploads: {
-												// Example showing how to customize the built-in fields
-												// of the Upload feature
-												fields: [
-													{
-														name: 'caption',
-														type: 'richText',
-														editor: lexicalEditor(),
-													},
-												],
-											},
-										},
-									}), */
-									// This is incredibly powerful. You can re-use your Payload blocks
-									// directly in the Lexical editor as follows:
-									BlocksFeature({
-										blocks: [
-											//createImgBlock()
-										],
-									}),
-								]
-							}),
-							admin: {
-								condition: (data, siblingData, { user }) => (Array.isArray(data.fields) && data.fields.includes('richText')) ? true : false,
-								description: {
-									en: 'Type "/" to open editor menu. "Ctrl + Shift + v" inserts text without formating.',
-									de: 'Schrägstrich "/" öffnet ein Editor Menü. "Strg + Shift + v" fügt Text ohne Formatierung ein.'
-								}
-							}
+			type: 'checkbox',
+			name: 'hasOwnPage',
+			label: {
+				de: 'Dieser Post bekommt seine eigene Seite/URL.',
+				en: 'This post gets its own page/URL.'
+			},
+			defaultValue: false,
+			localized: false,
+			admin: {
+				condition: (data) => (data.shape && data.shape.length > 0) ? true : false,
+			},
+		},
+		// --- post.elements
+		// --- post.elements.header
+		// --- post.elements.nav
+		// --- post.elements.footer
+		createElementsFields(),
+		// --- createPostFields()
+		{
+			type: 'collapsible',
+			label: {
+				de: 'Inhalt',
+				en: 'Content'
+			},
+			admin: {
+				condition: (data) => (data.shape && data.shape.length > 0) ? true : false,
+			},
+			fields: createPostFields(),
+		},
+		// post.html
+		createHTMLFields('head', 'main', 'page'),
+		// --- post.assets
+		createAssetsFields('imgs', 'docs', 'head'),
+		// --- post.shape
+		{
+			type: 'json',
+			name: 'shape',
+			defaultValue: [],
+			admin: {
+				condition: (data, siblingData, { user }) => (user && user.roles.includes('admin')) ? true : false,
+			},
+			hooks: {
+				beforeValidate: [
+					async ({ data, originalDoc, siblingData, operation, value, field, context, collection, req }) => {
+						if (operation === 'create') {
+							const type = await getDoc('post-types', data.type, context.user, { depth: 0 })
+							return type.shape
 						}
-					]
-				},
-			]
-		}
+						if (operation === 'update') {
+							if (data.type === null) {
+								// if post type has been reset
+								return null
+							}
+							if (data.type !== undefined && data.type !== originalDoc.type) {
+								// if post type has been changed
+								const type = await getDoc('post-types', data.type, context.user, { depth: 0 })
+								return type.shape
+							}
+
+						}
+					}
+				]
+			}
+		},
+		// --- commonFields
+		...commonFields,
 	],
 }

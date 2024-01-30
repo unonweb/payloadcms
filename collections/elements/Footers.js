@@ -6,17 +6,15 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 import editingModeField from '../../fields/editingMode';
 
 /* HOOKS STANDARD */
-import afterChangeHook from './afterChangeHook';
+import updateRelations from '../../hooks/afterChange/updateRelations';
 import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
-import beforeOperationHook from './beforeOperationHook';
-import afterOperationHook from './afterOperationHook';
 import getRelatedDoc from '../../hooks/getRelatedDoc';
 import log from '../../customLog';
 import mailError from '../../mailError';
 
 /* BLOCKS */
-import footerDefault from '../../blocks/footers/footer-default';
+import footerDefault from '../../blocks/footer/footer-default';
 
 /*  HOOKS ADD */
 import updateDocsMany from '../../hooks/updateDocsMany';
@@ -24,12 +22,17 @@ import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import createRichTextBlock from '../../blocks/rich-text-block';
 import afterDeleteHook from './afterDeleteHook';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
+import copyAssets from '../../hooks/afterChange/copyAssets';
+import setMainHTML from '../../hooks/beforeChange/setMainHTML';
 
-const COLPLURAL = 'footers'
+const SLUG = 'footers'
 const COLSINGULAR = 'footer'
 
 export const Footers = {
-	slug: COLPLURAL,
+	slug: SLUG,
 	admin: {
 		group: {
 			en: 'Elements',
@@ -50,7 +53,8 @@ export const Footers = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
+			async ({ args, operation }) => startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => populateContextBeforeOp({ args, operation }, ['sites']),
 		],
 		// --- beforeValidate
 		beforeValidate: [
@@ -77,11 +81,12 @@ export const Footers = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, context, operation }) => copyAssets(['images', 'documents'], { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, operation, context }) => updateRelations('pages', 'footer', { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -89,7 +94,7 @@ export const Footers = {
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ operation, args }) => afterOperationHook(COLPLURAL, { operation, args })
+			async ({ args, operation, result }) => await endConsoleTime(SLUG, { args, operation }),
 		],
 	},
 	// --- fields
@@ -142,8 +147,8 @@ export const Footers = {
 									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Es kann nur ein Element aus dieser Kollektion als Standard gesetzt werden.'
 								}
 							},
-							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
-							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, COLPLURAL),
+							defaultValue: async ({ user }) => await firstDefaultsToTrue(SLUG, user.shortName),
+							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, SLUG),
 						},
 						// --- footer.html
 						{

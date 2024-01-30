@@ -6,7 +6,7 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 import editingModeField from '../../fields/editingMode';
 
 /* HOOKS STANDARD */
-import afterChangeHook from './afterChangeHook';
+import updateRelations from '../../hooks/afterChange/updateRelations';
 import beforeChangeHook from './beforeChangeHook';
 import beforeOperationHook from './beforeOperationHook';
 import afterOperationHook from './afterOperationHook';
@@ -52,7 +52,7 @@ export const Backgrounds = {
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, operation, context }) => updateRelations(COLPLURAL, { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [

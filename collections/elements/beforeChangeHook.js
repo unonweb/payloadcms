@@ -35,7 +35,7 @@ export default async function beforeChangeHook(col = '', { data, req, operation,
 				const images = await getCol('images', user, {
 					depth: 0,
 					where: {
-						sites: { contain: site.id }
+						sites: { contains: site.id }
 					}
 				})
 

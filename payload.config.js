@@ -22,13 +22,11 @@ import { Pages } from './collections/Pages';
 import { Posts } from './collections/dynamic/Posts';
 import { Documents } from './collections/assets/Documents';
 import { Libraries } from './collections/assets/Libraries';
-import { Events } from './collections/dynamic/Events';
-import { Products } from './collections/dynamic/Products';
 import { Fonts } from './collections/assets/Fonts';
 import { _FontFamilies } from './collections/assets/_FontFamilies';
 import { Tags } from './collections/Tags';
-import { Backgrounds } from './collections/elements/Backgrounds';
 import { PostsFlex } from './collections/dynamic/PostsFlex';
+import { PostTypes } from './collections/dynamic/PostTypes';
 
 //const mockModulePath = path.resolve(__dirname, 'mocks/emptyObject.js')
 //const mockModulePath = '/home/payload/cms/src/mocks/emptyObject.js'
@@ -106,7 +104,7 @@ export default buildConfig({
 				},
 			}
 		},
-		css: path.resolve(__dirname, 'custom.css'),
+		css: path.resolve(__dirname, 'assets/custom.css'),
 		meta: {
 			titleSuffix: '- unonweb',
 			//favicon: '/assets/soy-32.png',
@@ -129,14 +127,12 @@ export default buildConfig({
 		/* dynamic content */
 		Posts,
 		PostsFlex,
-		Events,
-		Products,
+		PostTypes,
 		Tags,
 		/* elements */
 		Headers,
 		Navs,
 		Footers,
-		Backgrounds,
 		/* upload */
 		Images,
 		Documents,

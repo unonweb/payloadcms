@@ -6,6 +6,7 @@ import { isLoggedIn } from '../access/isLoggedIn';
 
 /* FIELDS */
 import editingModeField from '../fields/editingMode';
+import createCommonFields from '../fields/createCommonFields';
 
 /* BLOCKS */
 import createColumnsFlex from '../blocks/layout/lay-flex';
@@ -15,16 +16,14 @@ import getRelatedDoc from '../hooks/getRelatedDoc';
 import validateIsHome from '../hooks/validate/validateIsHome';
 import saveToDisk from '../hooks/_saveToDisk';
 import rmFile from '../hooks/_rmFile';
-import iterateBlocks from '../hooks/iterateBlocks';
-import getCol from '../hooks/_getCol';
 import log from '../customLog';
 import mailError from '../mailError';
-import renderHTMLHead from '../hooks/renderHTMLHead';
+import renderHeadHTML from '../helpers/renderHeadHTML';
 import updateDocSingle from '../hooks/updateDocSingle';
 import getDoc from '../hooks/getDoc';
 import validatePageTitle from '../hooks/validate/validatePageTitle';
 import slugify from '../hooks/_slugify';
-import renderHTMLPage from '../hooks/renderHTMLPage';
+import renderPageHTML from '../helpers/renderPageHTML';
 import getAppMode from '../hooks/_getAppMode';
 import getUserSites from '../hooks/getUserSites';
 import cpAssets from '../hooks/_cpAssets';
@@ -33,12 +32,19 @@ import createAssetsFields from '../fields/createAssetsFields';
 import initOtherLocaleField from '../fields/initOtherLocaleField'
 import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship';
 import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID';
+import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
+import populateContextBeforeOp from '../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../hooks/afterOperation/endConsoleTime';
+import setMainHTML from '../hooks/beforeChange/setMainHTML';
+import createHTMLFields from '../fields/createHTMLFields';
+import setHeadHTML from '../hooks/beforeChange/setHeadHTML';
+import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
 
-const COLSINGULAR = 'page'
-const COLPLURAL = 'pages'
+const commonFields = createCommonFields()
+const SLUG = 'pages'
 
 export const Pages = {
-	slug: 'pages',
+	slug: SLUG,
 	admin: {
 		useAsTitle: 'title',
 		defaultColumns: [
@@ -81,110 +87,16 @@ export const Pages = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => {
-				if (['create', 'update', 'delete'].includes(operation)) {
-					// if this page is updated internally by another localized version of the same page
-					// 'args.req.context.sites' is already set by the update operation
-					if (args.req.user) {
-						args.req.context.sites ??= await getUserSites(args.req.user.sites, args.req.user.shortName)
-					}
-					args.req.context.timeID ??= Date.now()
-					console.time(`<7>[time] [pages] "${args.req.context.timeID}"`)
-
-					if (args.req.user && args.req.user.sites.length === 1) {
-						// applies only if user has only one site <-- interim solution
-						const siteID = args.req.user.sites[0].id ?? args.req.user.sites[0]
-
-						args.req.context.images = await getCol('images', args.req.user.shortName, {
-							depth: 0,
-							where: { sites: { contain: siteID } }
-						})
-						args.req.context.documents = await getCol('documents', args.req.user.shortName, {
-							depth: 0,
-							where: { sites: { contain: siteID } }
-						})
-						args.req.context.pages = await getCol('pages', args.req.user.shortName, {
-							depth: 0,
-							where: { site: { equals: siteID } },
-						})
-					}
-				}
-
-			}
+			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages']),
 		],
 		beforeValidate: [
-			/* 
-				1. validate runs on the client
-				2. if successful, beforeValidate runs on the server
-				3. validate runs on the server 
-			*/
-			async ({ data, req, operation, originalDoc, }) => {
-				req.context.user ??= req?.user?.shortName ?? 'internal'
-				req.context.site ??= (typeof data.site === 'string' && req.context.sites) ? req.context.sites.find(item => item.id === data.site) : null
-				req.context.site ??= await getRelatedDoc('sites', data.site, req.context.user)
-				req.context.mode = getAppMode()
-				req.context.host = process.env.HOST
-				req.context.pathSite = `${req.context.site.paths.fs.site}/${req.context.mode}`
-			}
+			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req })
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => {
-				try {
-					if (!context.updatedByPageElement) {
-						const user = context.user
-						const mode = context.mode
-						const site = context.site
-
-						log('--- beforeChange ---', user, __filename, 7)
-						/* render html.main from blocks and update assets */
-						if (data.main.blocks && data.main.blocks.length > 0) {
-							//if (mode === 'dev' || operation === 'create' || !data.html.main || hasChanged(data.main.blocks, originalDoc?.main.blocks, user)) {}
-
-							/* iterate blocks */
-
-							const images = context.images ?? await getCol('images', user, {
-								depth: 0,
-								where: { sites: { contain: site.id } }
-							})
-
-							const documents = context.documents ?? await getCol('documents', user, {
-								depth: 0,
-								where: { sites: { contain: site.id } }
-							})
-
-							const pages = context.pages ?? await getCol('pages', user, {
-								depth: 0,
-								where: { site: { equals: site.id } },
-							})
-
-							const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, {
-								user: user,
-								locale: req.locale,
-								blocks: data.main.blocks,
-								site: site,
-								images: images.docs,
-								documents: documents.docs,
-								pages: pages.docs,
-							})
-
-							/* update page */
-							data.html.main = html // update page.html.main
-							data.assets.imgs = imgFiles // update page.assets.imgs
-							data.assets.docs = docFiles	// update page.assets.docs
-							data.assets.head = libPathsWeb // update page.assets.head
-						}
-
-						data.html.head = await renderHTMLHead(data, site, user) // update page.html.head; is called even if there's no doc.main.html
-
-						return data
-					}
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-					mailError(err, req)
-				}
-			}
+			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
 		],
 		// --- afterChange 
 		afterChange: [
@@ -229,7 +141,7 @@ export const Pages = {
 					await cpAssets(`${process.cwd()}/upload/images/`, `${pathSite}/assets/imgs`, imgFilesUnique, user) // cp imgs from src to dest
 
 					/* compose html */
-					const pageHTML = renderHTMLPage(req.locale, doc, user, {
+					const pageHTML = renderPageHTML(req.locale, doc, user, {
 						// pass html or undefined:
 						navHTML: nav?.html,
 						headerHTML: header?.html,
@@ -260,28 +172,12 @@ export const Pages = {
 					}
 
 					/* remove previous page if site changes */
-
-					if (currSiteID !== prevSiteID) {
+					if (operation === 'update' && currSiteID !== prevSiteID) {
 						// slug has changed and is not empty
 						const prevSite = await getDoc('sites', previousDoc.site, user, { depth: 0 })
 						for (const loc of site.locales.used) {
 							await rmFile(`${prevSite.paths.fs.site}/dev/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory
 							await rmFile(`${prevSite.paths.fs.site}/prod/${loc}/${previousDoc.slug}`, user, { recursive: true, throwErrorIfMissing: false }) // remove former directory
-						}
-					}
-
-					/* other locale versions */
-					// init other locales of this doc
-					if (operation === 'create') {
-						if (doc.initOtherLocale === true && site.locales.used.length > 1) {
-							for (const loc of site.locales.used) {
-								if (loc !== req.locale) {
-									const updatedDoc = await updateDocSingle('pages', doc.id, user, {
-										data: doc,
-										locale: loc,
-									})
-								}
-							}
 						}
 					}
 
@@ -370,12 +266,7 @@ export const Pages = {
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => {
-
-				if (['create', 'update', 'updateByID', 'delete', 'deleteByID'].includes(operation)) {
-					console.timeEnd(`<7>[time] [pages] "${args.req.context.timeID}"`)
-				}
-			}
+			async ({ args, operation, result }) => await endConsoleTime(SLUG, { args, operation }),
 		],
 	},
 	// --- fields
@@ -435,7 +326,8 @@ export const Pages = {
 								description: {
 									de: 'Optional. Hilft den Überblick zu behalten.',
 									en: 'Optional. Helps to sort pages in the admin panel.'
-								}
+								},
+								hidden: true
 							},
 						},
 						// --- page.description
@@ -604,51 +496,7 @@ export const Pages = {
 							}
 						},
 						// --- page.html
-						{
-							type: 'group',
-							name: 'html',
-							admin: {
-								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-							},
-							fields: [
-								// --- page.html.header
-								{
-									type: 'code',
-									name: 'header',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-								// --- page.html.head
-								{
-									type: 'code',
-									name: 'head',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-								// --- page.html.main
-								{
-									type: 'code',
-									name: 'main',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-								// --- page.html.nav
-								{
-									type: 'code',
-									name: 'nav',
-									localized: true,
-									admin: {
-										language: 'html',
-									},
-								},
-							]
-						},
+						createHTMLFields('head', 'main', 'page'),
 						// --- page.assets
 						// --- page.assets.imgs
 						// --- page.assets.docs
@@ -738,7 +586,7 @@ export const Pages = {
 											return await getDefaultDocID({ data, originalDoc, value, field, context, req })
 										}
 										else {
-											return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+											return await resetBrokenRelationship(fieldValue, { field, context, collection })
 										}
 									},
 								]
@@ -771,7 +619,7 @@ export const Pages = {
 											return await getDefaultDocID({ data, originalDoc, value, field, context, req })
 										}
 										else {
-											return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+											return await resetBrokenRelationship(fieldValue, { field, context, collection })
 										}
 									}
 								]
@@ -804,7 +652,7 @@ export const Pages = {
 											return await getDefaultDocID({ data, originalDoc, value, field, context, req })
 										}
 										else {
-											return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+											return await resetBrokenRelationship(fieldValue, { field, context, collection })
 										}
 									}
 								]
@@ -1018,14 +866,7 @@ export const Pages = {
 				},
 			]
 		},
-		// --- updatedBy
-		{
-			type: 'text',
-			name: 'updatedBy',
-			admin: {
-				hidden: true
-			}
-		},
+		...commonFields,
 		// --- SIDEBAR ---
 		// --- editingMode
 		editingModeField,

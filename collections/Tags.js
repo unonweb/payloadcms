@@ -1,5 +1,9 @@
 import isAdminOrHasSiteAccess from "../access/isAdminOrHasSiteAccess";
 import { isLoggedIn } from "../access/isLoggedIn";
+import createCommonFields from '../fields/createCommonFields';
+
+const commonFields = createCommonFields()
+const SLUG = ' tags'
 
 export const Tags = {
 	slug: 'tags',
@@ -87,7 +91,7 @@ export const Tags = {
 				},
 				{
 					label: 'Posts Flex',
-					value: 'postsFlex'
+					value: 'posts-flex'
 				},
 			],
 		},
@@ -110,32 +114,9 @@ export const Tags = {
 			relationTo: 'images',
 			required: false,
 		},
-		// --- tag.createdByID
-		{
-			type: 'relationship',
-			relationTo: 'users',
-			name: 'createdByID',
-			maxDepth: 0,
-			hasMany: false,
-			defaultValue: ({ user }) => (user) ? user.id : '',
-			admin: {
-				condition: (data, siblingData, { user }) => user && user.roles.includes('admin'),
-			},
-		},
-		// --- tag.createdByName
-		{
-			type: 'text',
-			name: 'createdByName',
-			label: {
-				de: 'Erstellt von Benutzer',
-				en: 'Created by User'
-			},
-			defaultValue: ({ user }) => (user) ? `${user.firstName} ${user.lastName}` : '',
-			admin: {
-				readOnly: true,
-				hidden: true,
-			}
-		}
+		// --- commonFields
+		...commonFields,
+		
 		/* // --- tag.relPages
 		// set by includePosts (block) when a page includes a post category it stores it's ID here for reference
 		// queried by Posts (collection) in a afterChange hook in order to update (only!) the pages affected by changes in a post

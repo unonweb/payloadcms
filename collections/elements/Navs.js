@@ -4,7 +4,7 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 import { isAdmin } from '../../access/isAdmin';
 
 // BLOCKS
-import nav from '../../blocks/navs/nav';
+import nav from '../../blocks/nav/nav';
 
 // FIELDS
 import editingModeField from '../../fields/editingMode';
@@ -16,18 +16,21 @@ import mailError from '../../mailError';
 import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
 import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import updateDocsMany from '../../hooks/updateDocsMany';
-import afterChangeHook from './afterChangeHook';
+import updateRelations from '../../hooks/afterChange/updateRelations';
 import beforeChangeHook from './beforeChangeHook';
 import createAssetsFields from '../../fields/createAssetsFields';
-import beforeOperationHook from './beforeOperationHook';
-import afterOperationHook from './afterOperationHook';
 import afterDeleteHook from './afterDeleteHook';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
+import copyAssets from '../../hooks/afterChange/copyAssets';
+import setMainHTML from '../../hooks/beforeChange/setMainHTML';
 
-const COLPLURAL = 'navs'
+const SLUG = 'navs'
 const COLSINGULAR = 'nav'
 
 export const Navs = {
-	slug: COLPLURAL,
+	slug: SLUG,
 	labels: {
 		singular: {
 			de: 'Navigation',
@@ -49,14 +52,6 @@ export const Navs = {
 		defaultColumns: ['title', 'site'],
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
-		/* preview: async (doc) => {
-			return 'https://manueldieterich.unonweb.local/'
-			if (doc.site) {
-				const site = (typeof doc.site === 'string') ? await getDoc('sites', doc.site) : doc.site
-				const appMode = getAppMode()
-				return `${site[appMode].origin}`;
-			}
-		}, */
 	},
 	// --- accces
 	access: {
@@ -69,7 +64,8 @@ export const Navs = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook(COLPLURAL, { args, operation })
+			async ({ args, operation }) => startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => populateContextBeforeOp({ args, operation }, ['sites']),
 		],
 		// --- beforeValidate
 		beforeValidate: [
@@ -96,11 +92,12 @@ export const Navs = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => beforeChangeHook(COLPLURAL, { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
 		],
 		// --- afterChange 
 		afterChange: [
-			async ({ req, doc, previousDoc, operation, context }) => afterChangeHook(COLPLURAL, { req, doc, previousDoc, operation, context }),
+			async ({ req, doc, previousDoc, context, operation }) => copyAssets(['images', 'documents'], { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, operation, context }) => updateRelations('pages', 'nav', { req, doc, previousDoc, operation, context }),
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -108,7 +105,7 @@ export const Navs = {
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ operation, args }) => afterOperationHook(COLPLURAL, { operation, args })
+			async ({ args, operation, result }) => await endConsoleTime(SLUG, { args, operation }),
 		],
 	},
 	// --- fields
@@ -182,8 +179,8 @@ export const Navs = {
 									de: 'Wird bei der Erstellung neuer Seiten/Posts automatisch hinterlegt. Only one navigation may be set as default.'
 								}
 							},
-							defaultValue: async ({ user }) => await firstDefaultsToTrue(COLPLURAL, user.shortName),
-							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, COLPLURAL),
+							defaultValue: async ({ user }) => await firstDefaultsToTrue(SLUG, user.shortName),
+							validate: async (val, { data, payload }) => await isUniqueDefault(val, data, payload, SLUG),
 						},
 						// --- nav.html
 						{

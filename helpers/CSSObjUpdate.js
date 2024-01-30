@@ -1,4 +1,4 @@
-export default function updateCSSObj(css = {}, selector = '', key = '', val = '') {
+export default function CSSObjUpdate(css = {}, selector = '', key = '', val = '') {
 	/*	
 		- returns the updated css obj 
 	*/

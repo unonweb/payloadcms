@@ -4,31 +4,31 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 
 /* FIELDS */
 import editingModeField from '../../fields/editingMode';
+import createCommonFields from '../../fields/createCommonFields';
 
 /* BLOCKS */
 import createRichTextBlock from '../../blocks/rich-text-block';
-import createImgBlock from '../../blocks/img-block';
+import createUnImgBlock from '../../blocks/img/un-img';
 
 /* HOOKS & HELPERS */
 import log from '../../customLog';
 import getDoc from '../../hooks/getDoc';
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import iterateBlocks from '../../hooks/iterateBlocks';
-import getCol from '../../hooks/_getCol';
-import hasChanged from '../../hooks/_hasChanged';
 import createElementsFields from './createPageElementsField';
-import renderHTMLHead from '../../hooks/renderHTMLHead';
 import createAssetsFields from '../../fields/createAssetsFields';
 import createHTMLFields from '../../fields/createHTMLFields';
-import beforeOperationHook from './beforeOperationHook';
-import afterOperationHook from './afterOperationHook';
-import afterChangeHook from './afterChangeHook';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import savePostsJson from '../../hooks/afterOperation/savePostsJson';
+import copyAssets from '../../hooks/afterChange/copyAssets';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
-import beforeChangeHook from './beforeChangeHook';
-import beforeValidateHook from './beforeValidateHook';
+import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
+import setPageHTML from '../../hooks/beforeChange/setPageHTML';
+import setHeadHTML from '../../hooks/beforeChange/setHeadHTML';
+import savePost from '../../hooks/afterChange/savePost';
 
-const COLSINGULAR = 'post'
 const SLUG = 'posts'
+const commonFields = createCommonFields()
 
 export const Posts = {
 	slug: SLUG,
@@ -63,25 +63,33 @@ export const Posts = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => await beforeOperationHook(SLUG, { args, operation })
+			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages'])
 		],
 		// --- beforeValidate
 		beforeValidate: [
-			async ({ data, req, operation, originalDoc }) => await beforeValidateHook(SLUG, { data, req, operation, originalDoc })
+			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req })
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => await beforeChangeHook(SLUG, { data, req, operation, originalDoc, context })
+			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }),
+			// data.html.main
+			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, originalDoc, context }),
+
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => await afterChangeHook(SLUG, { req, doc, previousDoc, context, operation })
+			async ({ req, doc, previousDoc, context, operation }) => await copyAssets(['images', 'documents'], { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, context, operation }) => await savePost(SLUG, { req, doc, context }),
 		],
+		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => await afterOperationHook(SLUG, { args, operation, result })
+			async ({ args, operation, result }) => await savePostsJson(SLUG, { args, operation, result }),
+			async ({ args, operation, result }) => await endConsoleTime(SLUG, { args, operation }),
 		],
 	},
 	fields: [
+		// --- SIDEBAR
 		// --- editingMode
 		editingModeField,
 		initOtherLocaleField,
@@ -269,135 +277,10 @@ export const Posts = {
 						// --- post.footer
 						createElementsFields(),
 						// post.html
-						createHTMLFields(),
+						createHTMLFields('head', 'main', 'page'),
 						// --- post.assets
 						createAssetsFields('imgs', 'docs', 'head'),
 						// meta: url
-						/* {
-							type: 'text',
-							name: 'url',
-							label: {
-								de: 'Post URL',
-								en: 'Post URL'
-							},
-							localized: false,
-							required: false,
-							admin: {
-								readOnly: true,
-							},
-							hooks: {
-								afterRead: [
-									(args) => addURLSlug(args) // <-- CHECK: unsure if I need this. Maybe I just link to posts via ID?
-								]
-							},
-						}, */
-						// --- meta: slug
-						/* {
-							type: 'text',
-							name: 'slug',
-							label: {
-								de: 'Post Slug',
-								en: 'Post Slug'
-							},
-							localized: false,
-							required: false,
-							admin: {
-								readOnly: true,
-							},
-							hooks: {
-								afterRead: [
-									(args) => addSlug(args) // <-- CHECK: unsure if I need this. Maybe I just link to posts via ID?
-								]
-							},
-						}, */
-						// --- preview select ---
-						/* {
-							type: 'group',
-							name: 'preview',
-							label: {
-								de: 'Vorschau',
-								en: 'Preview'
-							},
-							fields: [
-								{
-									type: 'checkbox',
-									name: 'usePreview',
-									label: {
-										de: 'Vorschau aktivieren',
-										en: 'Activate Preview'
-									},
-								},
-								{
-									type: 'row',
-									fields: [
-										{
-											type: 'checkbox',
-											name: 'img',
-											label: {
-												de: 'Bild',
-												en: 'Image'
-											},
-											admin: {
-												width: '25%',
-												condition: (_, siblingData) => siblingData?.usePreview
-											}
-										},
-										{
-											type: 'checkbox',
-											name: 'title',
-											label: {
-												de: 'Titel',
-												en: 'Preview Image'
-											},
-											admin: {
-												width: '25%',
-												condition: (_, siblingData) => siblingData?.usePreview
-											}
-										},
-										{
-											type: 'checkbox',
-											name: 'excerpt',
-											label: {
-												de: 'Exzerpt',
-												en: 'Excerpt'
-											},
-											admin: {
-												width: '25%',
-												condition: (_, siblingData) => siblingData?.usePreview
-											}
-										},
-										{
-											type: 'checkbox',
-											name: 'date',
-											label: {
-												de: 'Datum',
-												en: 'Date'
-											},
-											admin: {
-												width: '25%',
-												condition: (_, siblingData) => siblingData?.usePreview
-											}
-										},
-									]
-								},
-								// --- preview img ---
-								{
-									type: 'upload',
-									name: 'img',
-									relationTo: 'images',
-									required: true,
-									admin: {
-										description: {
-											en: 'Preview Image',
-											de: 'Vorschau-Bild'
-										},
-										condition: (_, siblingData) => siblingData?.img
-									}
-								},
-							]
-						} */
-
-
 					]
 				},
 				// --- CONTENT [tab-2] ---
@@ -422,13 +305,15 @@ export const Posts = {
 							},
 							blocks: [
 								createRichTextBlock(),
-								createImgBlock(),
+								createUnImgBlock(['caption', 'size', 'link']),
 							]
 						},
 					]
 				},
 			]
-		}
+		},
+		// --- COMMON FIELDS
+		...commonFields
 	],
 }
 

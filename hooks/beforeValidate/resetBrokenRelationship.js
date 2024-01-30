@@ -1,10 +1,10 @@
 import log from '../../customLog'
 import payload from 'payload'
 
-export default async function resetBrokenRelationship(relationID = '', { data, originalDoc, value, field, collection, req } = {}) {
+export default async function resetBrokenRelationship(relationID = '', { field, collection, context } = {}) {
 	/* 
-		Hook: 
-			beforeValidate
+		Field-Hook
+		
 		Order:
 			- after beforeOperation
 		Task: 
@@ -28,10 +28,10 @@ export default async function resetBrokenRelationship(relationID = '', { data, o
 	} catch (error) {
 		switch (error.name) {
 			case 'NotFound':
-				log(`Could not find "${relationID}" in "${relationTo}" referenced from "${collection.slug}"\n--> Reset relationship.`, req?.user?.shortName, __filename, 4)
+				log(`Could not find "${relationID}" in "${relationTo}" referenced from "${collection.slug}"\n--> Reset relationship.`, context.user, __filename, 4)
 				return null
 			default:
-				log(error.stack, req?.user?.shortName, __filename, 3)
+				log(error.stack, context.user, __filename, 3)
 		}
 	}
 }

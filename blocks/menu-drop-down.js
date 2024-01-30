@@ -1,6 +1,6 @@
 import createLinkIntBlock from './link-int-block'
 import createLinkExtBlock from './link-ext-block'
-import createImgBlock from './img-block'
+import createUnImgBlock from './img/un-img'
 
 export default function createMenuDropDown() {
 	const block = {
@@ -72,7 +72,7 @@ export default function createMenuDropDown() {
 				blocks: [
 					createLinkIntBlock({ slots: 'link' }),
 					createLinkExtBlock({ slots: 'link' }),
-					createImgBlock({ slots: 'image' }),
+					createUnImgBlock(['caption', 'size', 'link']),
 				]
 			},
 		]

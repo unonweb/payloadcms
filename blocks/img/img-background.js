@@ -1,4 +1,4 @@
-import updateCSSObj from '../../hooks/_updateCSSObj'
+import CSSObjUpdate from '../../helpers/CSSObjUpdate'
 import getDoc from '../../hooks/getDoc'
 import updateDocSingle from '../../hooks/updateDocSingle'
 

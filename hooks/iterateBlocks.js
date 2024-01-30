@@ -1,50 +1,60 @@
-import {
-	IS_BOLD,
-	IS_ITALIC,
-	IS_STRIKETHROUGH,
-	IS_UNDERLINE,
-	IS_CODE,
-	IS_SUBSCRIPT,
-	IS_SUPERSCRIPT,
-} from './_lexicalNodeFormat';
 import log from '../customLog'
 import CustomError from '../customError'
 import getAppMode from './_getAppMode'
 import getDoc from './getDoc';
+import renderLexicalHTML from '../helpers/renderLexicalHTML';
+import renderImageset from '../helpers/renderImageset';
 
-
-export default function iterateBlocks(doc, { user = '', locale = '', blocks = [], images = [], site = {}, pages = [], documents = [] } = {}) {
+export default function iterateBlocks(doc, blocks = [], context) {
 	// called for each page that is to be rendered
 
-	if (documents.length === 0) {
+	context.slug = (doc.slug === '') ? '/' : doc.slug
+	context.title = doc.title
+	context.origin = context.site.paths.web.origin[context.mode]
+	context.origin = (context.origin.endsWith('/')) ? context.origin.slice(0, -1) : context.origin // cut off trailing '/'
+	context.theme = context.site?.domainShort ?? ''
+	context.pathWebImgs = '/assets/imgs'
+	context.pathWebPosts = '/assets/posts'
+	context.pathWebDocs = '/assets/docs'
+	context.pathFSLib = `${context.site.paths.fs.admin.resources}/assets/lib`
+
+	const slug = context.slug
+	const origin = context.origin
+	const locale = context.locale
+	const user = context.user
+	const pathWebImgs = context.pathWebImgs
+	const title = context.title
+	const mode = context.mode
+	const theme = context.theme
+	const pathWebAssets = '/assets'
+	const pathWebDocs = context.pathWebDocs
+	const pathWebPosts = context.pathWebPosts
+	const pathFSLib = context.pathFSLib
+
+	/* checks */
+	if (context.documents.length === 0) {
 		log('empty array: "documents"', user, __filename, 5)
 	}
-	if (images.length === 0) {
+	if (context.images.length === 0) {
 		log('empty array: "images"', user, __filename, 5)
 	}
-	if (pages.length === 0) {
+	if (context.pages.length === 0) {
 		log('empty array: "pages"', user, __filename, 5)
 	}
 
-	const mode = getAppMode()
-	let origin = site.paths.web.origin[mode]
-	origin = (origin.endsWith('/')) ? origin.slice(0, -1) : origin // cut off trailing '/'
-	const theme = site?.domainShort ?? ''
-	const pathWebAssets = '/assets'
-	const pathWebImgs = '/assets/imgs'
-	const pathWebDocs = '/assets/docs'
-	const pathWebPosts = '/assets/posts'
-	const slug = (doc.slug === '') ? '/' : doc.slug
-	const pathFSLib = `${site.paths.fs.admin.resources}/assets/lib`
-
+	context.imgFiles = []
+	context.docFiles = []
+	context.libPathsWeb = new Set()
+	
 	let html
-	let libPathsWeb = new Set()
-	let imgFiles = []
-	let docFiles = []
-
+	
 	html = render(blocks); // action!
+	
 	html = html.replace(/\s+/g, " ").trim()
 	// html = html.replace(/[\n\r\s]+/g, " ").trim()
+	const imgFiles = context.imgFiles
+	const docFiles = context.docFiles
+	let libPathsWeb = context.libPathsWeb
 	libPathsWeb = Array.from(libPathsWeb)
 	return { html, imgFiles, docFiles, libPathsWeb }
 
@@ -73,6 +83,8 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 						return renderUnLayFixed(block);
 					case 'columns-flex':
 						return renderUnLayFlex(block);
+					case 'include-posts-flex':
+						return renderUnPostsFlex(block);
 					case 'include-posts':
 						return renderUnPostsLit(block)
 
@@ -110,8 +122,10 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 						return renderUnLangSwitch(block);
 
 					// --- IMAGE ---
-					case 'img':
+					case 'un-img':
 						return renderUnImg(block);
+					case 'img':
+						return renderImg(block);
 					case 'img-slides':
 						return renderUnImgSlides(block);
 					case 'img-gallery':
@@ -149,60 +163,20 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		let html = /* html */`
 			<un-header-banner ${attributes}>
 				<!--- BACKGROUND --->
-				${(block.background.images.length > 0) 
-					? block.background.images.map(img => `${ renderImageset(img.rel, { sizes: '100vw', loading: 'eager', slot: 'background', classes: 'background' }) }`).join(' ')
+				${(block.background.blocks) 
+					? render(block.background.blocks)
 					: ''
 				}
 				<!--- OVERLAY --->
 				<div class="overlay">
 					${(block.overlay.blocks) 
-						? render(block.overlay.blocks) 
+						? render(block.overlay.blocks)
 						: ''
 					}
 				</div>
 			</un-header-banner>`
 
 		return html
-
-		/* <!-- OVERLAY 
-					${block.overlay.images.map(img => {
-						switch (img.link.type) {
-							case "internal":
-								return `
-									<div class="overlay">
-										<a href="${site.origin.dev}/${img.link.slug}">
-											${renderImagesetEl({
-												img: img.image,
-												sizes: "15vw",
-												loading: "eager",
-											})}
-										</a>
-									</div>
-								`;
-							case "custom":
-								return `
-									<div class="overlay">
-										<a href="https://${img.link.url}">
-											${renderImagesetEl({
-												img: img.image,
-												sizes: "15vw",
-												loading: "eager",
-											})}
-										</a>
-									</div>
-								`;
-							case "none":
-								return `
-									<div class="overlay">
-										${renderImagesetEl({
-											img: img.image,
-											sizes: "15vw",
-											loading: "eager",
-										})}
-									</div>
-								`;
-						}
-					}).join(' ')} */
 	}
 
 	// #FOOTER ---
@@ -248,7 +222,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			case 'image':
 				html = /* html */`
 					<un-drawer ${attributes}>
-						${renderImageset(block.trigger.image, { sizes: '10vw', loading: 'eager', slot: 'trigger' })}
+						${renderImageset(block.trigger.image, context, { sizes: '10vw', loading: 'eager', slot: 'trigger' })}
 						${render(block.content.blocks)}
 					</un-drawer>
 				`
@@ -261,10 +235,10 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 	}
 
 	function renderUnMapLeaflet(block = {}) {
-		libPathsWeb.add('/assets/lib/leaflet-1.9.4.css')
-		libPathsWeb.add('/assets/lib/leaflet-1.9.4.js')
+		context.libPathsWeb.add('/assets/lib/leaflet-1.9.4.css')
+		context.libPathsWeb.add('/assets/lib/leaflet-1.9.4.js')
 		//filesToPageHead.add('/assets/lib/lit-3.1.0-all.js')
-		libPathsWeb.add('/assets/custom-elements/un-map-leaflet.js')
+		context.libPathsWeb.add('/assets/custom-elements/un-map-leaflet.js')
 
 		const attributes = [
 			// global
@@ -498,9 +472,31 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 		return html
 	}
 
+	function renderUnPostsFlex(block = {}) {
+		context.libPathsWeb.add('/assets/lib/lit-3.1.0-all.js')
+		context.libPathsWeb.add('/assets/custom-elements/un-posts-lit.js')
+		//const includeSummary = block?.meta?.include?.includes('summary')
+		//const includeImage = block?.meta?.include?.includes('image')
+
+		// attributes
+		const attributes = [
+			(theme) ? `data-theme="${theme}"` : '',
+			(slug) ? `data-page="${slug}"` : '',
+			(locale) ? `lang="${locale}"` : '',
+			(locale) ? `src="${pathWebPosts}/${locale}/posts-flex.json"` : '',
+			(block.type) ? `type="${block.type}"` : '',
+			(block?.ui?.isCollapsible) ? "collapsible" : '', // boolean property
+			(block?.ui?.include) ? `ui-parts="${block.ui.include.join(' ')}"` : '',
+		].join(' ')
+
+		let html = /* html */`<un-posts-lit ${attributes}></un-posts-lit>`
+
+		return html
+	}
+
 	function renderUnPostsLit(block = {}) {
-		libPathsWeb.add('/assets/lib/lit-3.1.0-all.js')
-		libPathsWeb.add('/assets/custom-elements/un-posts-lit.js')
+		context.libPathsWeb.add('/assets/lib/lit-3.1.0-all.js')
+		context.libPathsWeb.add('/assets/custom-elements/un-posts-lit.js')
 		//const includeSummary = block?.meta?.include?.includes('summary')
 		//const includeImage = block?.meta?.include?.includes('image')
 
@@ -541,7 +537,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			// style
 			(block.shape) ? `data-shape=${block.shape}` : '',
 			(block.filter) ? `data-filter=${block.filter}` : '',
-			(block.hover.length > 0) ? `data-hover=${block.hover.join(' ')}` : '', // array!
+			(block.hover?.length > 0) ? `data-hover=${block.hover.join(' ')}` : '', // array!
 		].filter(item => item).join(' ')
 
 		let html = /* html */`
@@ -549,11 +545,11 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 				${block.images.map(img => {
 					switch (img.link.type) {
 						case 'internal':
-							return /* html */`<a href="${origin}/${img.link.slug}" slot="gallery">${renderImageset(img.rel, { sizes: '50vw', loading: 'eager' })}</a>`;
+							return /* html */`<a href="${origin}/${img.link.slug}" slot="gallery">${renderImageset(img.rel, context, { sizes: '50vw', loading: 'eager' })}</a>`;
 						case 'custom':
-							return /* html */`<a href="${img.link.url}" slot="gallery">${renderImageset(img.rel, { sizes: '50vw', loading: 'eager' })}</a>`;
+							return /* html */`<a href="${img.link.url}" slot="gallery">${renderImageset(img.rel, context, { sizes: '50vw', loading: 'eager' })}</a>`;
 						case 'none':
-							return renderImageset(img.rel, { sizes: '100vw' }) // 'size: 100vw' as the same img will be used for the modal
+							return renderImageset(img.rel, context, { sizes: '100vw' }) // 'size: 100vw' as the same img will be used for the modal
 						case 'undefined':
 							log('linkType == undefined', user, __filename, 4);
 					}
@@ -572,9 +568,25 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 
 		let html = /* html */`	
 			<un-img-slides ${attributes} arrows="true" bullets="true" thumbnails="0" autoslide="false">
-				${block.images.map((img) => renderImageset(img, { loading: "lazy" }))}
+				${block.images.map((img) => renderImageset(img, context, { loading: "lazy" }))}
 			</un-img-slides>
 		`;
+
+		return html
+	}
+
+	function renderImg(block = {}) {
+
+		if (block.caption) {
+			html = /* html */`
+			<figure>
+				${renderImageset(block.rel, context)}
+				<figcaption>${block.caption}</figcaption>
+			</figure>
+			`;
+		} else {
+			html = /* html */`${renderImageset(block.rel, context)}`
+		}
 
 		return html
 	}
@@ -584,49 +596,56 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			- not working with images in RichText content because they're only referenced 
 		*/
 
+		if (!block.rel) throw ReferenceError('Error: img.rel is not set')
+
 		const attributes = [
 			(block.size) ? `data-size=${block.size}` : '',
 			(block.shape) ? `data-shape=${block.shape}` : '',
 			(block.filter) ? `data-filter=${block.filter}` : '',
-			(block.hover.length > 0) ? `data-hover=${block.hover.join(' ')}` : '', // array!
+			(block.hover?.length > 0) ? `data-hover=${block.hover.join(' ')}` : '', // array!
 			(block.mask) ? `data-mask=${block.mask}` : '',
 			(theme) ? `data-theme="${theme}"` : '',
 			(slug) ? `data-page="${slug}"` : '',
 		].filter(item => item).join(' ')
 
 		let html = ''
+		
+		if (['internal', 'custom'].includes(block.link?.type)) {
 
-		if (block.rel) {
+			let href = ''
 			switch (block.link.type) {
-				case 'none':
-				case 'undefined':
-					html = /* html */`
-						<un-img ${attributes}>		
-							${renderImageset(block.rel)}
-						</un-img>
-					`;
-					break
 				case 'internal':
 					const linkedDoc = pages.find(p => p.id === block.link.rel.value && p.locale === locale) ?? pages.find(p => p.id === block.link.rel.value)
 					const slug = (linkedDoc.isHome) ? `/${locale}/` : `${locale}/${linkedDoc.slug}/`
-					html = /* html */`
-						<a href="${origin}/${slug}">
-							<un-img ${attributes}>${renderImageset(block.rel)}</un-img>
-						</a>
-					`;
-					break
+					href = `${origin}/${slug}`		
+					break;
 				case 'custom':
-					html = /* html */`
-						<a href="${block.link.url}">
-							<un-img ${attributes}>${renderImageset(block.rel)}</un-img>
-						</a>
-					`;
-					break
-				default:
-					throw CustomError('linkType unknown', site.domainShort, __filename);
+					href = `${block.link.url}`
+					break;
 			}
-		}
 
+			html = /* html */`
+				<a href="${origin}/${slug}">
+					<un-img ${attributes}>${renderImageset(block.rel, context)}</un-img>
+				</a>
+			`
+			
+		} else {
+			// no link
+			if (block.caption) {
+				html = /* html */`
+				<figure>
+					<un-img ${attributes}>${renderImageset(block.rel, context)}</un-img>
+					<figcaption>${block.caption}</figcaption>
+				</figure>
+				`;
+			} else {
+				html = /* html */`
+				<un-img ${attributes}>${renderImageset(block.rel, context)}</un-img>`;
+			}
+			
+		}
+		
 		return html
 	}
 
@@ -670,7 +689,7 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 			(slug) ? `data-page="${slug}"` : '',
 		].filter(item => item).join(' ')
 
-		html = /* html */`<un-rt ${attributes}>${serializeLexical(block.contentRichText.root.children)}</un-rt>`;
+		html = /* html */`<un-rt ${attributes}>${renderLexicalHTML(block.contentRichText.root.children, context)}</un-rt>`;
 
 		return html.replace(/\s+/g, " ").trim()
 	}
@@ -734,481 +753,4 @@ export default function iterateBlocks(doc, { user = '', locale = '', blocks = []
 
 	}
 
-	// --- ELEMENTS ---
-
-	function serializeLexical(children) {
-		if (!Array.isArray(children)) {
-			children = children.children
-		}
-
-		const htmlArray = children.map((node) => {
-
-			// get classes
-			let classes = [
-				(node.format && typeof node.format === 'string') ? node.format : '',
-				(node.format & IS_STRIKETHROUGH) ? 'line-through' : '',
-				(node.format & IS_UNDERLINE) ? 'underline' : '',
-				(node.indent > 0) ? `indent-${node.indent}` : '',
-			].filter(item => item)
-
-			// node.type === text
-			if (node.type === 'text') {
-				
-				let attributes = [
-					(classes.length > 0) ? ` class="${classes.join(' ')}"` : ''
-				].filter(item => item).join(' ')
-
-				//let text = `${escapeHTML(node.text)}`;
-
-				let text = `${node.text}`;
-				let tag = ''
-				
-				// get tag
-				if (node.format) {
-					if (node.format & IS_BOLD) tag = 'strong'
-					//text = `<strong class="${classes}">${text}</strong>`;
-					if (node.format & IS_ITALIC) tag = 'em'
-					//text = /* html */`<em class="${classes}">${text}</em>`;
-					if (node.format & IS_CODE) tag = 'code'
-					//text = /* html */`<code class="${classes}">${text}</code>`;
-					if (node.format & IS_SUBSCRIPT) tag = 'sub'
-					//text = /* html */`<sub class="${classes}">${text}</sub>`;
-					if (node.format & IS_SUPERSCRIPT) tag = 'sup'
-					//text = /* html */`<sup>${text}</sup>`;
-					if (node.format & IS_STRIKETHROUGH || node.format & IS_UNDERLINE) tag = 'span'	
-				}
-
-				if (tag) {
-					return `<${tag}${attributes}>${text}</${tag}>`;	
-				} 
-				else {
-					return `${text}`;
-				}
-			}
-
-			// node is null
-			if (!node) {
-				return null;
-			}
-
-			// serialize innerHTML
-			const innerHTML = (node.children) ? serializeLexical(node.children) : null;
-
-			// serialize outerHTML
-			let classStr = ''
-			let attributes = []
-			switch (node.type) {
-
-				// --- linebreak
-				case 'linebreak':
-					return /* html */`<br>`
-				
-				// --- link
-				case 'link':
-
-					let href = ''
-					// --- linkType
-					switch (node.fields.linkType) {
-						case 'custom':
-							href = node.fields.url	
-							break
-						case 'internal':
-							let linkedDoc = {}
-							switch (node.fields.doc.relationTo) {
-								// link -> pages
-								case 'pages':
-									linkedDoc = pages.find(page => (typeof node.fields.doc.value === 'string') 
-										? page.id === node.fields.doc.value 
-										: page.id === node.fields.doc.value.id
-									)
-									href = linkedDoc.url
-									break;
-								// link -> posts
-								case 'posts':
-									// const linkedDoc = await getDoc('posts', node.fields.doc.value, user, { depth: 0, locale: locale }) <-- FIX!
-									log('Link to posts in rich-text not implemented yet', user, __filename, 5)
-									break;
-								// link -> documents
-								case 'documents':
-									linkedDoc = documents.find(doc => (typeof node.fields.doc.value === 'string') 
-										? doc.id === node.fields.doc.value 
-										: doc.id === node.fields.doc.value.id
-									)
-									if (linkedDoc?.filename) {
-										docFiles.push(linkedDoc.filename)
-										href = `${pathWebDocs}/${linkedDoc.filename}`
-									}
-									break
-								// link -> images
-								case 'images':
-									linkedDoc = images.find(img => (typeof node.fields.doc.value === 'string') 
-										? img.id === node.fields.doc.value
-										: img.id === node.fields.doc.value.id
-									)
-									if (linkedDoc?.filename) {
-										imgFiles.push(linkedDoc.filename)
-										href = `${pathWebImgs}/${linkedDoc.filename}`
-									}
-									break
-							}
-					}
-
-					if (!href) throw Error(`href is "${href}"`)
-
-					attributes = [
-						`href="${href}"`,
-						(node.fields?.isDownload === true) ? `download=""` : '',
-						(node.fields.newTab === true) ? 'target="_blank"' : '',
-						(node.fields?.rel) ? `rel="${node.fields?.rel}"` : '',
-						(classes.length > 0) ? ` class="${classes.join(' ')}"` : ''
-					].filter(item => item).join(' ')
-
-					return /* html */`<a ${attributes}>${innerHTML}</a>`
-
-				// --- list
-				case 'list': // <-- !IMP: handle properly, especially nested lists
-					if (node.listType === 'bullet') {
-						return /* html */`<ul>${innerHTML}</ul>`
-					} else {
-						return /* html */`<ol>${innerHTML}</ol>`
-					}
-
-				// --- listitem
-				case 'listitem':
-					return /* html */`<li>${innerHTML}</li>`
-
-				// --- heading
-				case 'heading':
-					classStr = (classes.length > 0) ? `class="${classes.join(' ')}"` : ''
-					return `<${node.tag} ${classStr}>${innerHTML}</${node.tag}>`
-				
-				// --- upload
-				case 'upload':
-					return /* html */`<un-img data-float="left">${renderImageset(node.value.id)}</un-img>` // <-- ATT: hard-coded value
-				
-				// --- paragraph
-				case 'paragraph':
-					classStr = (classes.length > 0) ? `class="${classes.join(' ')}"` : ''
-					return /* html */`<p ${classStr}>${innerHTML ? innerHTML : '<br>'}</p>`;
-				
-				// --- default
-				default: 
-					// Probably just a normal paragraph
-					return /* html */`<p class="${classes}">${innerHTML ? innerHTML : '<br>'}</p>`;
-			}
-		}).filter((node) => node)
-
-		return htmlArray.join('') // no space!
-	}
-
-	function convertSlateRTtoHTML(rtContent) {
-		// receives slate richtText content
-		// returns a html string
-
-		// main
-		if (Array.isArray(rtContent)) {
-			// [children]...
-			return rtContent.reduce((output, node) => {
-				// returns a single value which is calculated based on the array
-				const isTextNode = _isText(node);
-				//const isTextNode = (node.type) ? false : true
-
-				const { text, bold, code, italic, underline, strikethrough } =
-					node; // erstellt sechs Variablen mit dem Inhalt von node.text, node.bold,...
-
-				if (isTextNode) {
-					// convert straight single quotations to curly
-					// "\u201C" is starting double curly
-					// "\u201D" is ending double curly
-					let html = text?.replace(/'/g, "\u2019"); // single quotes
-
-					if (bold) {
-						html = `<strong>${html}</strong>`;
-					}
-
-					if (code) {
-						html = `<code>${html}</code>`;
-					}
-
-					if (italic) {
-						html = `<em>${html}</em>`;
-					}
-
-					if (underline) {
-						html = `<span style="text-decoration: underline;">${html}</span>`;
-					}
-
-					if (strikethrough) {
-						html = `<span style="text-decoration: line-through;">${html}</span>`;
-					}
-
-					//console.log('adding html: ', html)
-					return `${output}${html}`;
-				}
-
-				if (node) {
-					let nodeHTML;
-					// check node.type
-					switch (node.type) {
-						case "h1":
-							nodeHTML = `<h1>${convertSlateRTtoHTML(node.children)}</h1>`;
-							break;
-
-						case "h2":
-							nodeHTML = `<h2>${convertSlateRTtoHTML(node.children)}</h2>`;
-							break;
-
-						case "h3":
-							nodeHTML = `<h3>${convertSlateRTtoHTML(node.children)}</h3>`;
-							break;
-
-						case "h4":
-							nodeHTML = `<h4>${convertSlateRTtoHTML(node.children)}</h4>`;
-							break;
-
-						case "h5":
-							nodeHTML = `<h5>${convertSlateRTtoHTML(node.children)}</h5>`;
-							break;
-
-						case "h6":
-							nodeHTML = `<h6>${convertSlateRTtoHTML(node.children)}</h6>`;
-							break;
-
-						case "ul":
-							nodeHTML = `<ul>${convertSlateRTtoHTML(node.children)}</ul>`;
-							break;
-
-						case "ol":
-							nodeHTML = `<ol>${convertSlateRTtoHTML(node.children)}</ol>`;
-							break;
-
-						case "li":
-							nodeHTML = `<li>${convertSlateRTtoHTML(node.children)}</li>`;
-							break;
-
-						case "link":
-							if (node.linkType === 'internal') {
-								// internal link
-								const attributes = [
-									(node?.fields?.isDownloadLink === true) ? `download=""` : '',
-									(node.doc.value.filename) ? `href="${pathWebAssets}/${node.doc.value.filename}"` : '',
-								].filter(item => item).join(' ')
-
-								nodeHTML = `<a ${attributes}>${convertSlateRTtoHTML(node.children)}</a>`;
-							}
-							else {
-								// external link
-								nodeHTML = `<a href="${node.url}">${convertSlateRTtoHTML(node.children)}</a>`;
-							}
-							break;
-
-						case "relationship":
-							nodeHTML = `<strong>Relationship to ${node.relationTo}: ${node.value}</strong><br/>`;
-							break;
-
-						/* IMAGE */
-
-						case "upload":
-							//nodeHTML = `<un-img>${_createImgSrcSetEl(node.value, webImgDir)}</un-img>`
-							nodeHTML = renderImageset(node.value)
-							break;
-
-						case "p":
-						case undefined:
-							nodeHTML = `<p>${convertSlateRTtoHTML(node.children)}</p>`;
-							break;
-
-						default:
-							nodeHTML = `<strong>${node.type}</strong>:<br/>${JSON.stringify(node)}`;
-							break;
-					}
-
-					//console.log('adding html: ', nodeHTML)
-					return `${output}${nodeHTML}\n`;
-				}
-
-				return output;
-				// end of content.reduce()
-			}, "");
-		}
-
-		function _isText(value) {
-			// copied from Slate
-
-			function isPlainObject(o) {
-				var ctor, prot;
-
-				if (isObject(o) === false) return false;
-
-				// If has modified constructor
-				ctor = o.constructor;
-				if (ctor === undefined) return true;
-
-				// If has modified prototype
-				prot = ctor.prototype;
-				if (isObject(prot) === false) return false;
-
-				// If constructor does not have an Object-specific method
-				if (prot.hasOwnProperty("isPrototypeOf") === false) {
-					return false;
-				}
-
-				// Most likely a plain Object
-				return true;
-			}
-
-			function isObject(o) {
-				return Object.prototype.toString.call(o) === "[object Object]";
-			}
-
-			return isPlainObject(value) && typeof value.text === "string";
-		}
-
-		/* function _createImgSrcSetEl(img, webImgDir = '', images = {}) {
-			// use this local variant instead of the static UnApp method
-			// because we need it to return plain html
-
-			if (typeof img === 'string') {
-				// looks like we've got just an id reference to the images collection
-				//img = images.docs.find(item => item.id === img)
-				img = images[item.id]
-			}
-
-			let imgEl;
-
-			if (!img.sizes) { // try reassigning one lvl down
-				img = img.image
-			}
-
-			if (img.sizes) {
-				// if there are different sizes...
-				let imgSizes = img.sizes;
-
-				let img1920Str = imgSizes.img1920.filename
-					? `${webImgDir}/${imgSizes.img1920.filename} 1920w, `
-					: "";
-				let img1600Str = imgSizes.img1600.filename
-					? `${webImgDir}/${imgSizes.img1600.filename} 1600w, `
-					: "";
-				let img1366Str = imgSizes.img1366.filename
-					? `${webImgDir}/${imgSizes.img1366.filename} 1366w, `
-					: "";
-				let img1024Str = imgSizes.img1024.filename
-					? `${webImgDir}/${imgSizes.img1024.filename} 1024w, `
-					: "";
-				let img768Str = imgSizes.img768.filename
-					? `${webImgDir}/${imgSizes.img768.filename} 768w, `
-					: "";
-				let img640Str = imgSizes.img640.filename
-					? `${webImgDir}/${imgSizes.img640.filename} 640w, `
-					: "";
-				let imgOriginal = `${webImgDir}/${img.filename}`;
-
-				imgEl = `
-				<img
-					srcset="${img1920Str}${img1600Str}${img1366Str}${img1024Str}${img768Str}${img640Str}${imgOriginal}"
-					sizes="
-						(max-width: 640px) 640px, 
-						(max-width: 768px) 768px, 
-						(max-width: 1024px) 1024px,
-						(max-width: 1366px) 1366px,
-						(max-width: 1600px) 1600px,
-						1920px"
-					>
-				`;
-			} else if (img.filename) {
-				// if there is just one size...
-				imgEl = `<img src="${webImgDir}/${img.filename}">`;
-			} else {
-				throw CustomError(`${img} does not contain image properties`, site.domainShort, __filename)
-			}
-
-			return imgEl;
-		} */
-
-		return ''
-	}
-
-	function renderImageset(img, { sizes = '100vw', loading = 'eager', slot = '', classes = '' } = {}) {
-		// * requires global images = []
-
-		try {
-			let id
-
-			if (typeof img === 'string') {
-				id = img
-				img = images.find(item => item.id === id)
-			}
-			if (typeof img === 'undefined') {
-				throw CustomError(`could not find img "${id}" for "${slug}" with locale "${locale}" in images collection`, user, __filename, 4)
-			}
-
-			let html
-
-			if (img.sizes) {
-				// if there are different sizes...
-
-				let imgSrc = '', imgOrgSrc = '', img1920Src = '', img1600Src = '', img1366Src = '', img1024Src = '', img768Src = '', img640Src = ''
-
-				if (img.filename) {
-					imgFiles.push(img.filename)
-					imgSrc = `${pathWebImgs}/${img.filename}`
-					imgOrgSrc = `${pathWebImgs}/${img.filename} ${img.width}w, `
-				}
-				if (img.sizes.img1920.filename) {
-					imgFiles.push(img.sizes.img1920.filename)
-					img1920Src = `${pathWebImgs}/${img.sizes.img1920.filename} 1920w, `
-				}
-				if (img.sizes.img1600.filename) {
-					imgFiles.push(img.sizes.img1600.filename)
-					img1600Src = `${pathWebImgs}/${img.sizes.img1600.filename} 1600w, `
-				}
-				if (img.sizes.img1366.filename) {
-					imgFiles.push(img.sizes.img1366.filename)
-					img1366Src = `${pathWebImgs}/${img.sizes.img1366.filename} 1366w, `
-				}
-				if (img.sizes.img1024.filename) {
-					imgFiles.push(img.sizes.img1024.filename)
-					img1024Src = `${pathWebImgs}/${img.sizes.img1024.filename} 1024w, `
-				}
-				if (img.sizes.img768.filename) {
-					imgFiles.push(img.sizes.img768.filename)
-					img768Src = `${pathWebImgs}/${img.sizes.img768.filename} 768w, `
-				}
-				if (img.sizes.img640.filename) {
-					imgFiles.push(img.sizes.img640.filename)
-					img640Src = `${pathWebImgs}/${img.sizes.img640.filename} 640w, `
-				}
-
-				const attributes = [
-					(img.alt) ? `alt="${img.alt}"` : '',
-					(img.height) ? `height="${img.height}"` : '',
-					(img.width) ? `width="${img.width}"` : '',
-					(slot) ? `slot="${slot}"` : '',
-					(loading) ? `loading="${loading}"` : '',
-					(classes) ? `class="${classes}"` : '',
-					(slug) ? `id="${doc.slug}-${img.id}"` : `id="${doc.title.toLowerCase()}-${img.id}"` // slug is undefined for posts
-				].filter(item => item).join(' ')
-
-				html = /* html */`
-					<img
-						src="${imgSrc}"
-						srcset="${imgOrgSrc}${img1920Src}${img1600Src}${img1366Src}${img1024Src}${img768Src}${img640Src}"
-						sizes="${sizes}"
-						${attributes}
-					>
-				`;
-			} else if (img.filename) {
-				// if there is just one size...
-				html = /* html */`<img src="${imgSrc}" ${attributes} >`
-			} else {
-				throw CustomError(`${img} does not contain image properties`)
-			}
-
-			return html
-
-		} catch (err) {
-			log(err.stack, user, __filename, 4)
-		}
-	}
 }

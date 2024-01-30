@@ -7,34 +7,30 @@ import editingModeField from '../../fields/editingMode';
 
 /* BLOCKS */
 import createRichTextBlock from '../../blocks/rich-text-block';
-import createImgBlock from '../../blocks/img-block';
+import createUnImgBlock from '../../blocks/img/un-img';
 
 /* HOOKS & HELPERS */
-import rmDocFile from '../../hooks/rmDocFile'
-import log from '../../customLog';
-import getDoc from '../../hooks/getDoc';
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import mailError from '../../mailError';
-import saveToDisk from '../../hooks/_saveToDisk';
 import createElementsFields from './createPageElementsField';
-import getUserSites from '../../hooks/getUserSites';
+import createAssetsFields from '../../fields/createAssetsFields';
+import savePostsJson from '../../hooks/afterOperation/savePostsJson';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import copyAssets from '../../hooks/afterChange/copyAssets';
 import initOtherLocaleField from '../../fields/initOtherLocaleField';
-import afterChangeHook from './afterChangeHook';
-import beforeOperationHook from './beforeOperationHook';
-import afterOperationHook from './afterOperationHook';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
 
-export const Products = {
-	slug: 'products',
+const SLUG = 'events'
+const COLSINGULAR = 'event'
+
+export const Events = {
+	slug: SLUG,
 	admin: {
-		enableRichTextRelationship: false, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
-		enableRichTextLink: false,
+		enableRichTextRelationship: true, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
+		enableRichTextLink: true,
 		useAsTitle: 'title',
-		defaultColumns: [
-			'title',
-		],
+		defaultColumns: ['title',],
 		description: {
-			de: 'Erstelle einen Post. Dieser kann dann auf einer oder mehreren deiner (Sub)Seiten eingebunden werden. Beispiele für Posts sind: Blog-Artikel, Produkte, Veranstaltungen, Termine,...',
-			en: 'Create a new post which can then be included in one or multiple of your pages. Examples for posts are: blog articles, products, events, appointments,...',
+			de: 'Erstelle ein Event. Dieses kann dann auf einer oder mehreren deiner (Sub)Seiten eingebunden werden. Beispiele sind: Veranstaltungen, Termine,...',
+			en: 'Create a new post which can then be included in one or multiple of your pages. Examples for posts are: events, appointments,...',
 		},
 		group: {
 			de: 'Dynamische Inhalte',
@@ -43,7 +39,8 @@ export const Products = {
 		pagination: {
 			defaultLimit: 30,
 		},
-		hidden: true
+		//hidden: ({ user}) => ['hhaerer'].includes(user.shortName)
+		hidden: true,
 	},
 	versions: false,
 	access: {
@@ -55,22 +52,26 @@ export const Products = {
 	hooks: {
 		// --- beforeOperation
 		beforeOperation: [
-			async ({ args, operation }) => beforeOperationHook('products', { args, operation })
+			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['images', 'documents', 'pages'])
+		],
+		// --- beforeChange
+		beforeChange: [
+			
 		],
 		// --- afterChange
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => afterChangeHook('products', { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, context, operation }) => copyAssets(SLUG, { req, doc, previousDoc, context, operation }),
 		],
 		// --- afterOperation
 		afterOperation: [
-			async ({ args, operation, result }) => afterOperationHook('products', { args, operation, result })
+			async ({ args, operation, result }) => savePostsJson(SLUG, { args, operation, result })
 		],
 	},
 	fields: [
 		// --- editingMode
 		editingModeField,
 		initOtherLocaleField,
-		// --- TABS
 		{
 			type: 'tabs',
 			tabs: [
@@ -78,7 +79,7 @@ export const Products = {
 				{
 					label: 'Meta',
 					fields: [
-						// --- product.site
+						// --- event.site
 						{
 							type: 'relationship',
 							name: 'site',
@@ -87,7 +88,7 @@ export const Products = {
 							maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
 							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
 						},
-						// --- product.tags
+						// --- event.tags
 						{
 							type: 'relationship',
 							relationTo: 'tags',
@@ -98,7 +99,7 @@ export const Products = {
 							},
 							filterOptions: () => {
 								return {
-									relatedCollection: { equals: 'products' },
+									relatedCollection: { equals: 'events' },
 								}
 							},
 							hasMany: true,
@@ -115,7 +116,7 @@ export const Products = {
 								disableBulkEdit: false, // must be disabled if updatePostCategories() is used
 							},
 						},
-						// --- product.title
+						// --- event.title
 						{
 							type: 'text',
 							name: 'title',
@@ -126,7 +127,7 @@ export const Products = {
 							required: true,
 							localized: true,
 						},
-						// --- product.subtitle
+						// --- event.subtitle
 						{
 							type: 'text',
 							name: 'subtitle',
@@ -137,7 +138,7 @@ export const Products = {
 							required: false,
 							localized: true,
 						},
-						// --- product.description
+						// --- event.description
 						{
 							type: 'textarea',
 							name: 'description',
@@ -153,7 +154,82 @@ export const Products = {
 								}
 							}
 						},
-						// --- product.img
+						// --- event.date
+						{
+							type: 'row',
+							fields: [
+								{
+									type: 'date',
+									name: 'date',
+									label: {
+										de: 'Datum (Beginn)',
+										en: 'Date (Begin)'
+									},
+									defaultValue: () => new Date(),
+									admin: {
+										date: {
+											pickerAppearance: 'dayOnly',
+											displayFormat: 'd.MM.yyyy'
+										},
+										width: '30%'
+									}
+								},
+								{
+									type: 'date',
+									name: 'dateEnd',
+									label: {
+										de: 'Datum Ende',
+										en: 'Date End'
+									},
+									admin: {
+										date: {
+											pickerAppearance: 'dayOnly',
+											displayFormat: 'd.MM.yyyy'
+										},
+										width: '30%'
+									}
+								},
+							]
+						},
+						// --- event.location
+						{
+							type: 'group',
+							name: 'location',
+							fields: [
+								// --- isOnline
+								{
+									type: 'checkbox',
+									name: 'isOnline',
+									label: {
+										de: 'Findet online statt',
+										en: 'Online event'
+									},
+									defaultValue: false
+								},
+								// --- event.location.name
+								{
+									type: 'text',
+									name: 'name',
+									admin: {
+										condition: (data, siblingData) => (siblingData.isOnline) ? false : true,
+									}
+								},
+								// --- event.location.coords
+								{
+									type: 'point',
+									name: 'coords',
+									label: {
+										de: 'Koordinaten',
+										en: 'Coordinates'
+									},
+									admin: {
+										condition: (data, siblingData) => (siblingData.isOnline) ? false : true,
+									}
+								},
+							]
+
+						},
+						// --- event.img
 						{
 							type: 'upload',
 							name: 'img',
@@ -164,7 +240,7 @@ export const Products = {
 							relationTo: 'images',
 							required: false,
 						},
-						// --- product.hasOwnPage
+						// --- event.hasOwnPage
 						{
 							type: 'checkbox',
 							name: 'hasOwnPage',
@@ -172,19 +248,31 @@ export const Products = {
 								de: 'Dieser Artikel hat (zusätzlich) seine eigene Seite/URL.',
 								en: 'This article (additionally) has its own page/URL.'
 							},
-							defaultValue: true,
+							defaultValue: false,
 						},
-						// --- product.header
-						// --- product.nav
-						// --- product.footer
+						// --- event.header
+						// --- event.nav
+						// --- event.footer
 						createElementsFields(),
+						// --- event.assets
+						createAssetsFields(),
+						// --- event.html
+						{
+							type: 'code',
+							name: 'html',
+							localized: true,
+							admin: {
+								language: 'html',
+								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+							}
+						},
 					]
 				},
 				// --- CONTENT [tab-2] ---
 				{
 					label: 'Content',
 					fields: [
-						// --- content - blocks
+						// --- event.blocks
 						{
 							type: 'blocks',
 							name: 'blocks',
@@ -198,31 +286,12 @@ export const Products = {
 							},
 							blocks: [
 								createRichTextBlock(),
-								createImgBlock(),
+								createUnImgBlock(),
 							]
 						},
 					]
-				}
+				},
 			]
 		}
 	],
-}
-
-function createWebVersion(posts = [], user = {}) {
-
-	posts = (posts.docs) ? posts.docs : posts
-
-	return posts.map(doc => {
-		return {
-			id: doc.id,
-			tags: doc.tags,
-			title: doc.title,
-			time: doc.time,
-			html: doc.html.main,
-			author: `${user.firstName} ${user.lastName}`,
-			date: doc.date,
-			updatedAt: doc.updatedAt,
-			createdAt: doc.createdAt,
-		}
-	})
 }

@@ -84,7 +84,7 @@ export default function createElementsFields() {
 								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
 							}
 							else {
-								return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+								return await resetBrokenRelationship(fieldValue, { field, context, collection, req })
 							}
 						}
 					]
@@ -117,7 +117,7 @@ export default function createElementsFields() {
 								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
 							}
 							else {
-								return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+								return await resetBrokenRelationship(fieldValue, { field, context, collection, req })
 							}
 						}
 					]
@@ -150,7 +150,7 @@ export default function createElementsFields() {
 								return await getDefaultDocID({ data, originalDoc, value, field, context, req })
 							}
 							else {
-								return await resetBrokenRelationship(fieldValue, { data, originalDoc, value, field, context, collection, req })
+								return await resetBrokenRelationship(fieldValue, { field, context, collection, req })
 							}
 						}
 					]
