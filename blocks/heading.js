@@ -1,4 +1,3 @@
-//import { slateEditor } from '@payloadcms/richtext-slate'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 
 export default function createHeadingBlock() {

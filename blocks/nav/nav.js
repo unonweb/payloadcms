@@ -1,7 +1,7 @@
-import createLangSwitchBlock from '../lang-switch';
-import createLinkExtBlock from '../link-ext-block';
-import createLinkIntBlock from '../link-int-block';
-import createMenuDropDown from '../menu-drop-down';
+import createLangSwitchBlock from '../lang-switch.js';
+import createLinkExtBlock from '../link-ext-block.js';
+import createLinkIntBlock from '../link-int-block.js';
+import createMenuDropDown from '../menu-drop-down.js';
 
 const nav = {
 	slug: 'nav',

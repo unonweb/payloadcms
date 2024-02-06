@@ -1,6 +1,6 @@
-import log from '../../customLog'
-import mailError from '../../mailError'
-import rmFile from '../_rmFile'
+import log from '../../helpers/customLog'
+import mailError from '../../helpers/mailError'
+import rmFile from '../../helpers/_rmFile'
 import getDoc from '../getDoc'
 
 export default async function removePrevPage({ operation, doc, previousDoc, context, req }) {
@@ -34,6 +34,6 @@ export default async function removePrevPage({ operation, doc, previousDoc, cont
 		}
 	} catch (error) {
 		log(error.stack, context.user, __filename, 3)
-		mailError(error, req)
+		mailError(error)
 	}
 }

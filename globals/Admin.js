@@ -1,8 +1,8 @@
 import { isAdmin } from '../access/isAdmin'
 import updateDocsMany from '../hooks/updateDocsMany'
-import log from '../customLog'
-import mailError from '../mailError'
-import hasChanged from '../hooks/_hasChanged'
+import log from '../helpers/customLog'
+import mailError from '../helpers/mailError'
+import hasChanged from '../helpers/_hasChanged'
 
 const Admin = {
 	slug: 'admin',

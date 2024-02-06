@@ -1,12 +1,11 @@
-import createRichTextBlock from '../rich-text-block'
-import { mapLeafletBlock } from '../map-leaflet'
-import createUnImgBlock from '../img/un-img'
-import { imgGalleryBlock } from '../img/img-gallery'
-import { imgSlidesBlock } from '../img/img-slideshow'
-import { socialMediaIcons } from '../social-media-icons'
-import createIncludePostsBlock from '../include-posts'
-import createIncludePostsFlexBlock from '../include-posts-flex'
-import showOptionsField from '../../fields/showOptions'
+import createRichTextBlock from '../rich-text-block.js'
+import { mapLeafletBlock } from '../map-leaflet.js'
+import createUnImgBlock from '../img/un-img.js'
+import { imgGalleryBlock } from '../img/img-gallery.js'
+import { imgSlidesBlock } from '../img/img-slideshow.js'
+import { socialMediaIcons } from '../social-media-icons.js'
+import createIncludePostsFlexBlock from '../include-posts-flex.js'
+import showOptionsField from '../../fields/showOptions.js'
 
 const blocksAvailable = [
 	createRichTextBlock(),
@@ -15,7 +14,6 @@ const blocksAvailable = [
 	imgSlidesBlock,
 	socialMediaIcons,
 	mapLeafletBlock,
-	createIncludePostsBlock(),
 	createIncludePostsFlexBlock(),
 ]
 

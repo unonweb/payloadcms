@@ -1,6 +1,6 @@
 import payload from 'payload'
-import log from '../customLog'
-import mailError from '../mailError'
+import log from '../helpers/customLog'
+import mailError from '../helpers/mailError'
 
 const otherLocaleField = {
 	/*  */
@@ -35,7 +35,7 @@ const otherLocaleField = {
 		},
 		{
 			label: {
-				de: 'Speichere alle andere neu ab',
+				de: 'Speichere auch alle andere neu ab',
 				en: 'Save other languages, too'
 			},
 			value: 'saveOthers',
@@ -98,7 +98,7 @@ const otherLocaleField = {
 					}
 				} catch (error) {
 					log(error.stack, context.user, __filename, 3)
-					mailError(error, req)
+					mailError(error)
 				}
 			}
 		]

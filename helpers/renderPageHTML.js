@@ -1,4 +1,4 @@
-import log from '../customLog'
+import log from './customLog'
 
 export default function renderPageHTML(locale = '', page = {}, user = '', { navHTML = '', headerHTML = '', footerHTML = '' } = {}) {
 	// should be called when one of the following changes:
@@ -14,6 +14,8 @@ export default function renderPageHTML(locale = '', page = {}, user = '', { navH
 		if (!page.html?.main) log(`page.html.main is "${typeof page.html?.main}" for "${page.slug}" with locale "${locale}"`, user, __filename, 4)
 		if (!page.html?.head) throw new Error(`page.html.head is "${page?.html?.head}" for "${page.slug}" with locale "${locale}"`)
 
+		const slug = (page.slug === '') ? '/' : page.slug
+
 		const pageHTML = /* html */`
 			<!DOCTYPE html>
 			<html lang=${ locale } data-theme="">
@@ -21,8 +23,7 @@ export default function renderPageHTML(locale = '', page = {}, user = '', { navH
 			<body>
 				${ headerHTML ?? '' }
 				${ navHTML ?? '' }
-				<main data-page="${ page.slug ?? ''}" lang="${ locale ?? '' }" data-margin="${ page.main?.margin ?? 'medium'}" data-density="${ page.main?.density ?? 'medium'}" data-justify="${ page.main?.justify ?? 'left'}" data-align="${ page.main?.align ?? 'center'}">
-					${ page.main?.showTitleOnPage ? /* html */`<h1>${ page.title }</h1>` : '' }
+				<main data-page="${slug}" lang="${ locale ?? '' }" data-margin="${ page.main?.margin ?? 'medium'}" data-density="${ page.main?.density ?? 'medium'}" data-justify="${ page.main?.justify ?? 'left'}" data-align="${ page.main?.align ?? 'center'}">
 					${ page.html?.main ?? '' }
 				</main>
 				${ footerHTML ?? '' }

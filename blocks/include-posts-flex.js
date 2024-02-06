@@ -3,8 +3,8 @@ export default function createIncludePostsFlexBlock() {
 		slug: 'include-posts-flex',
 		labels: {
 			singular: {
-				en: 'Posts Flex',
-				de: 'Posts Flex'
+				en: 'Posts',
+				de: 'Posts'
 			},
 		},
 		fields: [
@@ -18,7 +18,7 @@ export default function createIncludePostsFlexBlock() {
 					en: 'Which posts should be included?'
 				},
 				//maxDepth: 0, // include the entire post-category (as it is not much data) <-- CHECK: If we really need this!
-				hasMany: false,
+				hasMany: false, // <-- IMP: If I enable this I must make sure that iterateBlocks passes all types as attribute to the element
 			},
 			// --- block.sortBy
 			{

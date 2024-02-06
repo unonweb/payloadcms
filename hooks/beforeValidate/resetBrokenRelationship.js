@@ -1,4 +1,4 @@
-import log from '../../customLog'
+import log from '../../helpers/customLog'
 import payload from 'payload'
 
 export default async function resetBrokenRelationship(relationID = '', { field, collection, context } = {}) {

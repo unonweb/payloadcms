@@ -1,6 +1,6 @@
-import log from '../../customLog'
-import mailError from '../../mailError'
-import saveToDisk from '../_saveToDisk'
+import log from '../../helpers/customLog'
+import mailError from '../../helpers/mailError'
+import saveToDisk from '../../helpers/_saveToDisk'
 
 export default async function savePage({ doc, context, req }) {
 	/* 
@@ -31,6 +31,6 @@ export default async function savePage({ doc, context, req }) {
 		}
 	} catch (error) {
 		log(error.stack, context.user, __filename, 3)
-		mailError(error, req)
+		mailError(error)
 	}
 }

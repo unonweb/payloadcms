@@ -1,6 +1,4 @@
 /* ACCESS */
-import { isAdmin, isAdminFieldLevel } from '../../access/isAdmin';
-import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
 import { isLoggedIn } from '../../access/isLoggedIn';
 
 /* BLOCKS */
@@ -10,23 +8,22 @@ import headerBanner from '../../blocks/header/header-banner';
 import editingModeField from '../../fields/editingMode';
 
 /* HOOKS STANDARD */
-import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
+import firstDefaultsToTrue from '../../hooks/defaultValue/firstDefaultsToTrue';
 import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import updateRelations from '../../hooks/afterChange/updateRelations';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterDeleteHook from './afterDeleteHook';
-import log from '../../customLog';
-import mailError from '../../mailError';
+import log from '../../helpers/customLog';
+import mailError from '../../helpers/mailError';
 
 /*  HOOKS & HELPERS */
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import updateDocsMany from '../../hooks/updateDocsMany';
 import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
 import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
 import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
 import copyAssets from '../../hooks/afterChange/copyAssets';
 import setMainHTML from '../../hooks/beforeChange/setMainHTML';
 import createHTMLFields from '../../fields/createHTMLFields';
+import hasSiteAccess from '../../access/hasSiteAccess';
 
 
 const SLUG = 'headers'
@@ -46,9 +43,9 @@ export const Headers = {
 	},
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('site'),
-		read: isAdminOrHasSiteAccess('site'),
-		delete: isAdminOrHasSiteAccess('site'),
+		update: hasSiteAccess('site'),
+		read: hasSiteAccess('site'),
+		delete: hasSiteAccess('site'),
 	},
 	// --- hooks
 	hooks: {
@@ -97,7 +94,7 @@ export const Headers = {
 							required: true,
 							// If user is not admin, set the site by default
 							// to the first site that they have access to
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
+							defaultValue: ({ user }) => (user && user.sites?.length === 1) ? user.sites[0] : null,
 						},
 						// --- header.title
 						{

@@ -1,7 +1,7 @@
 //import create from 'payload/dist/collections/operations/create'
 import payload from 'payload'
-import CustomError from '../customError'
-import log from '../customLog'
+import CustomError from '../helpers/customError'
+import log from '../helpers/customLog'
 
 export default async function uploadFile(filePath = '', user = '', { data = {}, colSlug = 'images', locale = '' } = {}) {
 	// the created doc is returned

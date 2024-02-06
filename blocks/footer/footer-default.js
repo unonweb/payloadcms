@@ -1,4 +1,4 @@
-import createContactDataBlock from '../contact-data-block';
+import createContactDataBlock from '../contact-data-block.js';
 
 const footerDefault = {
 	slug: 'footer-default',

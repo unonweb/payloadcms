@@ -1,9 +1,3 @@
-/* import getAppMode from '../hooks/_getAppMode'
-import getSite from '../hooks/getSite'
-import cpFile from '../hooks/_cpFile'
-import getDoc from '../hooks/getDoc'
-import reportError from '../reportError' */
-
 export default function createLangSwitchBlock() {
 	const block = {
 		slug: 'lang-switch',

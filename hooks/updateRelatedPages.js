@@ -1,4 +1,4 @@
-import log from '../customLog'
+import log from '../helpers/customLog'
 import payload from 'payload'
 
 export default async function updateRelatedPages(fieldName = '', fieldID = '', siteID = '', locale = '', user = '') {

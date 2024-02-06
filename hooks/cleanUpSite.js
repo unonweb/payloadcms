@@ -1,11 +1,11 @@
 import getDoc from './getDoc'
-import getCol from './_getCol'
+import getCol from './getCol'
 import { parse } from 'path'
 import { readdir, rm } from 'fs/promises'
-import log from '../customLog'
-import canAccess from './_canAccess'
-import getAppMode from './_getAppMode'
-import isDirectory from './_isDirectory'
+import log from '../helpers/customLog'
+import canAccess from '../helpers/_canAccess'
+import getAppMode from '../helpers/_getAppMode'
+import isDirectory from '../helpers/_isDirectory'
 
 export default async function cleanUpSite(site = {}, user = '', {
 	cleanUpPages = true,
@@ -29,7 +29,7 @@ export default async function cleanUpSite(site = {}, user = '', {
 			},
 		})
 
-		const posts = await getCol('posts', user, {
+		const posts = await getCol('posts-flex', user, {
 			depth: 0,
 			where: {
 				site: { equals: site.id },

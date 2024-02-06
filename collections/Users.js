@@ -1,14 +1,13 @@
 /* ACCESS */
-import { isAdmin, isAdminFieldLevel } from '../access/isAdmin';
-import { isAdminOrSelf } from '../access/isAdminOrSelf';
+import { isAdmin, isAdminFieldLevel } from '../access/isAdmin.js';
+import { isAdminOrSelf } from '../access/isAdminOrSelf.js';
 
 // HOOKS
-import updateDocSingle from '../hooks/updateDocSingle';
-import log from '../customLog';
-import mailError from '../mailError';
-import cleanUpSite from '../hooks/cleanUpSite'
-import getRelatedDoc from '../hooks/getRelatedDoc';
-import spawnCmd from '../hooks/_spawnCmd';
+import updateDocSingle from '../hooks/updateDocSingle.js';
+import log from '../helpers/customLog.js';
+import mailError from '../helpers/mailError.js';
+import cleanUpSite from '../hooks/cleanUpSite.js'
+import getRelatedDoc from '../hooks/getRelatedDoc.js';
 
 // VARIABLES
 const authTokenExpiration = 60 * 20 // 20 minutes

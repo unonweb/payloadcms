@@ -93,7 +93,6 @@ export default function createPostFields({ readOnly = false } = {}) {
 						en: 'End'
 					},
 					localized: false,
-					defaultValue: () => new Date(),
 					admin: {
 						condition: (data) => (data.shape && data.shape.includes('date_end')) ? true : false,
 						date: {
@@ -176,6 +175,7 @@ export default function createPostFields({ readOnly = false } = {}) {
 				de: 'Koordinaten',
 				en: 'Coordinates'
 			},
+			localized: false,
 			admin: {
 				width: '25%',
 				hidden: true,

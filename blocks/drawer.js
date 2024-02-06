@@ -1,4 +1,4 @@
-import createRichTextBlock from './rich-text-block'
+import createRichTextBlock from './rich-text-block.js'
 
 export default function createDrawerBlock() {
 	const block = {

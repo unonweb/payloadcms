@@ -1,5 +1,5 @@
 import payload from 'payload'
-import log from '../customLog'
+import log from '../helpers/customLog'
 
 export default async function updateDocSingle(colSlug = '', id = '', user = '', { data = {}, locale = '', context = {} } = {}) {
 	// updates many if 'docID' is omitted and 'where' is given

@@ -1,13 +1,14 @@
-import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
-import { isLoggedIn } from '../../access/isLoggedIn';
-import updateDocsMany from '../../hooks/updateDocsMany';
-import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
-import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext';
-import createPostFields from './createPostFields';
-import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
-import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
-import removeRelations from '../../hooks/afterDelete/rmRelations';
-import log from '../../customLog';
+import { isLoggedIn } from '../../access/isLoggedIn.js';
+import updateDocsMany from '../../hooks/updateDocsMany.js';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime.js';
+import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext.js';
+import createPostFields from './createPostFields.js';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext.js';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime.js';
+import removeRelations from '../../hooks/afterDelete/rmRelations.js';
+import log from '../../helpers/customLog.js';
+import hasSiteAccess from '../../access/hasSiteAccess.js';
+import isUnique from '../../hooks/validate/isUnique.js';
 
 const SLUG = 'post-types'
 
@@ -26,8 +27,8 @@ export const PostTypes = {
 	admin: {
 		useAsTitle: 'name',
 		group: {
-			de: 'Dynamische Inhalte',
-			en: 'Dynamic Content'
+			de: 'Posts',
+			en: 'Posts'
 		},
 		description: {
 			de: 'Es werden Tags angezeigt, die man selbst erstellt hat. Außerdem Tags, die der Admin erstellt hat.',
@@ -35,13 +36,13 @@ export const PostTypes = {
 		},
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
-		hidden: ({ user}) => !['unonner'].includes(user.shortName)
+		hidden: ({ user }) => !['unonner'].includes(user.shortName)
 	},
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('site'),
-		read: isAdminOrHasSiteAccess('site'),
-		delete: isAdminOrHasSiteAccess('site'),
+		update: hasSiteAccess('site'),
+		read: hasSiteAccess('site'),
+		delete: hasSiteAccess('site'),
 	},
 	hooks: {
 		// --- beforeOperation
@@ -51,7 +52,38 @@ export const PostTypes = {
 		],
 		// --- beforeValidate
 		beforeValidate: [
-			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req })
+			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req }, ['sites', 'images', 'documents', 'pages'])
+		],
+		afterChange: [
+			async ({ req, doc, previousDoc, context, operation }) => {
+				try {
+					if (operation === 'update') {
+						// update docs that reference this doc
+						for (const loc of context.site.locales.used) {
+							await updateDocsMany('posts-flex', context.user, {
+								locale: loc,
+								where: {
+									and: [
+										{ site: { equals: context.site.id } },
+										{ type: { equals: doc.id } },
+									]
+								},
+								data: {
+									shape: doc.shape,
+									dateStyle: doc.dateStyle,
+									typeName: doc.name,
+								},
+								context: {
+									preventFsOps: false,
+									...context,
+								}
+							})	
+						}
+					}
+				} catch (error) {
+					log(error.stack, context.user, __filename, 3)
+				}
+			}
 		],
 		// --- afterDelete
 		afterDelete: [
@@ -72,7 +104,7 @@ export const PostTypes = {
 			index: true,
 			required: true,
 			maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
-			//defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
+			defaultValue: ({ user }) => (user && user.sites?.length === 1) ? user.sites[0] : null,
 		},
 		// --- postType.name
 		{
@@ -80,16 +112,23 @@ export const PostTypes = {
 			name: 'name',
 			label: 'Name',
 			required: true,
-			localized: true,
+			localized: false,
+			admin: {
+				description: "Don't change! If you do you need to adapt a) the path of the template rendering function and b) the corresponding css"
+			},
+			validate: async (val, { data, payload, user, siblingData, id }) => await isUnique(SLUG, 'name', val, { data, payload }),
 		},
 		// --- postType.shape
 		{
 			type: 'select',
 			name: 'shape',
 			hasMany: true,
+			localized: false,
 			options: [
 				'title',
+				//'title_noloc',
 				'subtitle',
+				//'subtitle_noloc',
 				'description',
 				'date_start',
 				'date_end',
@@ -101,35 +140,6 @@ export const PostTypes = {
 				'location_coords',
 				'artists'
 			],
-			hooks: {
-				afterChange: [
-					async ({ value, previousValue, originalDoc, operation, context, req }) => {
-						if (operation === 'update') {
-							try {
-								// update docs that reference this doc with new 'shape' value
-								await updateDocsMany('posts-flex', context.user, {
-									where: {
-										and: [
-											{ site: { equals: context.site.id } },
-											{ type: { equals: originalDoc.id } },
-										]
-									},
-									data: {
-										shape: value
-									},
-									context: {
-										preventFsOps: true,
-										...context,
-									}
-								})
-							} catch (error) {
-								log(error.stack, context.user, __filename, 3)
-							}
-
-						}
-					}
-				]
-			},
 			defaultValue: ['title', 'date_start', 'richText']
 		},
 		// --- postType.dateStyle
@@ -174,15 +184,6 @@ export const PostTypes = {
 				},
 			],
 			defaultValue: 'short',
-		},
-		// --- postType.html
-		{
-			type: 'code',
-			name: 'html',
-			localized: false,
-			admin: {
-				language: 'html',
-			},
 		},
 		// --- createPostFields()
 		{

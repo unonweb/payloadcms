@@ -1,6 +1,6 @@
-import log from '../../customLog'
-import getCol from '../_getCol'
-import saveToDisk from '../_saveToDisk'
+import log from '../../helpers/customLog'
+import getCol from '../getCol'
+import saveToDisk from '../../helpers/_saveToDisk'
 import getRelatedDoc from '../getRelatedDoc'
 
 export default async function savePostsJson(slug = '', { args, operation, result }) {
@@ -20,24 +20,30 @@ export default async function savePostsJson(slug = '', { args, operation, result
 	const user = args.req.context.user
 	const mode = args.req.context.mode
 	const locale = args.req.locale
-	const docs = (Array.isArray(result.docs)) ? result.docs : [result] // wrap result in an array; necessary because of bulk operations
+	const site = args.req.context.site
 
-	for (const doc of docs) {
-		// <-- IMP: Now when deleting multiple posts for each post this code is executed; basically only for different sites this code would need to be executed
-		const site = await getRelatedDoc('sites', doc.site, user)
+	const docs = (Array.isArray(result.docs)) ? result.docs : [result] // wrap result in an array because of bulk operations
+	const sameSiteDocs = docs.filter(item => item.site === site.id)
+	if (sameSiteDocs.length !== docs.length) throw Error(`There are docs with different sites in the same bulk operation!`)
+	const postTypes = Array.from(new Set(docs.map((doc) => doc.type))) // get different postTypes
 
-		/* save posts.json in this locale to disk */
-		// get all posts
+	/* save posts.json in this locale to disk */
+	// get all posts
+	for (const postType of postTypes) {
 		const posts = await getCol(slug, user, {
 			depth: 1,
 			locale: locale,
 			where: {
-				site: { equals: site.id }
+				and: [
+					{ site: { equals: site.id } },
+					{ type: { equals: postType } },
+				]
+
 			},
 		})
 
 		const webVersion = createWebVersion(posts.docs, locale, args.req.user)
-		const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${locale}/${slug}.json`
+		const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${locale}/${postType}.json`
 		await saveToDisk(destPath, JSON.stringify(webVersion), user)
 
 		/* save posts.json in additional locale to disk */
@@ -52,7 +58,7 @@ export default async function savePostsJson(slug = '', { args, operation, result
 				})
 
 				const webVersion = createWebVersion(posts.docs, loc, args.req.user)
-				const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/${slug}.json`
+				const destPath = `${site.paths.fs.site}/${mode}/assets/posts/${loc}/${postType}.json`
 				await saveToDisk(destPath, JSON.stringify(webVersion), user)
 			}
 		}
@@ -64,22 +70,27 @@ function createWebVersion(docs = [], locale = '') {
 	docs = (docs.docs) ? docs.docs : docs
 	docs = (!Array.isArray(docs)) ? [docs] : docs
 
-	const postsWebVersion = docs.map(doc => {
-		return {
-			type: doc.type.id ?? doc.type,
-			id: doc.id, // string
-			tags: doc.tags, // object
-			title: doc.title, // string
+	let postsWebVersion = []
+
+	for (const doc of docs) {
+		let subset = {
+			type: doc.type?.id ?? doc.type,
+			id: doc.id ?? undefined,
+			tags: doc.tags ?? [],
+			title: doc.title ?? undefined,
 			html: doc.html?.main,
 			author: doc.createdByName,
-			dateStart: doc.date_start,
-			dateEnd: doc.date_end,
-			dateTime: doc.date_time,
 			updatedAt: doc.updatedAt,
 			createdAt: doc.createdAt,
 			locale: locale,
 		}
-	})
+		if (Array.isArray(doc.shape)) {
+			for (const field of doc.shape.filter(item => !['richText'].includes(item))) {
+				subset[field] = doc[field]
+			}
+		}
+		postsWebVersion.push(subset)
+	}
 
 	return postsWebVersion
 }

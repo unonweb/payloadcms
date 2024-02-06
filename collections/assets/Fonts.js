@@ -5,7 +5,7 @@ import { isAdmin } from '../../access/isAdmin.js';
 import { isLoggedIn } from "../../access/isLoggedIn.js";
 
 /* HOOKS & HELPERS */
-import log from '../../customLog.js';
+import log from '../../helpers/customLog.js';
 import getUserSites from '../../hooks/getUserSites.js';
 import getRelatedDoc from '../../hooks/getRelatedDoc.js';
 import getDoc from '../../hooks/getDoc.js';

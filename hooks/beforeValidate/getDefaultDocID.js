@@ -1,5 +1,5 @@
 import payload from 'payload'
-import log from '../../customLog'
+import log from '../../helpers/customLog'
 
 export default async function getDefaultDocID({ data, originalDoc, value, field, req }) {
 	/* 

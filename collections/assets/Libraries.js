@@ -1,10 +1,8 @@
 /* ACCESS */
-import isAdminOrHasSiteAccess from "../../access/isAdminOrHasSiteAccess.js";
-import { isLoggedIn } from "../../access/isLoggedIn.js";
 import { isAdmin } from '../../access/isAdmin.js';
 
 /* HOOKS & HELPERS */
-import setFilenameToMd5 from '../../hooks/setFilenameToMd5.js';
+
 
 export const Libraries = {
 	slug: 'lib',

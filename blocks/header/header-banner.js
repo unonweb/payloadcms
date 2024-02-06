@@ -1,7 +1,7 @@
-import createUnImgBlock from '../img/un-img'
-import createDrawerBlock from '../drawer'
-import createRichTextBlock from '../rich-text-block'
-import createImgBlock from '../img/img'
+import createUnImgBlock from '../img/un-img.js'
+import createDrawerBlock from '../drawer.js'
+import createRichTextBlock from '../rich-text-block.js'
+import createImgBlock from '../img/img.js'
 
 const headerBanner = {
 	slug: 'header-banner',

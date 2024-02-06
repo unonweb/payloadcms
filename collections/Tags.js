@@ -1,6 +1,9 @@
-import isAdminOrHasSiteAccess from "../access/isAdminOrHasSiteAccess";
-import { isLoggedIn } from "../access/isLoggedIn";
-import createCommonFields from '../fields/createCommonFields';
+import hasSiteAccess from '../access/hasSiteAccess.js';
+import { isLoggedIn } from "../access/isLoggedIn.js";
+import createCommonFields from '../fields/createCommonFields.js';
+import updateOtherLocale from '../hooks/afterChange/updateOtherLocale.js';
+import populateContextBeforeOp from '../hooks/beforeOperation/populateContext.js';
+import startConsoleTime from '../hooks/beforeOperation/startConsoleTime.js';
 
 const commonFields = createCommonFields()
 const SLUG = ' tags'
@@ -20,8 +23,8 @@ export const Tags = {
 	admin: {
 		useAsTitle: 'name',
 		group: {
-			de: 'Dynamische Inhalte',
-			en: 'Dynamic Content'
+			de: 'Posts',
+			en: 'Posts'
 		},
 		description: {
 			de: 'Es werden Tags angezeigt, die man selbst erstellt hat. Außerdem Tags, die der Admin erstellt hat.',
@@ -32,9 +35,20 @@ export const Tags = {
 	},
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('sites'),
-		read: isAdminOrHasSiteAccess('sites', { allSitesOption: true }),
-		delete: isAdminOrHasSiteAccess('sites'),
+		update: hasSiteAccess('sites'),
+		read: hasSiteAccess('sites', { allSitesOption: true }),
+		delete: hasSiteAccess('sites'),
+	},
+	hooks: {
+		// --- beforeOperation
+		beforeOperation: [
+			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
+			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages']),
+		],
+		// --- afterChange
+		afterChange: [
+			async ({ req, doc, previousDoc, context, operation }) => await updateOtherLocale({ req, doc, previousDoc, context, operation }) // use this because the 'title' field of tags is localized and it happens easily not to set it
+		]
 	},
 	fields: [
 		// --- tag.sites
@@ -47,7 +61,7 @@ export const Tags = {
 			maxDepth: 0,
 			// If user is not admin, set the site by default
 			// to the first site that they have access to
-			defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : [],
+			defaultValue: ({ user }) => (user && user.sites?.length === 1) ? user.sites[0] : [],
 			admin: {
 				condition: (data, siblingData, { user }) => (siblingData.allSites === true) ? false : true,
 			}
@@ -78,10 +92,6 @@ export const Tags = {
 					value: 'pages',
 				},
 				{
-					label: 'Posts',
-					value: 'posts'
-				},
-				{
 					label: 'Events',
 					value: 'events'
 				},
@@ -90,7 +100,7 @@ export const Tags = {
 					value: 'lib'
 				},
 				{
-					label: 'Posts Flex',
+					label: 'Posts',
 					value: 'posts-flex'
 				},
 			],
@@ -102,6 +112,7 @@ export const Tags = {
 			label: 'Name',
 			required: true,
 			localized: true,
+			index: true,
 		},
 		// --- tag.img
 		{
@@ -116,65 +127,5 @@ export const Tags = {
 		},
 		// --- commonFields
 		...commonFields,
-		
-		/* // --- tag.relPages
-		// set by includePosts (block) when a page includes a post category it stores it's ID here for reference
-		// queried by Posts (collection) in a afterChange hook in order to update (only!) the pages affected by changes in a post
-		{
-			type: 'relationship',
-			name: 'relPages',
-			relationTo: 'pages',
-			maxDepth: 0, // prevents that the whole page is going to be included
-			hasMany: true,
-			label: {
-				de: 'Verwendet auf folgenden Seiten:',
-				en: 'Used on the following pages:'
-			},
-			admin: {
-				readOnly: true
-			},
-		}, */
-		// --- relPosts
-		// set by the Posts collection when a post is associated with a category
-		/* {
-			type: 'relationship',
-			relationTo: 'posts',
-			name: 'relPosts',
-			maxDepth: 0, // prevent that the whole post is going to be included
-			hasMany: true,
-			label: {
-				de: 'Assoziiert mit folgenden Posts:',
-				en: 'Associated with the following posts:'
-			},
-			admin: {
-				readOnly: true
-			},
-			hooks: {
-				beforeChange: [
-					async (args) => {
-						
-						let relPosts = args.originalDoc.relPosts
-
-						const op = args.value.split(' ')[0]
-						const postID = args.value.split(' ')[1]
-
-						switch (op) {
-							case 'add':
-								if (!args.originalDoc.relPosts.includes(postID)) {
-									relPosts.push(postID) // add if not present already
-								}	
-								break;
-							case 'remove':
-								relPosts = relPosts.filter(id => id !== postID)
-								break;
-							default:
-								throw new CustomError('unhandled case', args?.req?.user?.shortName, __filename)
-						}
-
-						return relPosts
-					}
-				]
-			}
-		} */
 	],
 }

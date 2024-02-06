@@ -1,6 +1,6 @@
-import log from '../customLog'
-import canAccess from '../hooks/_canAccess';
-import getAppMode from '../hooks/_getAppMode'
+import log from './customLog'
+import canAccess from './_canAccess';
+import getAppMode from './_getAppMode'
 import { readFile } from 'fs/promises'
 import { readdir } from 'fs/promises';
 import getRelatedDoc from '../hooks/getRelatedDoc';
@@ -121,7 +121,7 @@ export default async function renderHeadHTML(data, context) {
 		return headHTML.replace(/\s+/g, " ").trim()
 
 	} catch (err) {
-		log(err.stack, user, __filename, 3)
+		log(err.stack, context.user, __filename, 3)
 	}
 }
 

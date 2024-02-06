@@ -1,5 +1,5 @@
-import log from '../../customLog'
-import mailError from '../../mailError'
+import log from '../../helpers/customLog'
+import mailError from '../../helpers/mailError'
 import getDoc from '../getDoc'
 import renderPageHTML from '../../helpers/renderPageHTML'
 
@@ -44,6 +44,6 @@ export default async function setPageHTML({ data, req, operation, context }) {
 
 	} catch (error) {
 		log(error.stack, user, __filename, 3)
-		mailError(error, req)
+		mailError(error)
 	}
 }

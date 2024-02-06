@@ -1,6 +1,6 @@
-import log from '../customLog'
+const log = require('./customLog.js');
 
-export default function renderImageset(img, context, { sizes = '100vw', loading = 'eager', slot = '', classes = '' } = {}) {
+module.exports = function renderImageset(img, context, { sizes = '100vw', loading = 'eager', slot = '', classes = '' } = {}) {
 	// * requires global images = []
 
 	try {

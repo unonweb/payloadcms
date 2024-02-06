@@ -6,27 +6,25 @@ import path from 'path';
 import { mongooseAdapter } from "@payloadcms/db-mongodb";
 import { webpackBundler } from "@payloadcms/bundler-webpack";
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
-import Logo from './logo';
+import Logo from './helpers/logo.js';
 
 /* GLOBALS */
-import Admin from './globals/Admin';
+import Admin from './globals/Admin.js';
 
 /* COLLECTIONS */
-import { Users } from './collections/Users';
-import { Sites } from './collections/Sites';
-import { Images } from './collections/assets/Images';
-import { Headers } from './collections/elements/Headers';
-import { Footers } from './collections/elements/Footers';
-import { Navs } from './collections/elements/Navs';
-import { Pages } from './collections/Pages';
-import { Posts } from './collections/dynamic/Posts';
-import { Documents } from './collections/assets/Documents';
-import { Libraries } from './collections/assets/Libraries';
-import { Fonts } from './collections/assets/Fonts';
-import { _FontFamilies } from './collections/assets/_FontFamilies';
-import { Tags } from './collections/Tags';
-import { PostsFlex } from './collections/dynamic/PostsFlex';
-import { PostTypes } from './collections/dynamic/PostTypes';
+import { Users } from './collections/Users.js';
+import { Sites } from './collections/Sites.js';
+import { Images } from './collections/assets/Images.js';
+import { Headers } from './collections/elements/Headers.js';
+import { Footers } from './collections/elements/Footers.js';
+import { Navs } from './collections/elements/Navs.js';
+import { Pages } from './collections/Pages.js';
+import { Documents } from './collections/assets/Documents.js';
+import { Fonts } from './collections/assets/Fonts.js';
+import { _FontFamilies } from './collections/assets/_FontFamilies.js';
+import { Tags } from './collections/Tags.js';
+import { PostsFlex } from './collections/dynamic/PostsFlex.js';
+import { PostTypes } from './collections/dynamic/PostTypes.js';
 
 //const mockModulePath = path.resolve(__dirname, 'mocks/emptyObject.js')
 //const mockModulePath = '/home/payload/cms/src/mocks/emptyObject.js'
@@ -63,23 +61,6 @@ export default buildConfig({
 	admin: {
 		user: Users.slug,
 		bundler: webpackBundler(),
-		/* webpack: (config) => ({
-			...config,
-			watch: false,
-			resolve: {
-				...config.resolve,
-				fallback: {
-					...config.resolve.fallback,
-					//stream: false,
-					fs: false,
-					child_process: false,
-					util: false,
-					promisify: false,
-					assert: false,
-					os: false,
-				}
-			}
-		}), */
 		webpack: (config) => {
 			return {
 				...config,
@@ -125,7 +106,6 @@ export default buildConfig({
 		/* Pages */
 		Pages, // everything downwards will not be linkable from richText fields
 		/* dynamic content */
-		Posts,
 		PostsFlex,
 		PostTypes,
 		Tags,
@@ -157,24 +137,6 @@ export default buildConfig({
 	},
 	typescript: {
 		outputFile: path.resolve(__dirname, 'payload-types.ts'),
-	},
-	email: {
-		fromName: 'payload',
-		fromAddress: 'unonweb@posteo.de',
-		//mailTransporter,
-		transportOptions: {
-			host: process.env.SMTP_HOST,
-			auth: {
-				user: process.env.SMTP_USER,
-				pass: process.env.SMTP_PASS
-			},
-			port: 465,
-			secure: true, // use TLS
-			tls: {
-				// do not fail on invalid certs
-				rejectUnauthorized: false
-			}
-		},
 	},
 	/* SECURITY & LIMITS */
 	graphQL: {
@@ -214,5 +176,5 @@ export default buildConfig({
 		max: 500, // Number of requests served from a single IP before limiting. Defaults to 500.
 	},
 	maxDepth: 5,
-
+	indexSortableFields: true,
 });

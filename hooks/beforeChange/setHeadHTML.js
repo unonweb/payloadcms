@@ -1,5 +1,5 @@
-import log from '../../customLog'
-import mailError from '../../mailError'
+import log from '../../helpers/customLog'
+import mailError from '../../helpers/mailError'
 import renderHeadHTML from '../../helpers/renderHeadHTML'
 
 export default async function setHeadHTML({ data, req, context }) {
@@ -18,7 +18,7 @@ export default async function setHeadHTML({ data, req, context }) {
 		return data
 
 	} catch (err) {
-		log(err.stack, user, __filename, 3)
-		mailError(err, req)
+		log(err.stack, context.user, __filename, 3)
+		mailError(err)
 	}
 }

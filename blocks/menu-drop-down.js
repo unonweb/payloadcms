@@ -1,6 +1,6 @@
-import createLinkIntBlock from './link-int-block'
-import createLinkExtBlock from './link-ext-block'
-import createUnImgBlock from './img/un-img'
+import createLinkIntBlock from './link-int-block.js'
+import createLinkExtBlock from './link-ext-block.js'
+import createUnImgBlock from './img/un-img.js'
 
 export default function createMenuDropDown() {
 	const block = {

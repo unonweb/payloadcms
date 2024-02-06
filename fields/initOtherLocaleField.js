@@ -1,6 +1,6 @@
 import payload from 'payload'
-import log from '../customLog'
-import mailError from '../mailError'
+import log from '../helpers/customLog'
+import mailError from '../helpers/mailError'
 
 const initOtherLocaleField = {
 	type: 'checkbox',

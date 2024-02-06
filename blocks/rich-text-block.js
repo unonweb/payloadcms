@@ -134,7 +134,7 @@ export default function createRichTextBlock() {
 								},
 								/* {
 									type: 'relationship',
-									relationTo: ['posts', 'events'],
+									relationTo: ['posts-flex'],
 									name: 'rel',
 									label: 'Internal link to dynamic content',
 								}, */

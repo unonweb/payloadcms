@@ -5,7 +5,8 @@ import { isLoggedIn } from "../../access/isLoggedIn.js";
 /* HOOKS & HELPERS */
 import isAdminOrHasCreated from '../../access/isAdminOrHasCreated.js';
 import setFilenameToMd5 from '../../hooks/setFilenameToMd5.js';
-import mailError from '../../mailError.js';
+import mailError from '../../helpers/mailError.js';
+import hasSiteAccess from '../../access/hasSiteAccess.js';
 
 const sharpFormatOptions = {
 	jpg: {
@@ -119,7 +120,7 @@ export const Images = {
 	access: {
 		create: isLoggedIn,
 		update: isAdminOrHasCreated,
-		read: isAdminOrHasSiteAccess('sites', { allSitesOption: true }),
+		read: hasSiteAccess('sites', { allSitesOption: true }),
 		delete: isAdminOrHasCreated,
 	},
 	// --- hooks

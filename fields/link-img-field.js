@@ -1,8 +1,8 @@
 import getDocFieldValue from '../hooks/getDocFieldValue'
-import reportError from '../reportError'
+import reportError from '../helpers/reportError'
 
-export default function createLinkImgField({relationTo = ['pages', 'posts']} = {}) {
-	
+export default function createLinkImgField({relationTo = ['pages', 'posts-flex']} = {}) {
+	/* not used currently */
 	if (!Array.isArray(relationTo)) {
 		relationTo = [relationTo]
 	}

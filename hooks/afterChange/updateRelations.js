@@ -1,17 +1,23 @@
 import payload from 'payload'
 import getRelatedDoc from '../getRelatedDoc'
-import log from '../../customLog'
-import mailError from '../../mailError'
+import log from '../../helpers/customLog'
+import mailError from '../../helpers/mailError'
 
 export default async function updateRelations(destSlug = '', destFieldName = '', { req, doc, previousDoc, operation, context }) {
 	/*
 		Type:
 			afterChange
 			collectionHook
+		Called by:
+			- Headers
+			- Footers
+			- Navs
 		Tasks:
 		- update pages
 	*/
 	try {
+		if (context.isFullUpdate) return
+
 		context.site ??= await getRelatedDoc('sites', doc.site, user)
 		const user = context.user
 		const host = context.host
@@ -33,12 +39,12 @@ export default async function updateRelations(destSlug = '', destFieldName = '',
 							]
 						},
 						data: {
-							updatedBy: `${destFieldName}-${Date.now()}`
+							updatedBy: destFieldName
 						},
 						locale: loc,
 						context: {
 							isUpdatedByCode: true,
-							updatedByPageElement: true, // may be overwriten by former context
+							skipSetMainHTML: true, // may be overwriten by former context
 							[destFieldName]: doc,
 							...context,
 						},
@@ -59,23 +65,6 @@ export default async function updateRelations(destSlug = '', destFieldName = '',
 		}
 	} catch (err) {
 		log(err.stack, user, __filename, 3)
-		mailError(err, req)
+		mailError(err)
 	}
 }
-
-/* await updateDocsMany('pages', user, {
-	depth: 0,
-	locale: loc,
-	where: {
-		and: [
-			{ site: { equals: doc.site } },
-			{ nav: { equals: doc.id } },
-		]
-	},
-	data: {
-		html: {
-			nav: doc.html
-		}
-	},
-	context: context
-}) */

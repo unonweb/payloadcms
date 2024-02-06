@@ -1,41 +1,41 @@
 import * as React from "react";
 
 /* ACCESS */
-import isAdminOrHasSiteAccess from '../access/isAdminOrHasSiteAccess';
-import { isLoggedIn } from '../access/isLoggedIn';
+import { isLoggedIn } from '../access/isLoggedIn.js';
 
 /* FIELDS */
-import editingModeField from '../fields/editingMode';
-import createCommonFields from '../fields/createCommonFields';
+import editingModeField from '../fields/editingMode.js';
+import createCommonFields from '../fields/createCommonFields.js';
 
 /* BLOCKS */
-import createColumnsFlex from '../blocks/layout/lay-flex';
+import createColumnsFlex from '../blocks/layout/lay-flex.js';
 
 /* HOOKS & HELPERS */
-import getRelatedDoc from '../hooks/getRelatedDoc';
-import validateIsHome from '../hooks/validate/validateIsHome';
-import log from '../customLog';
-import mailError from '../mailError';
-import updateDocSingle from '../hooks/updateDocSingle';
-import validatePageTitle from '../hooks/validate/validatePageTitle';
-import slugify from '../hooks/_slugify';
-import getAppMode from '../hooks/_getAppMode';
-import canAccess from '../hooks/_canAccess';
-import createAssetsFields from '../fields/createAssetsFields';
-import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship';
-import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID';
-import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
-import populateContextBeforeOp from '../hooks/beforeOperation/populateContext';
-import endConsoleTime from '../hooks/afterOperation/endConsoleTime';
-import setMainHTML from '../hooks/beforeChange/setMainHTML';
-import createHTMLFields from '../fields/createHTMLFields';
-import setHeadHTML from '../hooks/beforeChange/setHeadHTML';
-import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
-import copyAssets from '../hooks/afterChange/copyAssets';
-import setPageHTML from '../hooks/beforeChange/setPageHTML';
-import otherLocaleField from '../fields/otherLocaleField';
-import savePage from '../hooks/afterChange/savePage';
-import removePrevPage from '../hooks/afterChange/removePrevPage';
+import getRelatedDoc from '../hooks/getRelatedDoc.js';
+import validateIsHome from '../hooks/validate/validateIsHome.js';
+import log from '../helpers/customLog.js';
+import mailError from '../helpers/mailError.js';
+import updateDocSingle from '../hooks/updateDocSingle.js';
+import validatePageTitle from '../hooks/validate/validatePageTitle.js';
+import slugify from '../helpers/_slugify.js';
+import canAccess from '../helpers/_canAccess.js';
+import createAssetsFields from '../fields/createAssetsFields.js';
+import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship.js';
+import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID.js';
+import startConsoleTime from '../hooks/beforeOperation/startConsoleTime.js';
+import populateContextBeforeOp from '../hooks/beforeOperation/populateContext.js';
+import endConsoleTime from '../hooks/afterOperation/endConsoleTime.js';
+import setMainHTML from '../hooks/beforeChange/setMainHTML.js';
+import createHTMLFields from '../fields/createHTMLFields.js';
+import setHeadHTML from '../hooks/beforeChange/setHeadHTML.js';
+import populateContextBeforeVal from '../hooks/beforeValidate/populateContext.js';
+import copyAssets from '../hooks/afterChange/copyAssets.js';
+import setPageHTML from '../hooks/beforeChange/setPageHTML.js';
+import otherLocaleField from '../fields/otherLocaleField.js';
+import savePage from '../hooks/afterChange/savePage.js';
+import removePrevPage from '../hooks/afterChange/removePrevPage.js';
+import hasSiteAccess from '../access/hasSiteAccess.js';
+import requestUpdateByID from '../helpers/requestUpdateByID.js';
 
 const commonFields = createCommonFields()
 const SLUG = 'pages'
@@ -71,9 +71,9 @@ export const Pages = {
 	versions: false,
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('site'),
-		read: isAdminOrHasSiteAccess('site'),
-		delete: isAdminOrHasSiteAccess('site'),
+		update: hasSiteAccess('site'),
+		read: hasSiteAccess('site'),
+		delete: hasSiteAccess('site'),
 	},
 	// --- hooks
 	hooks: {
@@ -83,7 +83,7 @@ export const Pages = {
 			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages']),
 		],
 		beforeValidate: [
-			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req })
+			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req }, ['sites', 'images', 'documents', 'pages'])
 		],
 		// --- beforeChange
 		beforeChange: [
@@ -98,30 +98,48 @@ export const Pages = {
 			async ({ req, doc, previousDoc, context, operation }) => await removePrevPage({ doc, previousDoc, req, context }),
 			async ({ req, doc, previousDoc, operation, context }) => {
 				try {
-					const user = req?.user?.shortName ?? 'internal'
-					log('--- afterChange ---', user, __filename, 7)
-					context.site ??= (typeof doc.site === 'string' && context.sites) ? context.sites.find(item => item.id === doc.site) : null
-					context.site ??= await getRelatedDoc('sites', doc.site, user)
-					const site = context.site
-					const mode = getAppMode()
-					const pathSite = `${site.paths.fs.site}/${mode}`
+					const pathSite = context.pathSite
 
-					// update site if 'user.css' or 'fonts.css' are missing
-					if (!await canAccess(`${pathSite}/assets/fonts.css`) || !await canAccess(`${pathSite}/assets/user.css`)) {
-						await updateDocSingle('sites', context.site.id, context.user, {
-							data: {
-								updatedBy: `pages-${Date.now()}`
-							},
-							context: {
-								isUpdatedByCode: true,
-								updatedBy: 'pages',
-								...context,
-							}
+					/* request site update */
+					if (!await canAccess(`${pathSite}/assets/fonts.css`)) {
+						requestUpdateByID(context, {
+							src: 'pages',
+							dest: 'sites',
+							id: context.site.id,
+							reason: `Can't access font.css`
 						})
 					}
 
+					if (!await canAccess(`${pathSite}/assets/user.css`)) {
+						requestUpdateByID(context, {
+							src: 'pages',
+							dest: 'sites',
+							id: context.site.id,
+							reason: `Can't access user.css`
+						})
+					}
+
+					/*  update site */
+					if (context.requestUpdate) {
+
+						for (let slug of Object.keys(context.requestUpdate)) {
+							for (let id of Object.keys(context.requestUpdate[slug])) {
+								await updateDocSingle(slug, id, context.user, {
+									data: context.requestUpdate[slug][id],
+									context: {
+										isUpdatedByCode: true,
+										updatedBy: 'pages',
+										...context,
+									},
+									overrideAccess: false,
+									user: req.user,
+								})	
+							}
+						}
+					}
+
 				} catch (err) {
-					log(err.stack, user, __filename, 3)
+					log(err.stack, context.user, __filename, 3)
 					mailError(err, req)
 				}
 			},
@@ -159,7 +177,7 @@ export const Pages = {
 						}
 					}
 				} catch (err) {
-					log(err.stack, user, __filename, 3)
+					log(err.stack, context.user, __filename, 3)
 				}
 			}
 		],
@@ -186,7 +204,7 @@ export const Pages = {
 							required: true,
 							// If user is not admin, set the site by default
 							// to the first site that they have access to
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
+							defaultValue: ({ user }) => (user && user.sites?.length === 1) ? user.sites[0] : null,
 						},
 						// --- page.title
 						{
@@ -341,7 +359,7 @@ export const Pages = {
 											}
 
 										} catch (error) {
-											log(error.stack, user, __filename, 3)
+											log(error.stack, context.user, __filename, 3)
 										}
 									}
 								],
@@ -401,25 +419,22 @@ export const Pages = {
 										*/
 										try {
 											// update site.urls
-											if (!req.user) return // return in bulk ops (we've disableBulkEdit)
+											const isBulkOp = (req?.query?.where?.id?.in?.length > 0) ? true : false
+											if (req.user && operation === 'update' && !isBulkOp && data.url !== originalDoc.url) {
 
-											//const hasChanged = (operation === 'update' && data[field.name] !== originalDoc[field.name]) ? true : false // works only with top-lvl fields! // works only in single ops
-											context.site.urls[originalDoc.id] ??= {}
-											context.site.urls[originalDoc.id][req.locale] = originalDoc.url
+												context.site.urls[originalDoc.id] ??= {}
+												context.site.urls[originalDoc.id][req.locale] = originalDoc.url
 
-											await updateDocSingle('sites', context.site.id, context.user, {
-												data: {
-													urls: context.site.urls,
-												},
-												context: {
-													isUpdatedByCode: true,
-													updatedBy: 'pages',
-													...context,
-												},
-												overrideAccess: false,
-												user: req.user,
-											})
-											
+												requestUpdateByID(context, {
+													src: 'pages',
+													dest: 'sites',
+													id: context.site.id,
+													data: {
+														urls: context.site.urls
+													},
+													reason: 'page.url has changed'
+												})
+											}
 										} catch (error) {
 											log(error.stack, context.user, __filename, 3)
 										}
@@ -590,20 +605,6 @@ export const Pages = {
 								]
 							}
 						},
-						// --- page.background
-						/* {
-							name: 'background',
-							type: 'relationship',
-							maxDepth: 0, // only return id
-							relationTo: 'backgrounds',
-							filterOptions: ({ data }) => {
-								return {
-									site: { equals: data.site }, // only elements associated with this site
-								}
-							},
-							required: false,
-							defaultValue: async ({ user }) => (user) ? await getDefaultDocID('backgrounds', user.shortName) : '',
-						}, */
 					]
 				},
 				// --- CONTENT [tab-3] ---

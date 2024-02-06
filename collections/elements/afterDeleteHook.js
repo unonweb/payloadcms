@@ -1,6 +1,6 @@
-import log from '../../customLog'
-import updateDocsMany from '../../hooks/updateDocsMany'
-import mailError from '../../mailError'
+import log from '../../helpers/customLog.js'
+import updateDocsMany from '../../hooks/updateDocsMany.js'
+import mailError from '../../helpers/mailError.js'
 
 export default async function afterDeleteHook(colSingular = '', { req, doc, context }) {
 	try {
@@ -21,7 +21,7 @@ export default async function afterDeleteHook(colSingular = '', { req, doc, cont
 		})
 		
 		/* remove association with posts */
-		await updateDocsMany('posts', user, {
+		await updateDocsMany('posts-flex', user, {
 			where: {
 				and: [
 					{ site: { equals: siteID } },

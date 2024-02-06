@@ -1,4 +1,4 @@
-import log from '../customLog'
+import log from '../helpers/customLog.js'
 
 export default function isAdminOrUserID(userID = []) {
 	/* 

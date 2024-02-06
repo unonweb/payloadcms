@@ -1,4 +1,4 @@
-import showOptionsField from '../../fields/showOptions'
+import showOptionsField from '../../fields/showOptions.js'
 
 export default function createUnImgBlock(options = []) {
 
@@ -217,7 +217,7 @@ export default function createUnImgBlock(options = []) {
 										de: 'Verlinktes Dokument',
 										en: 'Linked Document'
 									},
-									relationTo: ['pages', 'posts'],
+									relationTo: ['pages', 'posts-flex'],
 									required: true,
 									maxDepth: 2,
 									admin: {

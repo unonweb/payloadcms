@@ -1,4 +1,5 @@
 /* ACCESS */
+import hasSiteAccess from '../../access/hasSiteAccess.js';
 import isAdminOrHasSiteAccess from "../../access/isAdminOrHasSiteAccess.js";
 import { isLoggedIn } from "../../access/isLoggedIn.js";
 
@@ -24,9 +25,9 @@ export const Documents = {
 	},
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('sites'),
-		read: isAdminOrHasSiteAccess('sites'),
-		delete: isAdminOrHasSiteAccess('sites'),
+		update: hasSiteAccess('sites'),
+		read: hasSiteAccess('sites'),
+		delete: hasSiteAccess('sites'),
 	},
 	admin: {
 		group: 'Upload',

@@ -1,5 +1,5 @@
 import payload from 'payload'
-import log from '../customLog'
+import log from '../helpers/customLog'
 
 export default async function updateDocsMany(slug = '', user = '', { where = {}, data = {}, context = {}, locale = '', depth = 0, overrideAccess = true } = {}) {
 
@@ -22,7 +22,7 @@ export default async function updateDocsMany(slug = '', user = '', { where = {},
 		log(`no doc found in "${slug} with ${JSON.stringify(where)}`, user, __filename, 6)
 	} 
 	else {
-		log(`updated ${result.docs.length} in ${slug}`, user, __filename)
+		log(`updated ${result.docs.length} with locale ${locale} in ${slug}`, user, __filename)
 	}
 
 	/* for (const doc of result.docs) {

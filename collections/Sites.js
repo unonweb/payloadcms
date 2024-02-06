@@ -1,42 +1,30 @@
 /* ACCESS */
-import { isAdmin } from '../access/isAdmin';
-import log from '../customLog';
+import { isAdmin } from '../access/isAdmin.js';
+import log from '../helpers/customLog.js';
 
 /* FIELDS */
-import colorPickerField from '../components/color-picker-field';
-
-/* PAYLOAD */
-import payload from 'payload';
-
-/* NODE */
-import { promises as fsPromises, existsSync } from 'fs'
+import colorPickerField from '../components/color-picker-field.js';
 
 /*  HOOKS & HELPERS */
-import mailError from '../mailError';
-import editingModeField from '../fields/editingMode';
-import createDoc from '../hooks/_createDoc';
-import rmDocs from '../hooks/rmDocs';
-import hasChanged from '../hooks/_hasChanged';
-import rmFile from '../hooks/_rmFile';
-import initSitePaths from '../hooks/initSitePaths';
-import resolveObjPath from '../hooks/_resolveObjPath';
-import getRandomDocID from '../hooks/getRandomDocID';
-import getRelatedDoc from '../hooks/getRelatedDoc';
-import saveToDisk from '../hooks/_saveToDisk';
-import convertJSONToCSS from '../hooks/_convertJSONToCSS';
-import cpAssets from '../hooks/_cpAssets';
-import getAppMode from '../hooks/_getAppMode';
-import canAccess from '../hooks/_canAccess';
-import capitalizeWords from '../hooks/_capitalizeWords';
-import updateDocsMany from '../hooks/updateDocsMany';
-import cpFile from '../hooks/_cpFile';
-import getDoc from '../hooks/getDoc';
-import CSSObjUpdate from '../helpers/CSSObjUpdate';
-import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
-import endConsoleTime from '../hooks/afterOperation/endConsoleTime';
-import CSSObjRemoveKey from '../helpers/CSSObjRemoveKey';
-import populateContextBeforeOp from '../hooks/beforeOperation/populateContext';
-import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
+import mailError from '../helpers/mailError.js';
+import rmDocs from '../helpers/rmDocs.js';
+import rmFile from '../helpers/_rmFile.js';
+import resolveObjPath from '../helpers/_resolveObjPath.js';
+import getRandomDocID from '../hooks/getRandomDocID.js';
+import getRelatedDoc from '../hooks/getRelatedDoc.js';
+import saveToDisk from '../helpers/_saveToDisk.js';
+import CSSFromJSON from '../helpers/CSSFromJSON.js';
+import canAccess from '../helpers/_canAccess.js';
+import updateDocsMany from '../hooks/updateDocsMany.js';
+import CSSObjUpdate from '../helpers/CSSObjUpdate.js';
+import startConsoleTime from '../hooks/beforeOperation/startConsoleTime.js';
+import endConsoleTime from '../hooks/afterOperation/endConsoleTime.js';
+import CSSObjRemoveKey from '../helpers/CSSObjRemoveKey.js';
+import copyAssets from '../hooks/afterChange/copyAssets.js';
+import setSiteDefaults from '../hooks/beforeValidate/setSiteDefaults.js';
+import initFSPaths from '../hooks/afterChange/initFSPaths.js';
+import populateContextBeforeOp from '../hooks/beforeOperation/populateContext.js';
+import populateContextBeforeVal from '../hooks/beforeValidate/populateContext.js';
 
 const defaultUserCSS = {
 	"html": {
@@ -118,61 +106,26 @@ export const Sites = {
 		// --- beforeOperation
 		beforeOperation: [
 			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
-			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['images', 'documents']),
+			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages']),
 		],
 		// --- beforeValidate
 		beforeValidate: [
 			// runs after client-side validation
 			// runs before server-side validation
-			async ({ data, req, operation, originalDoc }) => populateContextBeforeVal({ data, req }),
-			async ({ data, req, operation, originalDoc }) => {
-				try {
-					if (operation === 'create') {
-
-						const user = req?.user?.shortName ?? 'internal'
-						log('--- beforeValidate ---', user, __filename, 7)
-
-						/* init paths from Admin global */
-
-						/* constants */
-						const domainShort = data.domain.slice(0, data.domain.lastIndexOf('.')) // radjajuschka.de --> radjajuschka
-						const admin = await payload.findGlobal({ slug: 'admin' })
-
-						/* default values */
-						data.domainShort ??= domainShort // site.domainShort
-						data.brandName ??= capitalizeWords(domainShort.replaceAll('-', ' ')) // "haerer-geruestbau" --> "Haerer Geruestbau"
-						data.paths.web.origin.dev ??= `http://${domainShort}.unonweb.local`
-						data.paths.web.origin.prod ??= `https://${data.domain}`
-						data.paths.web.admin.resources = admin.paths.web.resources
-						data.paths.fs.admin.sites = admin.paths.fs.sites
-						data.paths.fs.admin.customElements = admin.paths.fs.customElements
-
-
-
-						// update site paths
-						data = initSitePaths(data)
-					}
-
-					return data
-
-				} catch (err) {
-					log(err.stack, user, __filename, 3)
-				}
-			}
+			async ({ data, req, operation, originalDoc, context }) => await populateContextBeforeVal({ data, req, originalDoc }, ['sites', 'images', 'documents', 'pages']),
+			async ({ data, req, operation, originalDoc }) => setSiteDefaults({ data, operation }),
 		],
 		// --- beforeChange
 		beforeChange: [],
 		// --- afterChange
 		afterChange: [
+			async ({ req, doc, previousDoc, context, operation }) => await copyAssets(['images', 'documents', 'fonts'], { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, context, operation }) => await initFSPaths({ req, doc, operation, previousDoc, context }),
 			async ({ req, doc, operation, previousDoc, context }) => {
 				try {
 					const user = context.user
 					const pathSite = context.pathSite
 					const mode = context.mode
-
-					/* cp font files */
-					await cpAssets(`${process.cwd()}/upload/fonts`, `${pathSite}/assets`, doc.assets.fonts, user)
-					await cpAssets(`${process.cwd()}/upload/images`, `${pathSite}/assets/imgs`, doc.assets.imgs, user)
 
 					/* write font.css */
 					if (mode === 'dev' || doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
@@ -181,68 +134,15 @@ export const Sites = {
 
 					/* write user.css */
 					if (mode === 'dev' || JSON.stringify(doc?.css) !== JSON.stringify(previousDoc?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
-						let userCSS = convertJSONToCSS(doc.css)
+						let userCSS = CSSFromJSON(doc.css)
 						await saveToDisk(`${pathSite}/assets/user.css`, userCSS, user)
 					}
 
-					if (operation === 'create') {
-
-						/* INIT FS STRUCTURE */
-						if (!await canAccess(doc.paths.fs.site)) await fsPromises.mkdir(doc.paths.fs.site)
-						// prod
-						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/custom-elements`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/custom-elements`, { recursive: true })
-						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/imgs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/imgs`)
-						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/docs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/docs`)
-						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/lib`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/lib`)
-						if (!await canAccess(`${doc.paths.fs.site}/prod/assets/posts`)) await fsPromises.mkdir(`${doc.paths.fs.site}/prod/assets/posts`)
-						// dev
-						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/custom-elements`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/custom-elements`, { recursive: true })
-						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/imgs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/imgs`)
-						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/docs`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/docs`)
-						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/lib`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/lib`)
-						if (!await canAccess(`${doc.paths.fs.site}/dev/assets/posts`)) await fsPromises.mkdir(`${doc.paths.fs.site}/dev/assets/posts`)
-
-
-						/* INIT PAYLOAD */
-						// needs to be run in afterChange hook because before this site has no id yet
-						if (false) {
-							// disabled currently !!!
-							const header = await createDoc('headers', user, {
-								locale: doc.locales.default,
-								data: {
-									site: doc.id,
-								}
-							})
-							const nav = await createDoc('navs', user, {
-								locale: doc.locales.default,
-								data: {
-									site: doc.id,
-								}
-							})
-							const footer = await createDoc('footers', user, {
-								locale: doc.locales.default,
-								data: {
-									site: doc.id,
-								}
-							})
-							/* const page = await createDoc('pages', user, {
-								locale: doc.locales.default,
-								data: {
-									site: doc.id,
-									title: doc.domainShort,
-									isHome: true,
-									header: header.id,
-									nav: nav.id,
-									footer: footer.id
-								}
-							}) */
-						}
-					}
-
 					/* update site.assets.imgs */
-					doc.assets.imgs = [
-						doc.background.img_filename ?? ''
-					]
+					doc.assets.imgs = []
+					if (doc.background.img_filename) {
+						doc.assets.imgs.push(doc.background.img_filename)	
+					}
 
 					/* update pages */
 					if (!context.isUpdatedByCode && context.updatePages) {
@@ -258,42 +158,6 @@ export const Sites = {
 									site: doc,
 									...context,
 								}
-							})
-						}
-					}
-
-					/* full update */
-					if (context.fullUpdate) {
-						for (const loc of doc.locales.used) {
-							// update pages
-							await updateDocsMany('pages', user, {
-								where: {
-									site: { equals: doc.id }
-								},
-								data: { updatedBy: `sites-${Date.now()}` },
-								depth: 0,
-								locale: loc,
-								context: { site: doc }
-							})
-							// update navs
-							await updateDocsMany('navs', user, {
-								where: {
-									site: { equals: doc.id }
-								},
-								data: { updatedBy: `sites-${Date.now()}` },
-								depth: 0,
-								locale: loc,
-								context: { site: doc }
-							})
-							// update headers
-							await updateDocsMany('headers', user, {
-								where: {
-									site: { equals: doc.id }
-								},
-								data: { updatedBy: `sites-${Date.now()}` },
-								depth: 0,
-								locale: loc,
-								context: { site: doc }
 							})
 						}
 					}
@@ -330,9 +194,9 @@ export const Sites = {
 							where: { site: { equals: id } }
 						})
 					}
-					// remove 'Posts' Data
+					// remove 'Posts-Flex' Data
 					if (rmPostsData) {
-						await rmDocs('posts', user, {
+						await rmDocs('posts-flex', user, {
 							where: { site: { equals: id } }
 						})
 					}
@@ -438,7 +302,10 @@ export const Sites = {
 									defaultValue: [],
 									hooks: {
 										beforeChange: [
-											async ({ value, data, context }) => {
+											async ({ value, data, context, req }) => {
+
+												if (!req.user) return // return in bulk ops (we've disableBulkEdit)
+
 												value = []
 												context.fonts ??= {}
 
@@ -574,17 +441,6 @@ export const Sites = {
 											},
 											validate: (value, { payload }) => isValidPath(value, payload),
 										},
-										// --- site.paths.fs.posts
-										{
-											type: 'text',
-											name: 'posts',
-											label: 'site.paths.fs.posts',
-											required: false,
-											admin: {
-												placeholder: '/home/payload/sites/<domain>/assets/posts'
-											},
-											validate: (value, { payload }) => isValidPath(value, payload),
-										},
 										// --- site.paths.fs.fonts
 										{
 											type: 'text',
@@ -604,28 +460,6 @@ export const Sites = {
 											required: false,
 											admin: {
 												placeholder: '/home/payload/sites/<domain>/assets/docs'
-											},
-											validate: (value, { payload }) => isValidPath(value, payload),
-										},
-										// --- site.paths.fs.events
-										{
-											type: 'text',
-											name: 'events',
-											label: 'site.paths.fs.events',
-											required: false,
-											admin: {
-												placeholder: '/home/payload/sites/<domain>/assets/events'
-											},
-											validate: (value, { payload }) => isValidPath(value, payload),
-										},
-										// --- site.paths.fs.products
-										{
-											type: 'text',
-											name: 'products',
-											label: 'site.paths.fs.products',
-											required: false,
-											admin: {
-												placeholder: '/home/payload/sites/<domain>/assets/products'
 											},
 											validate: (value, { payload }) => isValidPath(value, payload),
 										},
@@ -815,6 +649,9 @@ export const Sites = {
 									},
 									maxDepth: 0,
 									required: false,
+									admin: {
+										disableBulkEdit: true,
+									},
 									hooks: {
 										beforeValidate: [
 											async ({ operation, context }) => {
@@ -836,6 +673,9 @@ export const Sites = {
 									},
 									maxDepth: 0,
 									required: false,
+									admin: {
+										disableBulkEdit: true,
+									},
 									hooks: {
 										beforeValidate: [
 											async ({ operation }) => {
@@ -875,7 +715,7 @@ export const Sites = {
 													context.fonts.headings ??= await getRelatedDoc('fonts', data.fonts.headings, context.user, { depth: 0 })
 													fontFaces.push(context.fonts.headings.face)
 												}
-												
+
 												return createFontCSS(fontFaces, context.fonts.body, context.fonts.headings) // update data.fonts.css
 											}
 										]
@@ -944,7 +784,7 @@ export const Sites = {
 										beforeValidate: [
 											// Runs before the update operation
 											async ({ value, context, operation, data, originalDoc, siblingData }) => {
-												
+
 												if (context.isUpdatedByCode) return
 
 												if (value) {
@@ -1036,12 +876,7 @@ export const Sites = {
 				},
 			]
 		},
-
-
 		// --- SIDEBAR ---
-
-		// --- editingMode
-		editingModeField,
 		// --- freezeSite
 		/* {
 			type: 'checkbox',
@@ -1068,9 +903,95 @@ export const Sites = {
 				beforeChange: [
 					({ value, context }) => {
 						if (value === true) {
-							context.fullUpdate = true	
+							context.fullUpdate = true
 						}
 						return false
+					}
+				],
+				afterChange: [
+					async ({ value, context, collection, req, originalDoc, operation }) => {
+						/*
+							Type:
+								afterChange
+								fieldHook
+							Task: 
+								Update all other locales of this document with this document's data
+							Attention:
+								The field value is always reset to false
+								But still 'value' holds the original value given in the admin panel
+						*/
+						try {
+							if (value === true) {
+								context.site = originalDoc
+
+								for (const loc of originalDoc.locales.used) {
+									// update pages
+									await updateDocsMany('pages', context.user, {
+										where: {
+											site: { equals: originalDoc.id }
+										},
+										data: { updatedBy: `sites` },
+										depth: 0,
+										locale: loc,
+										context: {
+											updatedBy: 'sites',
+											isUpdatedByCode: true,
+											isFullUpdate: true,
+											site: originalDoc,
+											...context,
+										}
+									})
+									// update navs
+									await updateDocsMany('navs', context.user, {
+										where: {
+											site: { equals: originalDoc.id }
+										},
+										data: { updatedBy: `sites` },
+										depth: 0,
+										locale: loc,
+										context: {
+											updatedBy: 'sites',
+											isUpdatedByCode: true,
+											site: originalDoc,
+											...context,
+										}
+									})
+									// update headers
+									await updateDocsMany('headers', context.user, {
+										where: {
+											site: { equals: originalDoc.id }
+										},
+										data: { updatedBy: `sites` },
+										depth: 0,
+										locale: loc,
+										context: {
+											updatedBy: 'sites',
+											isUpdatedByCode: true,
+											site: originalDoc,
+											...context,
+										}
+									})
+									// update posts
+									await updateDocsMany('posts-flex', context.user, {
+										where: {
+											site: { equals: originalDoc.id }
+										},
+										data: { updatedBy: `sites` },
+										depth: 0,
+										locale: loc,
+										context: {
+											updatedBy: 'sites',
+											isUpdatedByCode: true,
+											site: originalDoc,
+											...context,
+										}
+									})
+								}
+							}
+						} catch (error) {
+							log(error.stack, context.user, __filename, 3)
+							mailError(error, req)
+						}
 					}
 				]
 			}

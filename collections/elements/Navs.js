@@ -1,7 +1,5 @@
 // ACCESS
-import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
 import { isLoggedIn } from '../../access/isLoggedIn';
-import { isAdmin } from '../../access/isAdmin';
 
 // BLOCKS
 import nav from '../../blocks/nav/nav';
@@ -10,12 +8,8 @@ import nav from '../../blocks/nav/nav';
 import editingModeField from '../../fields/editingMode';
 
 // HOOKS & HELPERS
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import log from '../../customLog';
-import mailError from '../../mailError';
-import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
+import firstDefaultsToTrue from '../../hooks/defaultValue/firstDefaultsToTrue';
 import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
-import updateDocsMany from '../../hooks/updateDocsMany';
 import updateRelations from '../../hooks/afterChange/updateRelations';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterDeleteHook from './afterDeleteHook';
@@ -25,6 +19,7 @@ import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
 import copyAssets from '../../hooks/afterChange/copyAssets';
 import setMainHTML from '../../hooks/beforeChange/setMainHTML';
 import createHTMLFields from '../../fields/createHTMLFields';
+import hasSiteAccess from '../../access/hasSiteAccess';
 
 const SLUG = 'navs'
 const COLSINGULAR = 'nav'
@@ -56,9 +51,9 @@ export const Navs = {
 	// --- accces
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess(),
-		read: isAdminOrHasSiteAccess(),
-		delete: isAdminOrHasSiteAccess(),
+		update: hasSiteAccess(),
+		read: hasSiteAccess(),
+		delete: hasSiteAccess(),
 	},
 	// --- hooks
 	hooks: {
@@ -105,9 +100,7 @@ export const Navs = {
 							name: 'site',
 							relationTo: 'sites',
 							required: true,
-							// If user is not admin, set the site by default
-							// to the first site that they have access to
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
+							defaultValue: ({ user }) => (user && user.sites?.length === 1) ? user.sites[0] : null,
 						},
 						// --- nav.title
 						{

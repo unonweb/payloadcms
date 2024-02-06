@@ -1,7 +1,4 @@
-//import createImgBlock from './img'
-import createLinkImgField from '../../fields/link-img-field'
-import imgStyleOptions from '../../fields/img-style-fields'
-import showOptionsField from '../../fields/showOptions'
+import showOptionsField from '../../fields/showOptions.js'
 
 export const imgGalleryBlock = {
 	slug: 'img-gallery',
@@ -237,7 +234,7 @@ export const imgGalleryBlock = {
 										de: 'Verlinktes Dokument',
 										en: 'Linked Document'
 									},
-									relationTo: ['pages', 'posts'],
+									relationTo: ['pages', 'posts-flex'],
 									required: true,
 									maxDepth: 2,
 									admin: {

@@ -1,70 +1,74 @@
 import * as React from "react";
 
 /* ACCESS */
-import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
-import { isLoggedIn } from '../../access/isLoggedIn';
+import { isLoggedIn } from '../../access/isLoggedIn.js';
 
 /* FIELDS */
-import editingModeField from '../../fields/editingMode';
-import createCommonFields from '../../fields/createCommonFields';
+import createCommonFields from '../../fields/createCommonFields.js';
 
 /* BLOCKS */
-import createRichTextBlock from '../../blocks/rich-text-block';
-import createUnImgBlock from '../../blocks/img/un-img';
 
 /* HOOKS & HELPERS */
-import log from '../../customLog';
-import createElementsFields from './createPageElementsField';
-import createAssetsFields from '../../fields/createAssetsFields';
-import createHTMLFields from '../../fields/createHTMLFields';
-import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
-import savePostsJson from '../../hooks/afterOperation/savePostsJson';
-import copyAssets from '../../hooks/afterChange/copyAssets';
-import initOtherLocaleField from '../../fields/initOtherLocaleField';
-import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext';
-import createPostFields, { postFields } from './createPostFields';
-import getDoc from '../../hooks/getDoc';
-import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
-import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
-import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship';
-import setHeadHTML from '../../hooks/beforeChange/setHeadHTML';
-import setPageHTML from '../../hooks/beforeChange/setPageHTML';
-import savePost from '../../hooks/afterChange/savePost';
-import iterateBlocks from '../../hooks/iterateBlocks';
-import getPosSubset from '../../helpers/getPosSubset';
-import setPostHTML from '../../helpers/renderPostHTML';
-import otherLocaleField from '../../fields/otherLocaleField';
+import log from '../../helpers/customLog.js';
+import createElementsFields from './createPageElementsField.js';
+import createAssetsFields from '../../fields/createAssetsFields.js';
+import createHTMLFields from '../../fields/createHTMLFields.js';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime.js';
+import savePostsJson from '../../hooks/afterOperation/savePostsJson.js';
+import copyAssets from '../../hooks/afterChange/copyAssets.js';
+import createPostFields from './createPostFields.js';
+import getDoc from '../../hooks/getDoc.js';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext.js';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime.js';
+import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship.js';
+import setHeadHTML from '../../hooks/beforeChange/setHeadHTML.js';
+import setPageHTML from '../../hooks/beforeChange/setPageHTML.js';
+import savePost from '../../hooks/afterChange/savePost.js';
+import setPostHTML from '../../helpers/renderPostHTML.js';
+import otherLocaleField from '../../fields/otherLocaleField.js';
+import hasSiteAccess from '../../access/hasSiteAccess.js';
+import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext.js';
 
 const commonFields = createCommonFields()
 const SLUG = 'posts-flex'
 
 export const PostsFlex = {
 	slug: SLUG,
+	labels: {
+		singular: {
+			de: 'Post',
+			en: 'Post'
+		},
+		plural: {
+			de: 'Posts',
+			en: 'Posts'
+		},
+	},
 	admin: {
 		enableRichTextRelationship: false, // <-- FIX: Enable this later, when posts are (also) generated as separete html documents that we can link to
 		enableRichTextLink: false,
 		useAsTitle: 'id',
-		defaultColumns: ['id',],
+		defaultColumns: ['id', 'type'],
+		listSearchableFields: ['id', 'typeName', 'title'],
 		description: {
 			de: 'Erstelle einen Post. Dieser kann dann auf einer oder mehreren deiner (Sub)Seiten eingebunden werden. Beispiele für Posts sind: Blog-Artikel, Produkte, Veranstaltungen, Termine,...',
 			en: 'Create a new post which can then be included in one or multiple of your pages. Examples for posts are: blog articles, products, events, appointments,...',
 		},
 		group: {
-			de: 'Dynamische Inhalte',
-			en: 'Dynamic Content'
+			de: 'Posts',
+			en: 'Posts'
 		},
 		pagination: {
 			defaultLimit: 50,
 		},
 		hideAPIURL: true,
-		hidden: ({ user}) => !['unonner'].includes(user.shortName)
 	},
 	versions: false,
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('site'),
-		read: isAdminOrHasSiteAccess('site'),
-		delete: isAdminOrHasSiteAccess('site'),
+		update: hasSiteAccess('site'),
+		read: hasSiteAccess('site'),
+		delete: hasSiteAccess('site'),
 	},
 	hooks: {
 		// --- beforeOperation
@@ -72,11 +76,43 @@ export const PostsFlex = {
 			async ({ args, operation }) => await startConsoleTime(SLUG, { args, operation }),
 			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages']),
 		],
+		// --- beforeValidate
+		beforeValidate: [
+			async ({ data, req, operation, originalDoc, context }) => await populateContextBeforeVal({ data, req, originalDoc }, ['sites', 'images', 'documents', 'pages']),
+			async ({ data, req, operation, originalDoc, context }) => {
+				/* 
+					single & bulk user action:
+						- data.type === current value
+						- originalDoc.type === previous value
+				*/
+				if (operation === 'create') {
+					const type = await getDoc('post-types', data.type, context.user, { depth: 0 }) // when post doc is created get its shape
+					data.shape = type.shape
+					data.dateStyle = type.dateStyle
+					data.typeName = type.name
+				}
+
+				if (operation === 'update') {
+					if (data.type === null) {
+						return null // if post type has been reset
+					}
+					if (data.type !== undefined && data.type !== originalDoc.type) {
+						// if post type has been changed
+						const type = await getDoc('post-types', data.type, context.user, { depth: 0 })
+						data.shape = type.shape
+						data.dateStyle = type.dateStyle
+						data.typeName = type.name
+					}
+				}
+
+				return data
+			}
+		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }),
-			async ({ data, req, operation, originalDoc, context }) => await setPostHTML({ data, originalDoc, req, context }),
-			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context, operation }),
+			async ({ data, req, operation, originalDoc, context }) => await setPostHTML({ data, originalDoc, req, context, operation }),
+			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, context, operation }),
 		],
 		// --- afterChange
 		afterChange: [
@@ -94,8 +130,6 @@ export const PostsFlex = {
 		],
 	},
 	fields: [
-		// --- editingMode
-		editingModeField,
 		//initOtherLocaleField,
 		otherLocaleField,
 		// --- post.site
@@ -107,7 +141,7 @@ export const PostsFlex = {
 			index: true,
 			required: true,
 			maxDepth: 0, // if 1 then for every post the corresponding site is included into the pages collection (surplus data)
-			defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
+			defaultValue: ({ user }) => (user && user.sites?.length === 1) ? user.sites[0] : null,
 		},
 		// --- post.type
 		{
@@ -115,15 +149,16 @@ export const PostsFlex = {
 			relationTo: 'post-types',
 			name: 'type',
 			label: {
-				de: 'Type',
-				en: 'Typ'
+				de: 'Typ',
+				en: 'Type'
 			},
 			hasMany: false,
 			localized: false,
-			required: false,
-			index: false,
+			required: true,
+			index: true,
+			maxDepth: 0,
 			admin: {
-				description: () => (<span>&#10132; Nach Auswahl des Post-Typs bitte einmal <strong>speichern</strong>!</span>)
+				description: () => (<span>&#10132; Nach Auswahl oder Änderung des Post-Typs bitte einmal <strong>speichern</strong>!</span>)
 			},
 			hooks: {
 				beforeValidate: [
@@ -196,9 +231,14 @@ export const PostsFlex = {
 			},
 			fields: createPostFields(),
 		},
-		// post.html
+		// --- post.html
+		// --- post.html.main
+		// --- post.html.page
 		createHTMLFields('head', 'main', 'page'),
 		// --- post.assets
+		// --- post.assets.imgs
+		// --- post.assets.docs
+		// --- post.assets.head
 		createAssetsFields('imgs', 'docs', 'head'),
 		// --- post.shape
 		{
@@ -206,30 +246,33 @@ export const PostsFlex = {
 			name: 'shape',
 			defaultValue: [],
 			admin: {
-				condition: (data, siblingData, { user }) => (user && user.roles.includes('admin')) ? true : false,
+				hidden: true,
+				readOnly: true // set by post-type
 			},
-			hooks: {
-				beforeValidate: [
-					async ({ data, originalDoc, siblingData, operation, value, field, context, collection, req }) => {
-						if (operation === 'create') {
-							const type = await getDoc('post-types', data.type, context.user, { depth: 0 })
-							return type.shape
-						}
-						if (operation === 'update') {
-							if (data.type === null) {
-								// if post type has been reset
-								return null
-							}
-							if (data.type !== undefined && data.type !== originalDoc.type) {
-								// if post type has been changed
-								const type = await getDoc('post-types', data.type, context.user, { depth: 0 })
-								return type.shape
-							}
-
-						}
-					}
-				]
-			}
+		},
+		// --- post.dateStyle
+		{
+			type: 'text',
+			name: 'dateStyle',
+			admin: {
+				hidden: true,
+				readOnly: true // set by post-type
+			},
+		},
+		// --- post.typeName
+		{
+			type: 'text',
+			name: 'typeName',
+			label: {
+				de: 'Typ',
+				en: 'Type'
+			},
+			localized: false,
+			index: true,
+			admin: {
+				hidden: true,
+				readOnly: true // set by post-type
+			},
 		},
 		// --- commonFields
 		...commonFields,

@@ -1,6 +1,3 @@
-import CSSObjUpdate from '../../helpers/CSSObjUpdate'
-import getDoc from '../../hooks/getDoc'
-import updateDocSingle from '../../hooks/updateDocSingle'
 
 export default function createImgBackgroundBlock({ } = {}) {
 

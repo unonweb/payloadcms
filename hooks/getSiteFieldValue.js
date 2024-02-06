@@ -1,9 +1,9 @@
 //import findByID from 'payload/dist/collections/operations/findByID'
 import payload from 'payload'
-import getAppMode from './_getAppMode'
-import log from '../customLog'
-import CustomError from '../customError'
-import reportError from '../reportError'
+import getAppMode from '../helpers/_getAppMode'
+import log from '../helpers/customLog'
+import CustomError from '../helpers/customError'
+import reportError from '../helpers/reportError'
 
 export default async function getSiteFieldValue(site, field, user = '') {
 	// returns the value of field from collection 'sites'

@@ -1,5 +1,5 @@
 import payload from 'payload'
-import log from '../customLog'
+import log from '../helpers/customLog'
 
 export default async function getUserSites(sites = [], user = '', { depth = 0, locale = '' } = {}) {
 	// * returns [ { site }, { site }]

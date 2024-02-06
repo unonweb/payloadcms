@@ -1,5 +1,5 @@
 // imports
-import getAppMode from './_getAppMode'
+import getAppMode from '../helpers/_getAppMode'
 import saveAsJson from './_saveAsJson'
 
 export default async function saveSite(req, doc, destFieldName = 'pathDataGlobal', user = '') {

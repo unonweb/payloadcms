@@ -1,32 +1,27 @@
 /* ACCESS */
-import isAdminOrHasSiteAccess from '../../access/isAdminOrHasSiteAccess';
-import { isLoggedIn } from '../../access/isLoggedIn';
+import { isLoggedIn } from '../../access/isLoggedIn.js';
 
 /* FIELDS */
-import editingModeField from '../../fields/editingMode';
+import editingModeField from '../../fields/editingMode.js';
 
 /* HOOKS STANDARD */
-import updateRelations from '../../hooks/afterChange/updateRelations';
-import createAssetsFields from '../../fields/createAssetsFields';
-import getRelatedDoc from '../../hooks/getRelatedDoc';
-import log from '../../customLog';
-import mailError from '../../mailError';
+import updateRelations from '../../hooks/afterChange/updateRelations.js';
+import createAssetsFields from '../../fields/createAssetsFields.js';
 
 /* BLOCKS */
-import footerDefault from '../../blocks/footer/footer-default';
 
 /*  HOOKS ADD */
-import updateDocsMany from '../../hooks/updateDocsMany';
-import firstDefaultsToTrue from '../../hooks/firstDefaultsToTrue';
-import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
-import createRichTextBlock from '../../blocks/rich-text-block';
-import afterDeleteHook from './afterDeleteHook';
-import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
-import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
-import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
-import copyAssets from '../../hooks/afterChange/copyAssets';
-import setMainHTML from '../../hooks/beforeChange/setMainHTML';
-import createHTMLFields from '../../fields/createHTMLFields';
+import firstDefaultsToTrue from '../../hooks/defaultValue/firstDefaultsToTrue.js';
+import isUniqueDefault from '../../hooks/validate/isUniqueDefault.js';
+import createRichTextBlock from '../../blocks/rich-text-block.js';
+import afterDeleteHook from './afterDeleteHook.js';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime.js';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext.js';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime.js';
+import copyAssets from '../../hooks/afterChange/copyAssets.js';
+import setMainHTML from '../../hooks/beforeChange/setMainHTML.js';
+import createHTMLFields from '../../fields/createHTMLFields.js';
+import hasSiteAccess from '../../access/hasSiteAccess.js';
 
 const SLUG = 'footers'
 const COLSINGULAR = 'footer'
@@ -45,9 +40,9 @@ export const Footers = {
 	},
 	access: {
 		create: isLoggedIn,
-		update: isAdminOrHasSiteAccess('site'),
-		read: isAdminOrHasSiteAccess('site'),
-		delete: isAdminOrHasSiteAccess('site'),
+		update: hasSiteAccess('site'),
+		read: hasSiteAccess('site'),
+		delete: hasSiteAccess('site'),
 	},
 	// --- hooks
 	hooks: {
@@ -95,7 +90,7 @@ export const Footers = {
 							required: true,
 							// If user is not admin, set the site by default
 							// to the first site that they have access to
-							defaultValue: ({ user }) => (user && !user.roles.includes('admin') && user.sites?.[0]) ? user.sites[0] : null,
+							defaultValue: ({ user }) => (user && user.sites?.length === 1) ? user.sites[0] : null,
 						},
 						// --- footer.title
 						{

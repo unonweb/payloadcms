@@ -1,6 +1,6 @@
 //import findByID from 'payload/dist/collections/operations/findByID'
 import payload from 'payload'
-import CustomError from '../customError'
+import CustomError from '../helpers/customError'
 
 export default async function extractFieldsFromRelationship(args, fieldsToExtract = []) {
 	// afterRead

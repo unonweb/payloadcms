@@ -1,5 +1,5 @@
 import payload from 'payload'
-import log from '../customLog'
+import log from '../helpers/customLog'
 
 export default async function getRelatedDoc(colSlug = '', ref, user = '', { depth = 0, locale = '' } = {}) {
 	// receives a doc-id or a doc-object

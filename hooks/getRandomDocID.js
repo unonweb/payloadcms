@@ -1,5 +1,5 @@
-import log from '../customLog'
-import getRandomInt from './_getRandomInt'
+import log from '../helpers/customLog'
+import getRandomInt from '../helpers/_getRandomInt'
 import payload from 'payload'
 
 export default async function getRandomDocID(colSlug = '', user = '') {

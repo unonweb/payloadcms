@@ -1,5 +1,5 @@
-import getDefaultDocID from '../../hooks/beforeValidate/getDefaultDocID'
-import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship'
+import getDefaultDocID from '../../hooks/beforeValidate/getDefaultDocID.js'
+import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship.js'
 
 export default function createElementsFields() {
 	/* 

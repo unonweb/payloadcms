@@ -1,4 +1,4 @@
-import log from '../customLog'
+import log from '../helpers/customLog'
 import { exec } from 'child_process'
 
 export default async function publish(pathSite, user) {
