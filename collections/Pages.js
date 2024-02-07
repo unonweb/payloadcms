@@ -4,7 +4,6 @@ import * as React from "react";
 import { isLoggedIn } from '../access/isLoggedIn.js';
 
 /* FIELDS */
-import editingModeField from '../fields/editingMode.js';
 import createCommonFields from '../fields/createCommonFields.js';
 
 /* BLOCKS */
@@ -133,7 +132,7 @@ export const Pages = {
 									},
 									overrideAccess: false,
 									user: req.user,
-								})	
+								})
 							}
 						}
 					}
@@ -223,6 +222,7 @@ export const Pages = {
 							validate: async (val, { data, operation, t, payload }) => await validatePageTitle(val, data, payload, t), // return either true or a string error message
 						},
 						// --- page.tags
+						//	not used currently
 						{
 							type: 'relationship',
 							relationTo: 'tags',
@@ -239,7 +239,6 @@ export const Pages = {
 							hasMany: true,
 							required: false,
 							admin: {
-								condition: (data) => (data.editingMode === 'functional') ? true : false,
 								description: {
 									de: 'Optional. Hilft den Überblick zu behalten.',
 									en: 'Optional. Helps to sort pages in the admin panel.'
@@ -616,164 +615,6 @@ export const Pages = {
 					},
 					description: 'Wähle die Layout-Elemente, die im Hauptteil (<main>) der Seite verwendet werden sollen.',
 					fields: [
-						// [layout options]
-						{
-							type: 'row',
-							admin: {
-								condition: (data) => (data.editingMode === 'layout') ? true : false,
-							},
-							fields: [
-								// --- page.main.justify
-								/* {
-									type: 'select',
-									name: 'justify',
-									label: {
-										en: 'Justify horizontally',
-										de: 'Horizontale Ausrichtung'
-									},
-									defaultValue: 'center',
-									required: true,
-									admin: {
-										width: '25%',
-										description: {
-											en: 'Default setting for all columns',
-											de: 'Voreinstellung für alle Spalten'
-										}
-									},
-									options: [
-										{
-											label: 'Left',
-											value: 'left',
-										},
-										{
-											label: 'Center',
-											value: 'center',
-										},
-										{
-											label: 'Right',
-											value: 'right',
-										},
-									],
-								}, */
-								// --- page.main.align
-								/* {
-									type: 'select',
-									name: 'align',
-									label: {
-										en: 'Align vertically',
-										de: 'Vertikale Ausrichtung'
-									},
-									defaultValue: 'start',
-									required: true,
-									admin: {
-										width: '25%',
-									},
-									options: [
-										{
-											label: 'Start',
-											value: 'start',
-										},
-										{
-											label: 'Center',
-											value: 'center',
-										},
-										{
-											label: 'Baseline',
-											value: 'baseline',
-										},
-										{
-											label: 'End',
-											value: 'end',
-										},
-									],
-								}, */
-								// --- page.main.margin
-								/* {
-									type: 'select',
-									name: 'margin',
-									label: {
-										en: 'Margin',
-										de: 'Rand'
-									},
-									admin: {
-										width: '25%',
-									},
-									defaultValue: 'medium',
-									required: true,
-									options: [
-										{
-											label: {
-												en: 'Small',
-												de: 'Wenig'
-											},
-											value: 'small',
-										},
-										{
-											label: {
-												en: 'Medium',
-												de: 'Mittel'
-											},
-											value: 'medium',
-										},
-										{
-											label: {
-												en: 'Large',
-												de: 'Viel'
-											},
-											value: 'large',
-										},
-									],
-								}, */
-								// --- page.main.density
-								/* {
-									type: 'select',
-									name: 'density',
-									label: {
-										en: 'Density',
-										de: 'Dichte'
-									},
-									required: true,
-									admin: {
-										width: '25%',
-									},
-									defaultValue: 'medium',
-									options: [
-										{
-											label: {
-												en: 'Small',
-												de: 'Wenig'
-											},
-											value: 'small',
-										},
-										{
-											label: {
-												en: 'Medium',
-												de: 'Mittel'
-											},
-											value: 'medium',
-										},
-										{
-											label: {
-												en: 'Large',
-												de: 'Hoch'
-											},
-											value: 'high',
-										},
-									],
-								}, */
-								// --- page.main.showTitleOnPage
-								/* {
-									type: 'checkbox',
-									name: 'showTitleOnPage',
-									label: {
-										de: 'Titel oben auf dieser Seite anzeigen',
-										en: 'Show title at the top of this page'
-									},
-									defaultValue: false,
-									localized: false,
-								}, */
-							],
-						},
 						// --- page.main.blocks
 						{
 							type: 'blocks',
@@ -801,8 +642,6 @@ export const Pages = {
 		},
 		...commonFields,
 		// --- SIDEBAR ---
-		// --- editingMode
-		editingModeField,
 		otherLocaleField,
 		//initOtherLocaleField,
 		/* {
