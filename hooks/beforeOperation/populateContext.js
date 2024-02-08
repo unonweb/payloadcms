@@ -19,26 +19,26 @@ export default async function populateContextBeforeOp({ args, operation }, colle
 			Applies only if user has only one site
 	*/
 	try {
+
+		if (!args.req.user) return
+
 		if (['create', 'update', 'delete'].includes(operation)) {
 			args.req.context.user ??= args.req?.user?.shortName ?? 'internal'
 			args.req.context.mode ??= getAppMode()
 			args.req.context.host ??= process.env.HOST
 			args.req.context.locale ??= args.req.locale
 
-			if (args.req.user) {
-				
-				if (collections.includes('sites')) {
-					// this is the 'sites' collection
-					if (args.req.collection.config.slug === 'sites') {
-						args.req.context.site ??= args.data // set in beforeValidate hook
-						args.req.context.site.id ??= args.id
-					}
-					else {
-						// this is another collection
-						args.req.context.sites ??= await getUserSites(args.req.user.sites, args.req.user.shortName) // context.sites
-						args.req.context.site ??= (args.req.context.sites.length === 1) ? args.req.context.sites[0] : undefined // user has only one site
-						args.req.context.pathSite ??= `${args.req.context.site.paths.fs.site}/${args.req.context.mode}`
-					}
+			if (collections.includes('sites')) {
+				if (args.req.collection.config.slug === 'sites') {
+					// this is 'sites'
+					args.req.context.site ??= args.data
+					args.req.context.site.id ??= args.id
+				}
+				else {
+					// this is another collection
+					args.req.context.sites ??= await getUserSites(args.req.user.sites, args.req.user.shortName) // context.sites
+					args.req.context.site ??= (args.req.context.sites.length === 1) ? args.req.context.sites[0] : undefined // user has only one site
+					args.req.context.pathSite ??= `${args.req.context.site.paths.fs.site}/${args.req.context.mode}`
 				}
 			}
 		}
@@ -106,7 +106,7 @@ export default async function populateContextBeforeOp({ args, operation }, colle
 					pagination: false,
 					overrideAccess: false,
 					user: args.req.user,
-					locale: args.req.locale,
+					locale: 'all',
 				})
 
 				if (result.docs.length === 0) log(`no docs found in "pages"`, user, __filename, 5)

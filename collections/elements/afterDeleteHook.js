@@ -34,6 +34,6 @@ export default async function afterDeleteHook(colSingular = '', { req, doc, cont
 
 	} catch (error) {
 		log(err.stack, user, __filename, 3)
-		mailError(err, req)
+		mailError(err)
 	}
 }

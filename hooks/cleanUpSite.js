@@ -1,13 +1,15 @@
-import getDoc from './getDoc'
 import getCol from './getCol'
-import { parse } from 'path'
 import { readdir, rm } from 'fs/promises'
 import log from '../helpers/customLog'
 import canAccess from '../helpers/_canAccess'
 import getAppMode from '../helpers/_getAppMode'
 import isDirectory from '../helpers/_isDirectory'
+import updateDocSingle from './updateDocSingle'
 
 export default async function cleanUpSite(site = {}, user = '', {
+	/* 
+		Called for each of a user's sites individually
+	*/
 	cleanUpPages = true,
 	cleanUpFonts = true,
 	cleanUpImgs = true,

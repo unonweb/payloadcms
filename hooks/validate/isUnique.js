@@ -1,7 +1,12 @@
 export default async function isUnique(slug = '', fieldName = '', fieldValue, { data, payload }) {
 	/* 
 		Called on the backend
-		Returns either true or a string error message 
+		Task:
+			Check in the given collection 'slug' 
+			if there's a field 'fieldName'
+			with them same value 'fieldValue'
+		Returns:
+			either true or a string error message 
 	*/	
 	if (payload) {
 		const result = await payload.find({

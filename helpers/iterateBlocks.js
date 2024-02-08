@@ -339,29 +339,8 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 		return html
 	}
 
-	/* function renderUnA(block = {}) {
-		
-		const linkedDoc = pages.find(p => p.id === block.link.rel.value)
-		const title = (block.link.autoTitle === true) ? linkedDoc?.title[locale] : block.link.title
-
-		const attributes = [
-			(theme) ? `data-theme="${theme}"` : '',
-			(linkedDoc?.slug !== '') ? `data-href="/${locale}/${linkedDoc.slug}/"` : '', // subpage; use trailing slash so that anchor.href matches window.location.href
-			(linkedDoc?.slug === '') ? `data-href="/${locale}/"` : '', // homepage
-		].filter(item => item).join(' ')
-
-		let html = `
-			<un-a ${attributes}>${title}</un-a>
-		`
-
-		return html
-	} */
-
 	function renderLinkInternal(block = {}) {
-		//const linkedDoc = pages.find(p => p.id === block.link.rel.value && p.locale === locale) ?? pages.find(p => p.id === block.link.rel.value)
-		// 1. look for a page that matches by id AND locale
-		// 2. look for a page that matches by id
-
+		
 		const linkedDoc = pages.find(p => p.id === block.link.rel.value)
 		const title = (block.link.autoTitle === false) ? block.link.title : (typeof linkedDoc.title === 'string') ? linkedDoc.title : linkedDoc?.title[locale]
 
@@ -491,7 +470,13 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 			(block?.ui?.include) ? `ui-parts="${block.ui.include.join(' ')}"` : '',
 		].join(' ')
 
-		let html = /* html */`<un-posts-lit ${attributes}></un-posts-lit>`
+		context.posts.docs ??= []
+		const innerHTML = context.posts.docs.filter(post => post.type === block.type).map(post => post.html.main).join(' ')
+
+		let html = /* html */`
+			<un-posts-lit ${attributes}>
+				<noscript>${innerHTML}</noscript>
+			</un-posts-lit>`
 
 		return html
 	}
@@ -617,7 +602,7 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 			let href = ''
 			switch (block.link.type) {
 				case 'internal':
-					const linkedDoc = pages.find(p => p.id === block.link.rel.value && p.locale === locale) ?? pages.find(p => p.id === block.link.rel.value)
+					const linkedDoc = pages.find(p => p.id === block.link.rel.value)
 					const slug = (linkedDoc.isHome) ? `/${locale}/` : `${locale}/${linkedDoc.slug}/`
 					href = `${origin}/${slug}`		
 					break;
@@ -627,7 +612,7 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 			}
 
 			html = /* html */`
-				<a href="${origin}/${slug}">
+				<a href="${href}">
 					<un-img ${attributes}>${renderImageset(block.rel, context)}</un-img>
 				</a>
 			`
@@ -691,7 +676,7 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 			(slug) ? `data-page="${slug}"` : '',
 		].filter(item => item).join(' ')
 
-		html = /* html */`<un-rt ${attributes}>${renderLexicalHTML(block.contentRichText.root.children, context)}</un-rt>`;
+		html = /* html */`<un-rt ${attributes}>${renderLexicalHTML(block.contentRichText.root.children, context, locale)}</un-rt>`;
 
 		return html.replace(/\s+/g, " ").trim()
 	}

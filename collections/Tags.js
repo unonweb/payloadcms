@@ -4,6 +4,7 @@ import createCommonFields from '../fields/createCommonFields.js';
 import updateOtherLocale from '../hooks/afterChange/updateOtherLocale.js';
 import populateContextBeforeOp from '../hooks/beforeOperation/populateContext.js';
 import startConsoleTime from '../hooks/beforeOperation/startConsoleTime.js';
+import isUnique from '../hooks/validate/isUnique.js';
 
 const commonFields = createCommonFields()
 const SLUG = ' tags'
@@ -113,6 +114,7 @@ export const Tags = {
 			required: true,
 			localized: true,
 			index: true,
+			validate: async (val, { data, payload, user, siblingData, id }) => await isUnique(SLUG, 'name', val, { data, payload }),
 		},
 		// --- tag.img
 		{

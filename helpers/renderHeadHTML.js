@@ -48,14 +48,18 @@ export default async function renderHeadHTML(data, context) {
 		if (site.locales.used.length > 1) {
 			// --- extract allURLs
 			let allURLs = []
-			Object.values(site.urls).map(item => Object.values(item).forEach(item => allURLs.push(item)))
+			for (const page of context.pages.docs) {
+				for (const url of Object.values(page.url)) {
+					allURLs.push(url)
+				}
+			}
 			const altLocaleURLs = getAltLocaleURLs(data.url, allURLs)
 			const origin = getOrigin(mode, site)
 			hrefLangHTML = ctHrefLangLinks(data.url, altLocaleURLs, origin)	
 		}
 
 		/* background image */
-		const backgroundImg = (site.background?.img) ? await getRelatedDoc('images', site.background.img, user, { depth: 0 }) : null
+		const backgroundImg = (site.background?.img) ? await getRelatedDoc('images', site.background.img, context.user, { depth: 0 }) : null
 
 		const headHTML = /* html */`
 			<head>

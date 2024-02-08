@@ -1,12 +1,12 @@
 import getAppMode from './_getAppMode.js'
 import payload from 'payload'
 
-export default function mailError(err = {}, reqOrPayload = {}) {
+export default function mailError(err = {}) {
 	// error log
 	// error mail report
 	//if (getAppMode() === 'dev') return
 
-	const sendEmail = payload?.sendEmail ?? reqOrPayload?.sendEmail
+	const sendEmail = payload?.sendEmail
 
 	if (err.name === 'CustomError') {
 		// handle custom error

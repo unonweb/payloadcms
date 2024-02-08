@@ -5,6 +5,7 @@ import { isLoggedIn } from '../../access/isLoggedIn.js';
 
 /* FIELDS */
 import createCommonFields from '../../fields/createCommonFields.js';
+import { deployButtonField } from '../../fields/deployButtonField.js';
 
 /* BLOCKS */
 
@@ -130,8 +131,9 @@ export const PostsFlex = {
 		],
 	},
 	fields: [
-		//initOtherLocaleField,
+		// SIDEBAR
 		otherLocaleField,
+		deployButtonField,
 		// --- post.site
 		{
 			type: 'relationship',

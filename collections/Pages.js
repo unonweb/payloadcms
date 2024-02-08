@@ -2,9 +2,13 @@ import * as React from "react";
 
 /* ACCESS */
 import { isLoggedIn } from '../access/isLoggedIn.js';
+import hasSiteAccess from '../access/hasSiteAccess.js';
 
 /* FIELDS */
 import createCommonFields from '../fields/createCommonFields.js';
+import createHTMLFields from '../fields/createHTMLFields.js';
+import otherLocaleField from '../fields/otherLocaleField.js';
+import { deployButtonField } from '../fields/deployButtonField.js';
 
 /* BLOCKS */
 import createColumnsFlex from '../blocks/layout/lay-flex.js';
@@ -25,16 +29,14 @@ import startConsoleTime from '../hooks/beforeOperation/startConsoleTime.js';
 import populateContextBeforeOp from '../hooks/beforeOperation/populateContext.js';
 import endConsoleTime from '../hooks/afterOperation/endConsoleTime.js';
 import setMainHTML from '../hooks/beforeChange/setMainHTML.js';
-import createHTMLFields from '../fields/createHTMLFields.js';
 import setHeadHTML from '../hooks/beforeChange/setHeadHTML.js';
 import populateContextBeforeVal from '../hooks/beforeValidate/populateContext.js';
 import copyAssets from '../hooks/afterChange/copyAssets.js';
 import setPageHTML from '../hooks/beforeChange/setPageHTML.js';
-import otherLocaleField from '../fields/otherLocaleField.js';
 import savePage from '../hooks/afterChange/savePage.js';
 import removePrevPage from '../hooks/afterChange/removePrevPage.js';
-import hasSiteAccess from '../access/hasSiteAccess.js';
 import requestUpdateByID from '../helpers/requestUpdateByID.js';
+import isUnique from '../hooks/validate/isUnique.js';
 
 const commonFields = createCommonFields()
 const SLUG = 'pages'
@@ -139,46 +141,9 @@ export const Pages = {
 
 				} catch (err) {
 					log(err.stack, context.user, __filename, 3)
-					mailError(err, req)
+					mailError(err)
 				}
 			},
-		],
-		// --- afterDelete
-		afterDelete: [
-			async ({ req, doc, context }) => {
-				try {
-					const user = req?.user?.shortName ?? 'internal'
-					log('--- afterDelete ---', user, __filename, 7)
-					if (context.siteIsDeleted === true) {
-						return
-					}
-					else {
-						context.site ??= await getRelatedDoc('sites', doc.site, user)
-						const site = context.site
-
-						if (site) {
-							// if site still exists
-							// if afterDelete is triggered because site is deleted - there won't be not site anymore (surprise!)
-
-							/* update site.urls */
-							delete site.urls[doc.id]
-
-							await updateDocSingle('sites', site.id, user, {
-								data: {
-									urls: site.urls,
-								},
-								context: {
-									isUpdatedByCode: true,
-									updatedBy: 'pages',
-									...context,
-								}
-							})
-						}
-					}
-				} catch (err) {
-					log(err.stack, context.user, __filename, 3)
-				}
-			}
 		],
 		// --- afterOperation
 		afterOperation: [
@@ -289,6 +254,11 @@ export const Pages = {
 									},
 									admin: {
 										condition: (data) => (data.isHome === false) ? true : false,
+									},
+									hooks: {
+										beforeChange: [
+											() => false // always reset
+										],
 									}
 								},
 							]
@@ -304,11 +274,7 @@ export const Pages = {
 							unique: false,
 							localized: false,
 							admin: {
-								condition: (data) => (data.isHome === false && data.useCustomSlug === true) ? true : false,
-								/* placeholder: {
-									en: 'Leave empty to generate from title',
-									de: 'Leer lassen um URL Slug automatisch aus dem Titel zu erzeugen.'
-								}, */
+								condition: (data) => (!data.isHome && data.useCustomSlug) ? true : false,
 								description: {
 									en: `ATTENTION: It's important after publishing the website that the URL remains constant.`,
 									de: 'ACHTUNG: Nach Veröffentlichung der Website ist es wichtig, dass die URL konstant bleibt.'
@@ -316,54 +282,42 @@ export const Pages = {
 								disableBulkEdit: true,
 							},
 							hooks: {
-								beforeChange: [
+								beforeValidate: [
 									({ data, value, req, operation, context }) => {
 										try {
-											/* set and retun slug */
-											if (data.isHome === true) {
-												return ''
-											}
+											/* 
+												Task:
+													Set and retun slug
+												Arguments:
+													- 'value' is undefined in bulk operations
+											*/
+											if (!req.user) return
+											if (operation === 'update' && value === undefined) return // skip bulk ops
+											if (data.isHome) return ''
+											
+											if (value) return slugify(value)
 
-											if (data.isHome === false && value) {
-												// has value
-												if (data.useCustomSlug === true) {
-													// use custom slug
-													let slug = `${slugify(value)}`
-													context.slug = slug
-													return slug
-												} else {
-													// use former slug
-													return value
-												}
-											}
-
-											if (data.isHome === false && !value && data.title) {
-												// no value
+											if (!value) {
+												// no value (if page.slug field has been emptied in the admin panel)
 												// generate slug from title only if empty
 												// prevents automatic re-generation of slug when changing the title or the language
-												let slug
-												if (typeof data.title === 'object' && Object.keys(data.title).length === 1) {
-													// 'title' is a (locale) object and this objects has only one key
-													let titleKey = Object.keys(data.title)[0]
-													slug = `${slugify(data.title[titleKey])}`
-													context.slug = slug
-
-												} else {
-													// title is a string 
-													slug = `${slugify(data.title)}`
-													context.slug = slug
+												if (typeof data.title === 'string') {
+													return slugify(data.title)
 												}
 
-												return slug
+												if (typeof data.title === 'object') {
+													// 'title' is a (locale) object and this objects has only one key
+													let titleKey = Object.keys(data.title)[0]
+													return slugify(data.title[titleKey])
+												}
 											}
-
 										} catch (error) {
 											log(error.stack, context.user, __filename, 3)
 										}
 									}
 								],
 							},
-							validate: async (val, { data, operation, t, payload }) => (data.isHome === false && data.useCustomSlug === true && val === '') ? 'Bitte Wert angeben oder "ULR anpassen" deaktivieren' : true
+							validate: async (val, { data, operation, t, payload }) => (!data.isHome && val === '') ? 'Bitte Wert angeben oder "ULR anpassen" deaktivieren' : true
 						},
 						// --- page.url
 						{
@@ -383,22 +337,25 @@ export const Pages = {
 								},
 								disableBulkEdit: true,
 							},
+							validate: async (val, { data, operation, t, payload }) => await isUnique(SLUG, 'url', val, { data, payload }),
 							hooks: {
 								beforeChange: [
-									async ({ data, req, operation, context }) => {
+									async ({ data, req, operation, context, value, previousValue }) => {
 										try {
-											/* return url */
-											if (data.isHome === true) {
-												return '/'
-											}
+											/* 
+												Task:
+													Compose and return url
+												Arguments:
+													'data.slug' has the current value given in the admin panel
+												Attention:
+													If value of data.slug is changed a beforeChange field hook this change will not be visible here.
+													But if data.slug is changed in a beforeValidate hook we can see it here
+											*/
+											if (!req.user) return
+											if (data.isHome) return '/'
 
-											if (data.isHome === false) {
-												if (context.slug || data.slug) {
-													return `/${req.locale}/${context.slug || data.slug}`
-												} else {
-													throw new Error('url not set')
-												}
-											}
+											if (data.slug) return `/${req.locale}/${data.slug}`
+											else throw new Error('url not set')
 
 										} catch (error) {
 											log(error.stack, context.user, __filename, 3)
@@ -406,38 +363,7 @@ export const Pages = {
 									}
 								],
 								afterChange: [
-									async ({ operation, originalDoc, previousDoc, data, previousValue, value, context, req, field }) => {
-										/*
-											Attention:
-												In bulk operation previousDoc doesn't refere to previous version of the same doc
-												but to the previous doc in the bulk!
-												(value === previousValue) is always true
-											Arguments:
-												- current: originalDoc.url
-												- previous: data.url
-										*/
-										try {
-											// update site.urls
-											const isBulkOp = (req?.query?.where?.id?.in?.length > 0) ? true : false
-											if (req.user && operation === 'update' && !isBulkOp && data.url !== originalDoc.url) {
-
-												context.site.urls[originalDoc.id] ??= {}
-												context.site.urls[originalDoc.id][req.locale] = originalDoc.url
-
-												requestUpdateByID(context, {
-													src: 'pages',
-													dest: 'sites',
-													id: context.site.id,
-													data: {
-														urls: context.site.urls
-													},
-													reason: 'page.url has changed'
-												})
-											}
-										} catch (error) {
-											log(error.stack, context.user, __filename, 3)
-										}
-									}
+									
 								]
 							}
 						},
@@ -643,7 +569,7 @@ export const Pages = {
 		...commonFields,
 		// --- SIDEBAR ---
 		otherLocaleField,
-		//initOtherLocaleField,
+		deployButtonField,
 		/* {
 			type: 'text',
 			name: 'preview',

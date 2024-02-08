@@ -148,7 +148,7 @@ export const Images = {
 
 				} catch (err) {
 					log(err.message, user, __filename, 3)
-					mailError(err, req)
+					mailError(err)
 				}
 			},
 		],
@@ -216,7 +216,7 @@ export const Images = {
 							}
 						} catch (err) {
 							log(err.stack, user, __filename, 3)
-							mailError(err, req)
+							mailError(err)
 						}
 					},
 				]

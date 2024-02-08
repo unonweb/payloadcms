@@ -71,7 +71,7 @@ export const Users = {
 					}
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
-					mailError(err, req)
+					mailError(err)
 				}
 			}
 		],
@@ -91,7 +91,7 @@ export const Users = {
 					
 				} catch (err) {
 					log(err.stack, req.user.shortName, __filename, 3)
-					mailError(err, req)
+					mailError(err)
 				}
 			}
 		],
@@ -103,7 +103,7 @@ export const Users = {
 					log('refresh', user, __filename)
 				} catch (err) {
 					log(err.stack, req?.user?.shortName, __filename, 3)
-					mailError(err, req)
+					mailError(err)
 				}
 			}
 		],
@@ -192,6 +192,8 @@ export const Users = {
 			relationTo: 'sites',
 			saveToJWT: true, // save this field to JWT so we can use from req.user
 			hasMany: true,
+			minRows: 1,
+			maxRows: 1,
 			required: false,
 			access: {
 				// Only admins can create or update a value for this field

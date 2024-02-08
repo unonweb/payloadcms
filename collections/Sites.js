@@ -1,30 +1,30 @@
 /* ACCESS */
-import { isAdmin } from '../access/isAdmin.js';
-import log from '../helpers/customLog.js';
+import { isAdmin } from '../access/isAdmin';
+import log from '../helpers/customLog';
 
 /* FIELDS */
-import colorPickerField from '../components/color-picker-field.js';
+import colorPickerField from '../components/color-picker-field';
 
 /*  HOOKS & HELPERS */
-import mailError from '../helpers/mailError.js';
-import rmDocs from '../helpers/rmDocs.js';
-import rmFile from '../helpers/_rmFile.js';
-import resolveObjPath from '../helpers/_resolveObjPath.js';
-import getRandomDocID from '../hooks/getRandomDocID.js';
-import getRelatedDoc from '../hooks/getRelatedDoc.js';
-import saveToDisk from '../helpers/_saveToDisk.js';
-import CSSFromJSON from '../helpers/CSSFromJSON.js';
-import canAccess from '../helpers/_canAccess.js';
-import updateDocsMany from '../hooks/updateDocsMany.js';
-import CSSObjUpdate from '../helpers/CSSObjUpdate.js';
-import startConsoleTime from '../hooks/beforeOperation/startConsoleTime.js';
-import endConsoleTime from '../hooks/afterOperation/endConsoleTime.js';
-import CSSObjRemoveKey from '../helpers/CSSObjRemoveKey.js';
-import copyAssets from '../hooks/afterChange/copyAssets.js';
-import setSiteDefaults from '../hooks/beforeValidate/setSiteDefaults.js';
-import initFSPaths from '../hooks/afterChange/initFSPaths.js';
-import populateContextBeforeOp from '../hooks/beforeOperation/populateContext.js';
-import populateContextBeforeVal from '../hooks/beforeValidate/populateContext.js';
+import mailError from '../helpers/mailError';
+import rmDocs from '../helpers/rmDocs';
+import rmFile from '../helpers/_rmFile';
+import resolveObjPath from '../helpers/_resolveObjPath';
+import getRandomDocID from '../hooks/getRandomDocID';
+import getRelatedDoc from '../hooks/getRelatedDoc';
+import saveToDisk from '../helpers/_saveToDisk';
+import CSSFromJSON from '../helpers/CSSFromJSON';
+import canAccess from '../helpers/_canAccess';
+import updateDocsMany from '../hooks/updateDocsMany';
+import CSSObjUpdate from '../helpers/CSSObjUpdate';
+import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
+import endConsoleTime from '../hooks/afterOperation/endConsoleTime';
+import CSSObjRemoveKey from '../helpers/CSSObjRemoveKey';
+import copyAssets from '../hooks/afterChange/copyAssets';
+import setSiteDefaults from '../hooks/beforeValidate/setSiteDefaults';
+import initFSPaths from '../hooks/afterChange/initFSPaths';
+import populateContextBeforeOp from '../hooks/beforeOperation/populateContext';
+import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
 
 const defaultUserCSS = {
 	"html": {
@@ -114,6 +114,19 @@ export const Sites = {
 			// runs before server-side validation
 			async ({ data, req, operation, originalDoc, context }) => await populateContextBeforeVal({ data, req, originalDoc }, ['sites', 'images', 'documents', 'pages']),
 			async ({ data, req, operation, originalDoc }) => setSiteDefaults({ data, operation }),
+			async ({ data, req, operation, originalDoc }) => {
+				/* 
+					Task:
+						Update assets
+					Arguments:
+						data holds the current values even if it's set in beforeValidate field hooks
+				*/
+				
+				data.assets.imgs = []
+				if (data.background.img_filename) {
+					data.assets.imgs.push(data.background.img_filename)
+				}
+			}
 		],
 		// --- beforeChange
 		beforeChange: [],
@@ -125,23 +138,16 @@ export const Sites = {
 				try {
 					const user = context.user
 					const pathSite = context.pathSite
-					const mode = context.mode
 
 					/* write font.css */
-					if (mode === 'dev' || doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
+					if (doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
 						saveToDisk(`${pathSite}/assets/fonts.css`, doc.fonts.css, user)
 					}
 
 					/* write user.css */
-					if (mode === 'dev' || JSON.stringify(doc?.css) !== JSON.stringify(previousDoc?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
+					if (JSON.stringify(doc?.css) !== JSON.stringify(previousDoc?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
 						let userCSS = CSSFromJSON(doc.css)
 						await saveToDisk(`${pathSite}/assets/user.css`, userCSS, user)
-					}
-
-					/* update site.assets.imgs */
-					doc.assets.imgs = []
-					if (doc.background.img_filename) {
-						doc.assets.imgs.push(doc.background.img_filename)	
 					}
 
 					/* update pages */
@@ -164,7 +170,7 @@ export const Sites = {
 
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
-					mailError(err, req)
+					mailError(err)
 				}
 			},
 		],
@@ -223,7 +229,7 @@ export const Sites = {
 
 				} catch (err) {
 					log(err.stack, user, __filename, 3)
-					mailError(err, req)
+					mailError(err)
 				}
 			}
 		],
@@ -521,21 +527,6 @@ export const Sites = {
 								hidden: true
 							}
 						},
-						// --- site.urls
-						/*  updated by page
-							object with {
-								page.id: {
-									locale: page.url
-								}
-							}
-						*/
-						{
-							type: 'json',
-							name: 'urls',
-							localized: false,
-							label: 'site.urls',
-							defaultValue: {},
-						},
 					]
 				},
 				// --- OPTIONS [tab]
@@ -782,20 +773,32 @@ export const Sites = {
 									relationTo: 'images',
 									hooks: {
 										beforeValidate: [
-											// Runs before the update operation
-											async ({ value, context, operation, data, originalDoc, siblingData }) => {
+											/* 
+												Task:
+													Set 'site.img_filename'
+												Order:
+													Runs before the update operation
+												Arguments:
+													- originalDoc holds the previous value
+													- value holds the current value
+												Hint:
+													Needs to be beforeValidate because we set and use 'site.img_filename' in consecutive ops
+											*/
+											async ({ req, value, context, operation, data, field, originalDoc, siblingData }) => {
 
+												if (!req.user) return
 												if (context.isUpdatedByCode) return
+
+												if (operation === 'update' && value === originalDoc.background.img) return
 
 												if (value) {
 													const img = await getRelatedDoc('images', value, context.user, { depth: 0 })
 													siblingData.img_filename = img.filename
-													//data.css = CSSObjUpdate(data.css, 'body', 'background-image', `url("/assets/imgs/${img.filename}")`) // update data.css	
 												}
 												else {
 													siblingData.img_filename = null
-													//data.css = CSSObjRemoveKey(data.css, 'body', 'background-image') // update data.css	
 												}
+												
 												context.updatePages = true
 											}
 										]
@@ -825,11 +828,22 @@ export const Sites = {
 							hooks: {
 								beforeChange: [
 									({ value, data }) => {
+										/*
+											Task:
+												Update 'site.css'
+											Requires:
+												- data.background.img_filename
+												- data.colors.primary
+												- data.colors.secondary
+										*/
 										// data.background.img
-										value = (data.background.img_filename)
-											? CSSObjUpdate(value, 'body', 'background-image', `url("/assets/imgs/${data.background.img_filename}")`)
-											: CSSObjRemoveKey(value, 'body', 'background-image') // update data.css	
-
+										if (data.background.img_filename) {
+											value = CSSObjUpdate(value, 'body', 'background-image', `url("/assets/imgs/${data.background.img_filename}")`)
+										}
+										else {
+											value = CSSObjRemoveKey(value, 'body', 'background-image') // update data.css	
+										}
+										
 										// data.colors
 										value = CSSObjUpdate(value, 'html', '--primary', data.colors.primary) // update data.css
 										value = CSSObjUpdate(value, 'html', '--secondary', data.colors.secondary) // update data.css
@@ -838,58 +852,11 @@ export const Sites = {
 								]
 							}
 						},
-						// --- site.backend
-						/* {
-							type: 'group',
-							name: 'backend',
-							label: {
-								de: 'Backend',
-								en: 'Backend'
-							},
-							admin: {
-								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-							},
-							fields: [
-								// --- site.backend.deployTo
-								{
-									type: 'radio',
-									name: 'deployTo',
-									defaultValue: 'netlify',
-									required: true,
-									options: ['cloudflare', 'netlify'],
-									access: {
-										update: isAdmin
-									},
-								},
-								// --- site.backend.deployToken
-								{
-									type: 'text',
-									name: 'deployToken',
-									required: true,
-									access: {
-										update: isAdmin
-									},
-								},
-							]
-						}, */
 					]
 				},
 			]
 		},
 		// --- SIDEBAR ---
-		// --- freezeSite
-		/* {
-			type: 'checkbox',
-			name: 'freezeSite',
-			defaultValue: false,
-			admin: {
-				position: 'sidebar',
-				description: {
-					en: '',
-					de: 'Verhindert, dass die Seite beim Logout hochgeladen wird.'
-				}
-			}
-		}, */
 		// --- site.fullUpdate
 		{
 			type: 'checkbox',
@@ -990,7 +957,7 @@ export const Sites = {
 							}
 						} catch (error) {
 							log(error.stack, context.user, __filename, 3)
-							mailError(error, req)
+							mailError(error)
 						}
 					}
 				]

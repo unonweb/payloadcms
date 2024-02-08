@@ -1,6 +1,7 @@
 import log from '../../helpers/customLog'
 import mailError from '../../helpers/mailError'
 import cpFile from '../../helpers/_cpFile'
+import getRelatedDoc from '../getRelatedDoc'
 
 export default async function copyAssets(assets = ['images', 'documents'], { req, doc, context }) {
 	/*
@@ -8,6 +9,8 @@ export default async function copyAssets(assets = ['images', 'documents'], { req
 			Copy assets like images from payload upload directory to site's assets directory
 	*/
 	try {
+		if (!req.user) return
+		
 		const user = context.user
 		const mode = context.mode
 		const site = context.site
@@ -43,7 +46,7 @@ export default async function copyAssets(assets = ['images', 'documents'], { req
 		}
 		/* fonts */
 		if (assets.includes('fonts') && doc?.assets?.fonts?.length > 0) {
-			for (const fn of doc.assets.imgs) {
+			for (const fn of doc.assets.fonts) {
 				if (fn === null) {
 					log(`filename is null in doc.assets.fonts for "${doc.id}" in "${collection}"`, user, __filename)
 					continue

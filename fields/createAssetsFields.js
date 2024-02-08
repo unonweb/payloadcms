@@ -11,6 +11,7 @@ export default function createAssetsFields(...names) {
 			{
 				type: 'json',
 				name: name,
+				localized: false,
 				defaultValue: [],
 			}
 		)

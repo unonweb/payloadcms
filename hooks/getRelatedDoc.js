@@ -2,9 +2,14 @@ import payload from 'payload'
 import log from '../helpers/customLog'
 
 export default async function getRelatedDoc(colSlug = '', ref, user = '', { depth = 0, locale = '' } = {}) {
-	// receives a doc-id or a doc-object
-	// gets the doc-object if necessary
-	// returns the doc-object
+	/*
+		Receives:
+			A doc-id or a doc-object
+		Task:
+			Get the doc-object if necessary
+		Return:
+			The doc-object
+	*/
 
 	try {
 		switch (typeof ref) {

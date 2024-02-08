@@ -16,7 +16,8 @@ export default async function populateContextBeforeVal({ data, originalDoc, req 
 		Operations:
 			Before 'create' and 'update'
 		Order:
-			- after beforeValidate field lvl
+			1. beforeValidate field
+			2. beforeValidate collection
 		Task:
 			- Populate context with useful properties
 		Attention:
@@ -24,6 +25,9 @@ export default async function populateContextBeforeVal({ data, originalDoc, req 
 			- does not run in delete ops
 	*/
 	try {
+
+		if (!req.user) return
+
 		// site
 		if (req?.collection?.config?.slug === 'sites') {
 			req.context.site ??= originalDoc // set in beforeValidate hook

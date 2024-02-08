@@ -57,13 +57,15 @@ const TEXT_TYPE_TO_FORMAT = {
 const log = require('./customLog.js');
 const renderImageset = require('./renderImageset.js')
 
-module.exports = function renderLexicalHTML(children, context) {
+module.exports = function renderLexicalHTML(children, context, locale = '') {
 	/* 
 		Requires:
-			- context.docFiles
+			(for richText internal links)
 			- context.images
 			- context.documents
 			- context.pages
+		Updates:
+			- context.docFiles
 	*/
 
 	try {
@@ -132,7 +134,7 @@ module.exports = function renderLexicalHTML(children, context) {
 			}
 
 			// serialize innerHTML
-			const innerHTML = (node.children) ? renderLexicalHTML(node.children, context) : null;
+			const innerHTML = (node.children) ? renderLexicalHTML(node.children, context, locale) : null;
 
 			// serialize outerHTML
 			let classStr = ''
@@ -153,27 +155,22 @@ module.exports = function renderLexicalHTML(children, context) {
 							href = node.fields.url
 							break
 						case 'internal':
-							let linkedDoc = {}
+							const linkedDocID = (typeof node.fields.doc.value === 'string') ? node.fields.doc.value : node.fields.doc.value.id
+							let linkedDoc
 							switch (node.fields.doc.relationTo) {
-								// link -> pages
+								// link to pages
 								case 'pages':
-									linkedDoc = pages.find(page => (typeof node.fields.doc.value === 'string')
-										? page.id === node.fields.doc.value
-										: page.id === node.fields.doc.value.id
-									)
-									href = linkedDoc.url
+									linkedDoc = pages.find(page => page.id === linkedDocID)
+									href = (typeof linkedDoc.url === 'string') ? linkedDoc.url : linkedDoc.url[locale]
 									break;
-								// link -> posts
+								// link to posts
 								case 'posts-flex':
 									// const linkedDoc = await getDoc('posts', node.fields.doc.value, user, { depth: 0, locale: locale }) <-- FIX!
 									log('Link to posts in rich-text not implemented yet', user, __filename, 5)
 									break;
-								// link -> documents
+								// link to documents
 								case 'documents':
-									linkedDoc = documents.find(doc => (typeof node.fields.doc.value === 'string')
-										? doc.id === node.fields.doc.value
-										: doc.id === node.fields.doc.value.id
-									)
+									linkedDoc = documents.find(doc => doc.id === linkedDocID)
 									if (linkedDoc?.filename) {
 										context.docFiles.push(linkedDoc.filename)
 										href = `${pathWebDocs}/${linkedDoc.filename}`
@@ -181,10 +178,7 @@ module.exports = function renderLexicalHTML(children, context) {
 									break
 								// link -> images
 								case 'images':
-									linkedDoc = images.find(img => (typeof node.fields.doc.value === 'string')
-										? img.id === node.fields.doc.value
-										: img.id === node.fields.doc.value.id
-									)
+									linkedDoc = images.find(img => img.id === linkedDocID)
 									if (linkedDoc?.filename) {
 										imgFiles.push(linkedDoc.filename)
 										href = `${pathWebImgs}/${linkedDoc.filename}`
