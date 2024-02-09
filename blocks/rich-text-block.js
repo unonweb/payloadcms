@@ -15,32 +15,6 @@ export default function createRichTextBlock() {
 			plural: 'RichText Editoren'
 		},
 		fields: [
-			// --- [layout options]
-			/* {
-				type: 'collapsible',
-				label: {
-					en: 'Layout Options',
-					de: 'Layout Optionen'
-				},
-				admin: {
-					initCollapsed: true,
-					condition: (data) => (data.editingMode === 'layout') ? true : false
-				},
-				fields: []
-			}, */
-			// --- [style options]
-			/* {
-				type: 'collapsible',
-				label: {
-					en: 'Style Options',
-					de: 'Style Optionen'
-				},
-				admin: {
-					initCollapsed: true,
-					condition: (data) => (data.editingMode === 'style') ? true : false,
-				},
-				fields: []
-			}, */
 			// --- [experimental options]
 			{
 				type: 'collapsible',
