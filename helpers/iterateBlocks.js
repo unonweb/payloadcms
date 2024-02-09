@@ -16,6 +16,7 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 	context.pathFSLib = `${context.site.paths.fs.admin.resources}/assets/lib`
 	context.locale ??= locale
 
+	const site = context.site
 	const pages = context.pages.docs
 	const images = context.images.docs
 	const documents = context.documents.docs
@@ -91,6 +92,8 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 						return renderUnPostsFlex(block);
 
 					// --- OTHER ---
+					case 'svg':
+						return renderSVG(block);
 					case 'drawer':
 						return renderUnDrawer(block);
 					case 'map-leaflet':
@@ -202,6 +205,24 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 	}
 
 	// #OTHER
+
+	function renderSVG(block = {}) {
+		
+		const attributes = [
+			(theme) ? `data-theme="${theme}"` : '',
+			(slug) ? `data-page="${slug}"` : '', 
+		].filter(item => item)
+
+		for (const attribute of block.attributes ?? []) {
+			attributes.push(`${attribute.key}="${attribute.value}"`)
+		}
+
+		let html = /* html */`
+			<div ${attributes.join(' ')}>${block.svg}</div>
+		`
+
+		return html
+	}
 
 	function renderUnDrawer(block = {}) {
 		
@@ -455,8 +476,22 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 	}
 
 	function renderUnPostsFlex(block = {}) {
-		context.libPathsWeb.add('/assets/lib/lit-3.1.0-all.js')
+		/*
+			Note:
+				un-posts-lit.js is added dynamically and separately to <head> 
+				because we want to import the external lit dependeny locally hosted
+				This requires us to:
+					- Make sure that external lib dep is at <domain>/dev/assets/lib
+
+				If we would include it in the bundle then we need to change the current bundle system:
+					1) Check if postsFlex is really (and still) used
+					2) Remove/Add un-posts.lit.js to dev/assets/custom-elements
+					3) Remove/Add import statement for external dep (needs to at the top of the bundle) 
+					4) Remove/Add lit library
+		*/
+		context.libPathsWeb.add('/assets/lib/lit-3.1.0-all.js') // external dependency
 		context.libPathsWeb.add('/assets/custom-elements/un-posts-lit.js')
+
 		//const includeSummary = block?.meta?.include?.includes('summary')
 		//const includeImage = block?.meta?.include?.includes('image')
 

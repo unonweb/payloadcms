@@ -4,22 +4,19 @@ import log from '../../helpers/customLog'
 import mailError from '../../helpers/mailError'
 import getCol from '../getCol'
 
-/* 
-previousValue and previousSiblingDoc args added to beforeChange field hooks
-When updating a document you might may want to access the current value in the database for the field value inside of a beforeChange hook. 
-This is difficult to do on deeply nested fields using only originalDoc. These two new args make it much more simple.
-*/
-
 export default async function setMainHTML({ data, req, operation, originalDoc, context }) {
 	/*
 		Hook:
 			beforeChange
 		Tasks:
-			Iterate blocks and update:
+			Iterate blocks and update properties
+		Return:
 			- data.html.main or data.html
 			- data.assets.imgs
 			- data.assets.docs
 			- data.assets.head
+		Issues:
+			data.assets.head is updated here but renderHeadHTML has already been called
 	*/
 	try {
 		if (blocks && blocks.length === 0) return
@@ -29,7 +26,7 @@ export default async function setMainHTML({ data, req, operation, originalDoc, c
 		const host = context.host
 		const blocks = (data.main?.blocks) ? data.main.blocks : data.blocks
 		const prevBlocks = (operation === 'update') ? originalDoc.main?.blocks ?? originalDoc.blocks : null
-		context.posts ??= await getCol('posts-flex', user, { depth: 0, locale: req.locale, overrideAccess: false, user: req.user })
+		context.posts ??= await getCol('posts-flex', user, { depth: 0, locale: req.locale, overrideAccess: true, user: req.user })
 		
 		/* iterate blocks */
 		const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, blocks, req.locale, context)

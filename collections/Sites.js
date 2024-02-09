@@ -702,7 +702,7 @@ export const Sites = {
 													context.fonts.body ??= await getRelatedDoc('fonts', data.fonts.body, context.user, { depth: 0 })
 													fontFaces.push(context.fonts.body.face)
 												}
-												if (data.fonts.headings) {
+												if (data.fonts.headings && data.fonts.headings !== data.fonts.body) {
 													context.fonts.headings ??= await getRelatedDoc('fonts', data.fonts.headings, context.user, { depth: 0 })
 													fontFaces.push(context.fonts.headings.face)
 												}
@@ -789,8 +789,6 @@ export const Sites = {
 												if (!req.user) return
 												if (context.isUpdatedByCode) return
 
-												if (operation === 'update' && value === originalDoc.background.img) return
-
 												if (value) {
 													const img = await getRelatedDoc('images', value, context.user, { depth: 0 })
 													siblingData.img_filename = img.filename
@@ -815,7 +813,7 @@ export const Sites = {
 
 							]
 						},
-						// --- site.css
+						// --- user.css
 						/* 	- updated by site.colors
 						*/
 						{
@@ -830,7 +828,7 @@ export const Sites = {
 									({ value, data }) => {
 										/*
 											Task:
-												Update 'site.css'
+												Update 'user.css'
 											Requires:
 												- data.background.img_filename
 												- data.colors.primary

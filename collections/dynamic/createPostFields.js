@@ -271,8 +271,8 @@ export default function createPostFields({ readOnly = false } = {}) {
 							type: 'text',
 							name: 'name',
 							label: {
-								de: 'Ort',
-								en: 'artists'
+								de: 'Künstler',
+								en: 'Artist'
 							},
 							required: false,
 							localized: false,

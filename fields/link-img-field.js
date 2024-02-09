@@ -19,7 +19,6 @@ export default function createLinkImgField({relationTo = ['pages', 'posts-flex']
 				label: 'Link',
 				admin: {
 					initCollapsed: true,
-					condition: (data) => (data.editingMode === 'functional') ? true : false,
 				},
 				fields: [
 					// --- link.type

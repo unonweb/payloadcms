@@ -9,9 +9,9 @@ export default function renderPageHTML(locale = '', page = {}, user = '', { navH
 
 	try {
 
-		if (navHTML === '') log(`navHTML is empty for "${page.slug}" with locale "${locale}"`, user, __filename, 4)
-		if (headerHTML === '') log(`headerHTML is empty for "${page.slug}" with locale "${locale}"`, user, __filename, 4)
-		if (!page.html?.main) log(`page.html.main is "${typeof page.html?.main}" for "${page.slug}" with locale "${locale}"`, user, __filename, 4)
+		if (navHTML === '') log(`navHTML is empty for "${page.slug}" with locale "${locale}"`, user, __filename, 5)
+		if (headerHTML === '') log(`headerHTML is empty for "${page.slug}" with locale "${locale}"`, user, __filename, 5)
+		if (!page.html?.main) log(`page.html.main is "${typeof page.html?.main}" for "${page.slug}" with locale "${locale}"`, user, __filename, 5)
 		if (!page.html?.head) throw new Error(`page.html.head is "${page?.html?.head}" for "${page.slug}" with locale "${locale}"`)
 
 		const slug = (page.slug === '') ? '/' : page.slug

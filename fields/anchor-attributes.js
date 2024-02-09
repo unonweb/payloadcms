@@ -1,17 +1,14 @@
-export default function createAnchorAttrsFields({ label = 'Link Attributes', hideGutter = true, editingMode = 'experimental' } = {}) {
+export default function createAnchorAttrsFields({ label = 'Link Attributes', hideGutter = true } = {}) {
+	/*
+		State:
+			Not used currently
+	*/
 	const fields = {
 		type: 'group',
 		name: 'linkAttrs',
 		label: label,
 		admin: {
 			hideGutter: hideGutter,
-			condition: (data) => {
-				if (data.editingMode === editingMode) {
-					return true;
-				} else {
-					return false;
-				}
-			}
 		},
 		fields: [
 			// --- hover

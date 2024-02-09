@@ -6,13 +6,21 @@ import { readdir } from 'fs/promises';
 import getRelatedDoc from '../hooks/getRelatedDoc';
 
 export default async function renderHeadHTML(data, context) {
-	// renders a <head> corresponding to the given page
-
-	// should be called when one of the following changes:
-	// * mode
-	// * page.description
-	// * page.title
-
+	/*
+		Task:
+			Render <head>
+			[dev]
+				- Add all js and css files from assets/custom-elements
+			[prod]
+				- Add custom-elements.js
+				- Add custom-elements.css
+		Requires:
+			- data.assets.head: 
+		Should be called at least when one of the following changes:
+			- mode
+			- page.description
+			- page.title
+	*/
 	try {
 		const mode = context.mode
 		const site = context.site
@@ -32,10 +40,10 @@ export default async function renderHeadHTML(data, context) {
 		}
 
 		/* lib & separate c-element files */
-		const pathsLibFilesJS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.js')) : []
 		const pathsLibFilesCSS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.css')) : [] // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
 
 		/* prod */
+		const pathsLibFilesJS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.js')) : []
 		if (mode === 'prod') {
 			// check local fs asset paths
 			if (!await canAccess(`${fsPathCElements}/bundle-celements.js`)) log(`Cant't access "${fsPathCElements}/bundle-celements.js"`, user, __filename, 3)

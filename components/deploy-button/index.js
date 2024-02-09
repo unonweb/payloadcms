@@ -10,13 +10,20 @@ export const deployButton = () => {
 
 	return (
 		<>
-			<a href={`/deploy-site?site=${siteID}`} target="_blank">
-				<Button
-					className="deploy-button"
-					buttonStyle="secondary">Publish
-				</Button>
-			</a>
-			<div class="field-description">Alle Änderungen hochladen - entweder auf eine Preview-Domain oder die Live-Domain. Das kann etwas dauern. Bitte erst am Ende der Sitzung ausführen.</div>
+			<div class="deploy-button-wrapper">
+				<a href={`/deploy-site?site=${siteID}`} target="_blank">
+					<Button
+						className="deploy-button"
+						buttonStyle="secondary">Publish
+					</Button>
+				</a>
+				<div class="field-description">Alle Änderungen hochladen. Das kann etwas dauern.</div>
+				<ul class="field-description">
+					<li>Erst speichern</li>
+					<li>Erst am Ende der Sitzung ausführen</li>
+				</ul>
+			</div>
+
 		</>
 	);
 };

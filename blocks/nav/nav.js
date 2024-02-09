@@ -13,6 +13,10 @@ const nav = {
 	fields: [
 		{
 			type: 'row',
+			admin: {
+				condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+				description: 'Admin only options'
+			},
 			fields: [
 				// --- block.enableSplit
 				{
@@ -28,6 +32,10 @@ const nav = {
 		},
 		{
 			type: 'row',
+			admin: {
+				condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+				description: 'Admin only options'
+			},
 			fields: [
 				// --- block.sticky
 				{
@@ -72,7 +80,7 @@ const nav = {
 				},
 			},
 			blocks: [
-				createLinkIntBlock({ slots: ['offset'] }),
+				createLinkIntBlock(),
 				createLinkExtBlock(),
 				createLangSwitchBlock(),
 				createMenuDropDown()
@@ -106,7 +114,7 @@ const nav = {
 				}
 			},
 			blocks: [
-				createLinkIntBlock({ slots: ['offset'] }),
+				createLinkIntBlock(),
 				createLinkExtBlock(),
 				createLangSwitchBlock(),
 				createMenuDropDown()

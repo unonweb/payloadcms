@@ -58,6 +58,22 @@ export default async function copyAssets(assets = ['images', 'documents'], { req
 				await cpFile(srcPath, destPath, user, { overwrite: false })
 			}
 		}
+		/* head */
+		// '/assets/lib/lit-3.1.0-all.js'
+		// '/assets/custom-elements/un-posts-lit.js'
+		if (false) {
+			for (const fn of doc.assets.head) {
+				if (fn === null) {
+					log(`filename is null in doc.assets.head for "${doc.id}" in "${collection}"`, user, __filename)
+					continue
+				}
+				const srcDir = `${process.cwd()}/upload/fonts`
+				const destDir = `${site.paths.fs.site}/${mode}/assets`
+				const srcPath = `${srcDir}/${fn}`
+				const destPath = `${destDir}/${fn}`
+				await cpFile(srcPath, destPath, user, { overwrite: false })
+			}
+		}
 	} catch (err) {
 		log(err.stack, user, __filename, 3)
 		mailError(err)

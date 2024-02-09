@@ -7,7 +7,9 @@ export default async function setHeadHTML({ data, req, context }) {
 		Tasks:
 			- set data.html.head
 		Return: 
-			data
+			- data
+		Requires:
+			- data.assets.head
 	*/
 	try {
 

@@ -6,6 +6,7 @@ import { imgSlidesBlock } from '../img/img-slideshow.js'
 import { socialMediaIcons } from '../social-media-icons.js'
 import createIncludePostsFlexBlock from '../include-posts-flex.js'
 import showOptionsField from '../../fields/showOptions.js'
+import createSVGBlock from '../svg-block.js'
 
 const blocksAvailable = [
 	createRichTextBlock(),
@@ -15,6 +16,7 @@ const blocksAvailable = [
 	socialMediaIcons,
 	mapLeafletBlock,
 	createIncludePostsFlexBlock(),
+	createSVGBlock(),
 ]
 
 export default function createColumnsFlex() {
@@ -36,7 +38,7 @@ export default function createColumnsFlex() {
 			{
 				type: 'row',
 				admin: {
-					condition: (data, siblingData) => siblingData.showOptions,
+					//condition: (data, siblingData, { user }) => user && user.roles.includes('admin')
 				},
 				fields: [
 					// --- block.layout
@@ -87,6 +89,14 @@ export default function createColumnsFlex() {
 							},
 						]
 					},
+				]
+			},
+			{
+				type: 'row',
+				admin: {
+					condition: (data, siblingData) => siblingData.showOptions,
+				},
+				fields: [
 					// --- block.justify
 					{
 						type: 'select',
@@ -98,10 +108,6 @@ export default function createColumnsFlex() {
 						required: true,
 						admin: {
 							width: '25%',
-							/* description: {
-								en: 'Default setting for all columns',
-								de: 'Voreinstellung für alle Spalten'
-							} */
 						},
 						defaultValue: 'left',
 						options: [
@@ -127,14 +133,6 @@ export default function createColumnsFlex() {
 							},
 						],
 					},
-				]
-			},
-			{
-				type: 'row',
-				admin: {
-					condition: (data, siblingData) => siblingData.showOptions,
-				},
-				fields: [
 					// --- block.align
 					{
 						type: 'select',

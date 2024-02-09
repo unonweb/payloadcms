@@ -59,7 +59,7 @@ const start = async () => {
 				const site = await req.payload.findByID({ collection: 'sites', id: siteID, depth: 0 })
 				//const branch = req.query.branch
 				//const cmd = `un-deploy-site.sh ${site.domainShort} --${branch}`
-				const cmd = `/home/payload/bash_scripts/un-deploy-site.sh ${site.domainShort}`
+				const cmd = `/home/payload/cms/scripts/un-deploy-site.sh ${site.domainShort}`
 				//let result = execSync(cmd, { encoding: 'utf8', shell: '/bin/sh', })
 				//let html = renderDeployPage(site)
 				//res.set('Content-Type', 'text/html') 

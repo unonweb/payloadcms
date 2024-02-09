@@ -1,3 +1,8 @@
+/* 
+previousValue and previousSiblingDoc args added to beforeChange field hooks
+When updating a document you might may want to access the current value in the database for the field value inside of a beforeChange hook. 
+This is difficult to do on deeply nested fields using only originalDoc. These two new args make it much more simple.
+*/
 async ({ data, value, previousValue, req, operation, context, field, collection }) => {
 	/* 
 		Task:

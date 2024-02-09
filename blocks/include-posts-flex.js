@@ -1,3 +1,5 @@
+import showOptionsField from '../fields/showOptions'
+
 export default function createIncludePostsFlexBlock() {
 	const block = {
 		slug: 'include-posts-flex',
@@ -20,32 +22,43 @@ export default function createIncludePostsFlexBlock() {
 				//maxDepth: 0, // include the entire post-category (as it is not much data) <-- CHECK: If we really need this!
 				hasMany: false, // <-- IMP: If I enable this I must make sure that iterateBlocks passes all types as attribute to the element
 			},
-			// --- block.sortBy
+			// --- showOptions
+			showOptionsField,
 			{
-				type: 'radio',
-				name: 'sortBy',
-				label: {
-					de: 'Sortierung',
-					en: 'Order',
+				type: 'row',
+				admin: {
+					condition: (data, siblingData) => siblingData.showOptions
 				},
-				options: [
+				fields: [
+					// --- block.sortBy
 					{
-						value: 'date',
+						type: 'radio',
+						name: 'sortBy',
 						label: {
-							en: 'Date',
-							de: 'Datum'
-						}
+							de: 'Sortierung',
+							en: 'Order',
+						},
+						options: [
+							{
+								value: 'date',
+								label: {
+									en: 'Date',
+									de: 'Datum'
+								}
+							},
+							{
+								value: 'tags',
+								label: {
+									en: 'Tags',
+									de: 'Tags'
+								}
+							},
+						],
+						defaultValue: 'date',
 					},
-					{
-						value: 'tags',
-						label: {
-							en: 'Tags',
-							de: 'Tags'
-						}
-					},
-				],
-				defaultValue: 'date',
+				]
 			},
+
 			{
 				type: 'collapsible',
 				label: {
@@ -54,6 +67,7 @@ export default function createIncludePostsFlexBlock() {
 				},
 				admin: {
 					initCollapsed: true,
+					condition: (data, siblingData) => siblingData.showOptions
 				},
 				fields: [
 					// --- block.ui
@@ -74,7 +88,7 @@ export default function createIncludePostsFlexBlock() {
 									de: 'Zusammenklappbar',
 									en: 'Collapsible'
 								},
-								defaultValue: true,
+								defaultValue: false,
 							},
 							// --- block.ui.initState
 							{
@@ -85,7 +99,7 @@ export default function createIncludePostsFlexBlock() {
 									en: 'Initial State'
 								},
 								admin: {
-									condition: (data, siblingData) => (data.editingMode === 'layout' && siblingData.isCollapsible === true) ? true : false
+									condition: (data, siblingData) => siblingData.isCollapsible
 								},
 								options: [
 									{

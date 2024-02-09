@@ -88,13 +88,13 @@ export const Pages = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }),
-			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }), // data.html.main, data.assets
+			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }), // data.html.head
 			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, originalDoc, context }), // data.html.main 
 		],
 		// --- afterChange 
 		afterChange: [
-			async ({ req, doc, previousDoc, context, operation }) => await copyAssets(['images', 'documents'], { req, doc, previousDoc, context, operation }),
+			async ({ req, doc, previousDoc, context, operation }) => await copyAssets(['images', 'documents', 'head'], { req, doc, previousDoc, context, operation }),
 			async ({ req, doc, previousDoc, context, operation }) => await savePage({ doc, req, context }),
 			async ({ req, doc, previousDoc, context, operation }) => await removePrevPage({ doc, previousDoc, req, context }),
 			async ({ req, doc, previousDoc, operation, context }) => {
@@ -551,10 +551,8 @@ export const Pages = {
 								plural: 'Layouts',
 							},
 							blocks: [
-								//layoutFlex,
 								createColumnsFlex(),
-								//createColumnsFixed(),
-								//createIncludePostsBlock(),
+								//createLayoutTemplate(),
 							],
 							defaultValue: [
 								{
