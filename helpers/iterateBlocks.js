@@ -489,7 +489,7 @@ export default function iterateBlocks(doc, blocks = [], locale = '', context) {
 					3) Remove/Add import statement for external dep (needs to at the top of the bundle) 
 					4) Remove/Add lit library
 		*/
-		context.libPathsWeb.add('/assets/lib/lit-3.1.0-all.js') // external dependency
+		//context.libPathsWeb.add('/assets/lib/lit-3.1.0-all.js') // external dependency
 		context.libPathsWeb.add('/assets/custom-elements/un-posts-lit.js')
 
 		//const includeSummary = block?.meta?.include?.includes('summary')
