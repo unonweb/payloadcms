@@ -1,8 +1,10 @@
+import showOptionsField from '../fields/showOptions';
+
 export default function createLinkIntBlock({ slots = [] } = {}) {
 
 	// --- slots
 	slots = (!Array.isArray(slots)) ? [slots] : slots
-	
+
 	const slotField = (slots.length > 0)
 		? {
 			type: 'select',
@@ -11,7 +13,6 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 			//defaultValue: slots[0],
 			admin: {
 				readOnly: false,
-				condition: (data) => (data.editingMode === 'experimental') ? true : false
 			},
 		}
 		: {
@@ -43,6 +44,17 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 					className: 'hide-group-label'
 				},
 				fields: [
+					// --- showOptions
+					/* showOptionsField,
+					{
+						type: 'row',
+						admin: {
+							condition: (data, siblingData) => siblingData.showOptions,
+						},
+						fields: [
+							
+						]
+					}, */
 					// --- autoTitle
 					{
 						type: 'checkbox',
@@ -53,7 +65,7 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 						},
 						defaultValue: true,
 						admin: {
-							condition: (data) => (data.editingMode === 'functional') ? true : false
+							width: '25%',
 						},
 					},
 					{
@@ -74,6 +86,7 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 									width: '50%',
 								},
 							},
+							// --- title
 							{
 								type: 'text',
 								name: 'title',
@@ -81,29 +94,8 @@ export default function createLinkIntBlock({ slots = [] } = {}) {
 								required: true,
 								admin: {
 									condition: (_, siblingData) => !siblingData.autoTitle, // show only if autoTitle is not set
-									width: '50%',
+									width: '25%',
 								},
-								hooks: {
-									/* beforeValidate: [
-										async (args) => {
-											const user = args?.req?.user?.shortName ?? 'internal'
-											const locale = args?.req?.locale
-
-											if (args.siblingData.autoTitle) {
-												const linkedDocID = args.siblingData.rel.value
-												const linkedDoc = await getDoc('pages', linkedDocID, user, { depth: 0, locale: locale })
-												return linkedDoc.title
-											}
-										}
-									], */
-									/* afterRead: [
-										(args) => {
-											if (args.siblingData.autoTitle) {
-												return null
-											}
-										}
-									] */
-								}
 							},
 						]
 					},
