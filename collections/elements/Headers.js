@@ -5,7 +5,6 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 import headerBanner from '../../blocks/header/header-banner';
 
 /* FIELDS */
-import editingModeField from '../../fields/editingMode';
 
 /* HOOKS STANDARD */
 import firstDefaultsToTrue from '../../hooks/defaultValue/firstDefaultsToTrue';
@@ -13,8 +12,6 @@ import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
 import updateRelations from '../../hooks/afterChange/updateRelations';
 import createAssetsFields from '../../fields/createAssetsFields';
 import afterDeleteHook from './afterDeleteHook';
-import log from '../../helpers/customLog';
-import mailError from '../../helpers/mailError';
 
 /*  HOOKS & HELPERS */
 import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
@@ -76,8 +73,6 @@ export const Headers = {
 	},
 	// --- fields
 	fields: [
-		// --- editingMode
-		editingModeField,
 		// --- tabs
 		{
 			type: 'tabs',

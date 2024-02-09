@@ -2,7 +2,6 @@
 import { isLoggedIn } from '../../access/isLoggedIn.js';
 
 /* FIELDS */
-import editingModeField from '../../fields/editingMode.js';
 
 /* HOOKS STANDARD */
 import updateRelations from '../../hooks/afterChange/updateRelations.js';
@@ -73,8 +72,6 @@ export const Footers = {
 	},
 	// --- fields
 	fields: [
-		// --- editingMode
-		editingModeField,
 		{
 			type: 'tabs',
 			tabs: [

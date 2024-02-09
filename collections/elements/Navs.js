@@ -5,7 +5,6 @@ import { isLoggedIn } from '../../access/isLoggedIn';
 import nav from '../../blocks/nav/nav';
 
 // FIELDS
-import editingModeField from '../../fields/editingMode';
 
 // HOOKS & HELPERS
 import firstDefaultsToTrue from '../../hooks/defaultValue/firstDefaultsToTrue';
@@ -84,8 +83,6 @@ export const Navs = {
 	},
 	// --- fields
 	fields: [
-		// --- editingMode
-		editingModeField,
 		// --- tabs
 		{
 			type: 'tabs',
