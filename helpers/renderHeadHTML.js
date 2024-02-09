@@ -1,8 +1,7 @@
 import log from './customLog'
 import canAccess from './_canAccess';
 import getAppMode from './_getAppMode'
-import { readFile } from 'fs/promises'
-import { readdir } from 'fs/promises';
+import { readFile, readdir } from 'fs/promises'
 import getRelatedDoc from '../hooks/getRelatedDoc';
 
 export default async function renderHeadHTML(data, context) {
@@ -24,32 +23,14 @@ export default async function renderHeadHTML(data, context) {
 	try {
 		const mode = context.mode
 		const site = context.site
-		const webPathAssets = '/assets'
-		const webPathCElements = `${webPathAssets}/custom-elements`
+		const user = context.user
 		const fsPathSite = `${site.paths.fs.site}/${mode}`
 		const fsPathAssets = `${fsPathSite}/assets`
 		const fsPathCElements = `${fsPathSite}/assets/custom-elements`
 
-		/* dev */
-		let cElementFilesJS = []
-		let cElementFilesCSS = []
-		if (mode === 'dev') {
-			const dirContent = await readdir(fsPathCElements, { recursive: false, withFileTypes: false }) // readdir cElements
-			cElementFilesJS = dirContent.filter(fn => fn.endsWith('.js') && fn.startsWith('un-'))
-			cElementFilesCSS = dirContent.filter(fn => fn.endsWith('.css') && fn.startsWith('un-')) // includes all themes/domains
-		}
-
-		/* lib & separate c-element files */
-		const pathsLibFilesCSS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.css')) : [] // for 'prod' they're included in bundle.css; for 'dev' they're added to head together with all others
-
-		/* prod */
+		/* data.assets.head */
+		const pathsLibFilesCSS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.css')) : []
 		const pathsLibFilesJS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.js')) : []
-		if (mode === 'prod') {
-			// check local fs asset paths
-			if (!await canAccess(`${fsPathCElements}/bundle-celements.js`)) log(`Cant't access "${fsPathCElements}/bundle-celements.js"`, user, __filename, 3)
-			if (!await canAccess(`${fsPathCElements}/bundle-celements.css`)) log(`Cant't access "${fsPathCElements}/bundle-celements.css"`, user, __filename, 3)
-			if (!await canAccess(`${fsPathAssets}/site.css`)) log(`Cant't access "${fsPathAssets}/site.css"`, user, __filename, 3)
-		}
 
 		/* hrefLang */
 		let hrefLangHTML = ''
@@ -63,7 +44,7 @@ export default async function renderHeadHTML(data, context) {
 			}
 			const altLocaleURLs = getAltLocaleURLs(data.url, allURLs)
 			const origin = getOrigin(mode, site)
-			hrefLangHTML = ctHrefLangLinks(data.url, altLocaleURLs, origin)	
+			hrefLangHTML = ctHrefLangLinks(data.url, altLocaleURLs, origin)
 		}
 
 		/* background image */
@@ -81,52 +62,12 @@ export default async function renderHeadHTML(data, context) {
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<link rel="canonical" href="https://${site.domain}${data.url}"/>
 				${hrefLangHTML}
-				${(backgroundImg) ? /* html */`<link rel="preload" as="image" href="/assets/imgs/${backgroundImg.filename}">` : '' }
+				${(backgroundImg) ? /* html */`<link rel="preload" as="image" href="/assets/imgs/${backgroundImg.filename}">` : ''}
 				
 				<!--- ALWAYS --->
-				${(pathsLibFilesCSS.length > 0)
-					// '/assets/lib/leaflet-1.9.4.css'
-					// need to include separately for dev mode, too
-					? pathsLibFilesCSS.map(path => /* html */`<link rel="stylesheet" type="text/css" href="${path}">`).join(' ')
-					: ''
-				}
-				${(mode === 'prod' && pathsLibFilesJS.length > 0)
-					// in dev mode the js deps are included from 'https://resources.unonweb.local/custom-elements/prod/'
-					? pathsLibFilesJS.map(path => /* html */`<script type="module" src="${path}"></script>`).join(' ')
-					: ''
-				}
-				${(mode === 'prod')
-					? /* html */`
-						<!--- PROD ASSETS --->
-						<link href="${webPathAssets}/site.css" rel="stylesheet" type="text/css">
-						<style>${await readFile(`${fsPathAssets}/user.css`, 'utf-8')}</style>
-						<style>${await readFile(`${fsPathAssets}/fonts.css`, 'utf-8')}</style>
-						<script src=${`${webPathCElements}/bundle-celements.js`} type="module"></script>
-						<link href="${`${webPathCElements}/bundle-celements.css`}" rel="stylesheet" type="text/css">`
-						// inline "user.css" (will not be cached)
-						// inline "font.css" (will not be cached)
-						// link 'bundle.js' 
-						// link 'bundle.css'
-					: ''
-				}
-
-				${(mode === 'dev')
-					? /* html */`
-							<!--- DEV ASSETS --->
-							<link rel="stylesheet" type="text/css" href="${webPathAssets}/site.css">
-							<link rel="stylesheet" type="text/css" href="${webPathAssets}/user.css">
-							<link rel="stylesheet" type="text/css" href="${webPathAssets}/fonts.css">` // link
-					: ''
-				}
-					
-				${(mode === 'dev')
-					? cElementFilesCSS.map(fn => /* html */`<link rel="stylesheet" type="text/css" href="${webPathCElements}/${fn}">`).join(' ')
-					: ''
-				}
-				${(mode === 'dev')
-					? cElementFilesJS.map(fn => /* html */`<script ${module ? 'type="module"' : ''} src="${webPathCElements}/${fn}"></script>`).join(' ')
-					: ''
-				}
+				${insertAssetsAlways(pathsLibFilesCSS)}
+				${(mode === 'prod') ? await insertAssetsProd(fsPathSite, pathsLibFilesJS) : ''}
+				${(mode === 'dev') ? await insertAssetsDev(fsPathSite) : ''}
 
 			</head>`
 
@@ -175,4 +116,101 @@ function getOrigin(mode = '', site = {}) {
 		default:
 			return `https://${site.domain}`
 	}
+}
+
+function insertTagScriptByPath(paths = []) {
+	/* 
+		Return: HTML-String
+	*/
+	if (!Array.isArray(paths)) paths = [paths]
+	if (paths.length === 0) return ''
+
+	return paths.map(path => /* html */`<script type="module" src="${path}"></script>`).join(' ')
+}
+
+function insertTagScriptByName(names = [], dir = '', { module = true } = {}) {
+	/* 
+		Return: HTML-String
+	*/
+	if (!Array.isArray(names)) names = [names]
+	if (names.length === 0) return ''
+
+	return names.map(fn => /* html */`<script ${module ? 'type="module"' : ''} src="${dir}/${fn}"></script>`).join(' ')
+}
+
+function insertTagStyleLinkByName(names = [], dir = '') {
+	/* 
+		Return: HTML-String
+	*/
+	if (!Array.isArray(names)) names = [names]
+	if (names.length === 0) return ''
+
+	return names.map(fn => /* html */`<link rel="stylesheet" type="text/css" href="${dir}/${fn}">`).join(' ')
+}
+
+function insertTagStyleLinkByPath(paths = []) {
+	/* 
+		Return: HTML-String
+	*/
+	if (!Array.isArray(paths)) paths = [paths]
+	if (paths.length === 0) return ''
+
+	return paths.map(path => /* html */`<link rel="stylesheet" type="text/css" href="${path}">`).join(' ')
+}
+
+async function insertAssetsProd(fsPathSite = '', pathsLibFilesJS = []) {
+
+	const fsPathCElements = `${fsPathSite}/assets/custom-elements`
+	const fsPathAssets = `${fsPathSite}/assets`
+
+	// check local fs asset paths
+	if (!await canAccess(`${fsPathCElements}/bundle-celements.js`)) log(`Cant't access "${fsPathCElements}/bundle-celements.js"`, user, __filename, 3)
+	if (!await canAccess(`${fsPathCElements}/bundle-celements.css`)) log(`Cant't access "${fsPathCElements}/bundle-celements.css"`, user, __filename, 3)
+	if (!await canAccess(`${fsPathAssets}/site.css`)) log(`Cant't access "${fsPathAssets}/site.css"`, user, __filename, 3)
+
+	const html = /* html */`
+		<!--- PROD ASSETS --->
+		<link href="/assets/site.css" rel="stylesheet" type="text/css">
+		<style>${await readFile(`${fsPathSite}/assets/user.css`, 'utf-8')}</style>
+		<style>${await readFile(`${fsPathSite}/assets/fonts.css`, 'utf-8')}</style>
+		<script src="/assets/custom-elements/bundle-celements.js" type="module"></script>
+		<link href="/assets/custom-elements/bundle-celements.css" rel="stylesheet" type="text/css">
+		${insertTagScriptByPath(pathsLibFilesJS)}
+	`
+	// inline "user.css" (will not be cached)
+	// inline "font.css" (will not be cached)
+	// link 'bundle.js' 
+	// link 'bundle.css'
+
+	return html ?? ''
+}
+
+async function insertAssetsDev(fsPathSite) {
+
+	const fsPathCElements = `${fsPathSite}/assets/custom-elements`
+	const dirContent = await readdir(fsPathCElements, { recursive: false, withFileTypes: false }) // readdir cElements
+	const cElementFilesJS = dirContent.filter(fn => fn.endsWith('.js') && fn.startsWith('un-'))
+	const cElementFilesCSS = dirContent.filter(fn => fn.endsWith('.css') && fn.startsWith('un-')) // includes all themes/domains
+
+	const html = /* html */`
+	
+		<!--- DEV ASSETS --->
+		<link rel="stylesheet" type="text/css" href="/assets/site.css">
+		<link rel="stylesheet" type="text/css" href="/assets/user.css">
+		<link rel="stylesheet" type="text/css" href="/assets/fonts.css">
+		${insertTagScriptByName(cElementFilesJS, '/assets/custom-elements')}
+		${insertTagStyleLinkByName(cElementFilesCSS, '/assets/custom-elements')}
+	`
+
+	return html ?? ''
+}
+
+function insertAssetsAlways(pathsLibFilesCSS) {
+	/* 
+		Always add separately and only on this specific page because we don't want to have this in the bundle
+		- /assets/lib/leaflet-1.9.4.css
+	*/
+	const html = /* html */`${insertTagStyleLinkByPath(pathsLibFilesCSS)}`
+
+	return html ?? ''
 }
