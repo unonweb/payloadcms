@@ -23,10 +23,7 @@ export default async function renderHeadHTML(data, context) {
 	try {
 		const mode = context.mode
 		const site = context.site
-		const user = context.user
 		const fsPathSite = `${site.paths.fs.site}/${mode}`
-		const fsPathAssets = `${fsPathSite}/assets`
-		const fsPathCElements = `${fsPathSite}/assets/custom-elements`
 
 		/* data.assets.head */
 		const pathsLibFilesCSS = (data.assets.head?.length > 0) ? data.assets.head.filter(fn => fn.endsWith('.css')) : []
