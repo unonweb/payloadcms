@@ -1,0 +1,27 @@
+export default function renderUnLangSwitch(block = {}) {
+
+	const attributes = [
+		(theme) ? `data-theme="${theme}"` : '',
+		(slug) ? `data-page="${slug}"` : '',
+		(block.icon) ? `data-icon="${block.icon}"` : '',
+	].filter(item => item).join(' ')
+
+	const innerHTML = block.languages.map((lang) => {
+		const textContent = (lang === 'de') ? 'Deutsch' : (lang === 'en') ? 'English' : ''
+		return /* html */`
+			<li class="lang">
+				<button value="${lang}">${textContent}</button>
+			</li>`
+	}).join(' ')
+
+	const html = /* html */`
+		<un-lang-switch ${attributes}>
+			<ul class="content">
+				${innerHTML}
+			</ul>
+		</un-lang-switch>
+	`;
+
+	return html
+
+}
