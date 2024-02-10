@@ -1,12 +1,14 @@
 import log from './customLog'
 
 export default function renderPageHTML(locale = '', page = {}, user = '', { navHTML = '', headerHTML = '', footerHTML = '' } = {}) {
-	// should be called when one of the following changes:
-	// * locale
-	// * page.title
-	// * page.html.main
-	// * page.showTitleOnPage
-
+	/*
+		Note:
+			Should at least be called if one of the following changes:
+			- locale
+			- page.title
+			- page.html.main
+			- page.showTitleOnPage
+	*/
 	try {
 
 		if (navHTML === '') log(`navHTML is empty for "${page.slug}" with locale "${locale}"`, user, __filename, 5)
