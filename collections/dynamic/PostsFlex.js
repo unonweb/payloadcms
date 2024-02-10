@@ -1,34 +1,34 @@
 import * as React from "react";
 
 /* ACCESS */
-import { isLoggedIn } from '../../access/isLoggedIn.js';
+import { isLoggedIn } from '../../access/isLoggedIn';
 
 /* FIELDS */
-import createCommonFields from '../../fields/createCommonFields.js';
-import { deployButtonField } from '../../fields/deployButtonField.js';
+import createCommonFields from '../../fields/createCommonFields';
+import { deployButtonField } from '../../fields/deployButtonField';
 
 /* BLOCKS */
 
 /* HOOKS & HELPERS */
-import log from '../../helpers/customLog.js';
-import createElementsFields from './createPageElementsField.js';
-import createAssetsFields from '../../fields/createAssetsFields.js';
-import createHTMLFields from '../../fields/createHTMLFields.js';
-import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime.js';
-import savePostsJson from '../../hooks/afterOperation/savePostsJson.js';
-import copyAssets from '../../hooks/afterChange/copyAssets.js';
-import createPostFields from './createPostFields.js';
-import getDoc from '../../hooks/getDoc.js';
-import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext.js';
-import endConsoleTime from '../../hooks/afterOperation/endConsoleTime.js';
-import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship.js';
-import setHeadHTML from '../../hooks/beforeChange/setHeadHTML.js';
-import setPageHTML from '../../hooks/beforeChange/setPageHTML.js';
-import savePost from '../../hooks/afterChange/savePost.js';
-import setPostHTML from '../../helpers/renderPostHTML.js';
-import otherLocaleField from '../../fields/otherLocaleField.js';
-import hasSiteAccess from '../../access/hasSiteAccess.js';
-import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext.js';
+import log from '../../helpers/customLog';
+import createElementsFields from './createPageElementsField';
+import createAssetsFields from '../../fields/createAssetsFields';
+import createHTMLFields from '../../fields/createHTMLFields';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import savePostsJson from '../../hooks/afterOperation/savePostsJson';
+import copyAssets from '../../hooks/afterChange/copyAssets';
+import createPostFields from './createPostFields';
+import getDoc from '../../hooks/getDoc';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
+import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship';
+import setHeadHTML from '../../hooks/beforeChange/setHeadHTML';
+import setPageHTML from '../../hooks/beforeChange/setPageHTML';
+import savePost from '../../hooks/afterChange/savePost';
+import setPostHTML from '../../helpers/setPostHTML';
+import otherLocaleField from '../../fields/otherLocaleField';
+import hasSiteAccess from '../../access/hasSiteAccess';
+import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext';
 
 const commonFields = createCommonFields()
 const SLUG = 'posts-flex'
