@@ -1,26 +1,26 @@
 /* ACCESS */
-import { isLoggedIn } from '../../access/isLoggedIn.js';
+import { isLoggedIn } from '../../access/isLoggedIn';
 
 /* FIELDS */
 
 /* HOOKS STANDARD */
-import updateRelations from '../../hooks/afterChange/updateRelations.js';
-import createAssetsFields from '../../fields/createAssetsFields.js';
+import updateRelations from '../../hooks/afterChange/updateRelations';
+import createAssetsFields from '../../fields/createAssetsFields';
 
 /* BLOCKS */
 
 /*  HOOKS ADD */
-import firstDefaultsToTrue from '../../hooks/defaultValue/firstDefaultsToTrue.js';
-import isUniqueDefault from '../../hooks/validate/isUniqueDefault.js';
-import createRichTextBlock from '../../blocks/rich-text-block.js';
-import afterDeleteHook from './afterDeleteHook.js';
-import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime.js';
-import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext.js';
-import endConsoleTime from '../../hooks/afterOperation/endConsoleTime.js';
-import copyAssets from '../../hooks/afterChange/copyAssets.js';
-import setMainHTML from '../../hooks/beforeChange/setMainHTML.js';
-import createHTMLFields from '../../fields/createHTMLFields.js';
-import hasSiteAccess from '../../access/hasSiteAccess.js';
+import firstDefaultsToTrue from '../../hooks/defaultValue/firstDefaultsToTrue';
+import isUniqueDefault from '../../hooks/validate/isUniqueDefault';
+import createRichTextBlock from '../../blocks/rich-text-block';
+import afterDeleteHook from './afterDeleteHook';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
+import copyAssets from '../../hooks/afterChange/copyAssets';
+import setPageMainHTML from '../../hooks/beforeChange/setMainHTMLPage';
+import createHTMLFields from '../../fields/createHTMLFields';
+import hasSiteAccess from '../../access/hasSiteAccess';
 
 const SLUG = 'footers'
 const COLSINGULAR = 'footer'
@@ -54,7 +54,7 @@ export const Footers = {
 		beforeValidate: [],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setPageMainHTML({ data, req, operation, originalDoc, context }),
 		],
 		// --- afterChange
 		afterChange: [

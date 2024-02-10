@@ -3,7 +3,7 @@ import mailError from '../../helpers/mailError'
 import getDoc from '../getDoc'
 import renderPageHTML from '../../helpers/renderPageHTML'
 
-export default async function setPageHTML({ data, req, operation, context }) {
+export default async function setHTML({ data, req, operation, context }) {
 	/*
 		Called by:
 			- Post

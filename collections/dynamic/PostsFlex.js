@@ -23,9 +23,9 @@ import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext
 import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
 import resetBrokenRelationship from '../../hooks/beforeValidate/resetBrokenRelationship';
 import setHeadHTML from '../../hooks/beforeChange/setHeadHTML';
-import setPageHTML from '../../hooks/beforeChange/setPageHTML';
+import setHTML from '../../hooks/beforeChange/setHTML';
 import savePost from '../../hooks/afterChange/savePost';
-import setPostHTML from '../../helpers/setPostHTML';
+import setMainHTMLPost from '../../hooks/beforeChange/setMainHTMLPost';
 import otherLocaleField from '../../fields/otherLocaleField';
 import hasSiteAccess from '../../access/hasSiteAccess';
 import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext';
@@ -112,8 +112,8 @@ export const PostsFlex = {
 		// --- beforeChange
 		beforeChange: [
 			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context, operation }),
-			async ({ data, req, operation, originalDoc, context }) => await setPostHTML({ data, originalDoc, req, context, operation }),
-			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, context, operation }),
+			async ({ data, req, operation, originalDoc, context }) => await setMainHTMLPost({ data, originalDoc, req, context, operation }),
+			async ({ data, req, operation, originalDoc, context }) => await setHTML({ data, req, operation, context, operation }),
 		],
 		// --- afterChange
 		afterChange: [

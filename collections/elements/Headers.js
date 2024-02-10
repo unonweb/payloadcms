@@ -18,7 +18,7 @@ import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
 import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
 import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
 import copyAssets from '../../hooks/afterChange/copyAssets';
-import setMainHTML from '../../hooks/beforeChange/setMainHTML';
+import setMainHTMLPage from '../../hooks/beforeChange/setMainHTMLPage';
 import createHTMLFields from '../../fields/createHTMLFields';
 import hasSiteAccess from '../../access/hasSiteAccess';
 
@@ -55,7 +55,7 @@ export const Headers = {
 		beforeValidate: [],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }),
+			async ({ data, req, operation, originalDoc, context }) => await setMainHTMLPage({ data, req, operation, originalDoc, context }),
 		],
 		// --- afterChange
 		afterChange: [

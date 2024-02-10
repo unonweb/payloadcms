@@ -1,42 +1,41 @@
 import * as React from "react";
 
 /* ACCESS */
-import { isLoggedIn } from '../access/isLoggedIn.js';
-import hasSiteAccess from '../access/hasSiteAccess.js';
+import { isLoggedIn } from '../access/isLoggedIn';
+import hasSiteAccess from '../access/hasSiteAccess';
 
 /* FIELDS */
-import createCommonFields from '../fields/createCommonFields.js';
-import createHTMLFields from '../fields/createHTMLFields.js';
-import otherLocaleField from '../fields/otherLocaleField.js';
-import { deployButtonField } from '../fields/deployButtonField.js';
+import createCommonFields from '../fields/createCommonFields';
+import createHTMLFields from '../fields/createHTMLFields';
+import otherLocaleField from '../fields/otherLocaleField';
+import { deployButtonField } from '../fields/deployButtonField';
 
 /* BLOCKS */
-import createColumnsFlex from '../blocks/layout/lay-flex.js';
+import createColumnsFlex from '../blocks/layout/lay-flex';
 
 /* HOOKS & HELPERS */
-import getRelatedDoc from '../hooks/getRelatedDoc.js';
-import validateIsHome from '../hooks/validate/validateIsHome.js';
-import log from '../helpers/customLog.js';
-import mailError from '../helpers/mailError.js';
-import updateDocSingle from '../hooks/updateDocSingle.js';
-import validatePageTitle from '../hooks/validate/validatePageTitle.js';
-import slugify from '../helpers/_slugify.js';
-import canAccess from '../helpers/_canAccess.js';
-import createAssetsFields from '../fields/createAssetsFields.js';
-import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship.js';
-import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID.js';
-import startConsoleTime from '../hooks/beforeOperation/startConsoleTime.js';
-import populateContextBeforeOp from '../hooks/beforeOperation/populateContext.js';
-import endConsoleTime from '../hooks/afterOperation/endConsoleTime.js';
-import setMainHTML from '../hooks/beforeChange/setMainHTML.js';
-import setHeadHTML from '../hooks/beforeChange/setHeadHTML.js';
-import populateContextBeforeVal from '../hooks/beforeValidate/populateContext.js';
-import copyAssets from '../hooks/afterChange/copyAssets.js';
-import setPageHTML from '../hooks/beforeChange/setPageHTML.js';
-import savePage from '../hooks/afterChange/savePage.js';
-import removePrevPage from '../hooks/afterChange/removePrevPage.js';
-import requestUpdateByID from '../helpers/requestUpdateByID.js';
-import isUnique from '../hooks/validate/isUnique.js';
+import validateIsHome from '../hooks/validate/validateIsHome';
+import log from '../helpers/customLog';
+import mailError from '../helpers/mailError';
+import updateDocSingle from '../hooks/updateDocSingle';
+import validatePageTitle from '../hooks/validate/validatePageTitle';
+import slugify from '../helpers/_slugify';
+import canAccess from '../helpers/_canAccess';
+import createAssetsFields from '../fields/createAssetsFields';
+import resetBrokenRelationship from '../hooks/beforeValidate/resetBrokenRelationship';
+import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID';
+import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
+import populateContextBeforeOp from '../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../hooks/afterOperation/endConsoleTime';
+import setPageMainHTML from '../hooks/beforeChange/setMainHTMLPage/index';
+import setHeadHTML from '../hooks/beforeChange/setHeadHTML';
+import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
+import copyAssets from '../hooks/afterChange/copyAssets';
+import setHTML from '../hooks/beforeChange/setHTML';
+import savePage from '../hooks/afterChange/savePage';
+import removePrevPage from '../hooks/afterChange/removePrevPage';
+import requestUpdateByID from '../helpers/requestUpdateByID';
+import isUnique from '../hooks/validate/isUnique';
 
 const commonFields = createCommonFields()
 const SLUG = 'pages'
@@ -88,9 +87,9 @@ export const Pages = {
 		],
 		// --- beforeChange
 		beforeChange: [
-			async ({ data, req, operation, originalDoc, context }) => await setMainHTML({ data, req, operation, originalDoc, context }), // data.html.main, data.assets
+			async ({ data, req, operation, originalDoc, context }) => await setPageMainHTML({ data, req, operation, originalDoc, context }), // data.html.main, data.assets
 			async ({ data, req, operation, originalDoc, context }) => await setHeadHTML({ data, req, context }), // data.html.head
-			async ({ data, req, operation, originalDoc, context }) => await setPageHTML({ data, req, operation, originalDoc, context }), // data.html.main 
+			async ({ data, req, operation, originalDoc, context }) => await setHTML({ data, req, operation, originalDoc, context }), // data.html.main 
 		],
 		// --- afterChange 
 		afterChange: [

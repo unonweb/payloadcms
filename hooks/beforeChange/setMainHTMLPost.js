@@ -1,7 +1,7 @@
-import log from './customLog.js'
+import log from '../../helpers/customLog.js'
 import { stat } from 'fs/promises'
 
-export default async function setPostHTML({ data, originalDoc, req, context, operation }) {
+export default async function setMainHTMLPost({ data, originalDoc, req, context, operation }) {
 	/* 
 		Type:
 			beforeChange collection hook

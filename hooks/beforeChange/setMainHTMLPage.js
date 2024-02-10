@@ -4,7 +4,7 @@ import log from '../../helpers/customLog'
 import mailError from '../../helpers/mailError'
 import getCol from '../getCol'
 
-export default async function setMainHTML({ data, req, operation, originalDoc, context }) {
+export default async function setMainHTMLPage({ data, req, operation, originalDoc, context }) {
 	/*
 		Hook:
 			beforeChange
