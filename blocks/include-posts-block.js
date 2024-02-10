@@ -1,6 +1,6 @@
 import showOptionsField from '../fields/showOptions'
 
-export default function createIncludePostsFlexBlock() {
+export default function createIncludePostsBlock() {
 	const block = {
 		slug: 'include-posts-flex',
 		labels: {
@@ -58,7 +58,6 @@ export default function createIncludePostsFlexBlock() {
 					},
 				]
 			},
-
 			{
 				type: 'collapsible',
 				label: {
