@@ -1,4 +1,3 @@
-import getDoc from '../hooks/getDoc.js'
 import log from './customLog.js'
 import { stat } from 'fs/promises'
 
