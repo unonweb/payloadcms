@@ -1,8 +1,11 @@
-export default function renderUnDrawer(block = {}) {
+import iterateBlocks from './iterateBlocks'
+import renderImageset from './renderImageset'
+
+export default function renderUnDrawer(block, meta, context) {
 
 	const attributes = [
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
 	].filter(item => item).join(' ')
 
 	let html
@@ -10,17 +13,17 @@ export default function renderUnDrawer(block = {}) {
 	switch (block.trigger.type) {
 		case 'hamburger':
 			html = /* html */`
-					<un-drawer ${attributes}>
-						<un-hamburger slot="trigger" data-state="closed"></un-hamburger>
-						${render(block.content.blocks)}
-					</un-drawer>
+				<un-drawer ${attributes}>
+					<un-hamburger slot="trigger" data-state="closed"></un-hamburger>
+					${iterateBlocks(block.content.blocks, meta, context)}
+				</un-drawer>
 				`
 		case 'image':
 			html = /* html */`
-					<un-drawer ${attributes}>
-						${renderImageset(block.trigger.image, context, { sizes: '10vw', loading: 'eager', slot: 'trigger' })}
-						${render(block.content.blocks)}
-					</un-drawer>
+				<un-drawer ${attributes}>
+					${renderImageset(block.trigger.image, meta, context, { sizes: '10vw', loading: 'eager', slot: 'trigger' })}
+					${iterateBlocks(block.content.blocks, meta, context)}
+				</un-drawer>
 				`
 		default:
 			html = ''

@@ -1,11 +1,9 @@
-export default function renderUnRT(block = {}) {
+import renderLexicalHTML from './renderLexicalHTML';
+
+export default function renderUnRT(block, meta, context) {
 
 	let html
 
-	if (!block.contentRichText) {
-		//throw ReferenceError('"block.contentRichText" not found. Maybe localization missing?')
-		log('"block.contentRichText" not found. Maybe localization missing?', site.domainShort, __filename, 4)
-	}
 	// now contentRichText is converted server side by an afterRead hook
 	// for backwards compatibility check if contentRichText is a string
 	// - if yes we can suppose that it's html
@@ -19,13 +17,14 @@ export default function renderUnRT(block = {}) {
 	} */
 
 	const attributes = [
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		// block attributes
 		(block.textAlign) ? `data-text-align="${block.textAlign}"` : '',
 		(block.bgMask) ? `data-bg-mask="${block.bgMask}"` : '',
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
 	].filter(item => item).join(' ')
 
-	html = /* html */`<un-rt ${attributes}>${renderLexicalHTML(block.contentRichText.root.children, context, locale)}</un-rt>`;
+	html = /* html */`<un-rt ${attributes}>${renderLexicalHTML(block.contentRichText.root.children, meta, context)}</un-rt>`;
 
 	return html.replace(/\s+/g, " ").trim()
 }

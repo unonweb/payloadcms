@@ -1,25 +1,27 @@
-export default function renderUnHeaderBanner(block = {}) {
+import iterateBlocks from './iterateBlocks'
+
+export default function renderUnHeaderBanner(block, meta, context) {
 	// blockType: 'header-banner'
-	
 	const attributes = [
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		// block
 		(block.transfx) ? `data-transfx="${block.transfx}"` : '',
 		(block.transtime) ? `data-shape=${block.transtime}` : '',
 		(block.filter) ? `data-filter=${block.filter}` : '',
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
 	].filter(item => item).join(' ')
 
 	let html = /* html */`
 		<un-header-banner ${attributes}>
 			<!--- BACKGROUND --->
 			${(block.background.blocks) 
-				? render(block.background.blocks)
+				? iterateBlocks(block.background.blocks, meta, context)
 				: ''
 			}
 			<!--- OVERLAY --->
 			<div class="overlay">
 				${(block.overlay.blocks) 
-					? render(block.overlay.blocks)
+					? iterateBlocks(block.overlay.blocks, meta, context)
 					: ''
 				}
 			</div>

@@ -1,14 +1,10 @@
-export default function renderUnMapLeaflet(block = {}) {
-	context.libPathsWeb.add('/assets/lib/leaflet-1.9.4.css')
-	context.libPathsWeb.add('/assets/lib/leaflet-1.9.4.js')
-	//filesToPageHead.add('/assets/lib/lit-3.1.0-all.js')
-	context.libPathsWeb.add('/assets/custom-elements/un-map-leaflet.js')
-
+export default function renderUnMapLeaflet(block, meta, context) {
+	
 	const attributes = [
-		// global
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
-		// functional
+		// meta
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		// block
 		(block.coords[0]) ? `data-lat="${block.coords[0]}"` : '',
 		(block.coords[1]) ? `data-lon="${block.coords[1]}"` : '',
 		(block.pin) ? `data-pin="${block.pin}"` : '',

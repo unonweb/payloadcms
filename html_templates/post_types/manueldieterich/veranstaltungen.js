@@ -33,7 +33,7 @@ module.exports = function renderHTMLTemplate(docID, { data, req, context }) {
 				</span>
 			</header>
 			<section class="content">
-				${renderLexicalHTML(data?.richText?.root?.children, context, req.locale)}
+				${renderLexicalHTML(data?.richText?.root?.children, { locale: req.locale }, context)}
 			</section>
 		</article>`
 }

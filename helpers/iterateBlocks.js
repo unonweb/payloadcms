@@ -1,168 +1,127 @@
-import log from './customLog'
+import log from './customLog.js';
 import renderLexicalHTML from './renderLexicalHTML.js'; // commonjs // works in dev mode
 import renderImageset from './renderImageset.js'; // commonjs // works in dev mode
-import renderUnHeaderBanner from './renderUnHeaderBanner';
-import renderUnFooter from './renderUnFooter';
-import renderUnLayFlex from './renderUnLayFlex';
-import renderUnPosts from './renderUnPosts';
-import renderSVG from './renderSVG';
-import renderUnDrawer from './renderUnDrawer';
-import renderUnMapLeaflet from './renderUnMapLeaflet';
-import renderUnRT from './renderUnRT';
-import renderUnContactData from './renderUnContact';
-import renderUnNav from './renderUnNav';
-import renderLinkInternal from './renderLinkInternal';
-import renderLinkExternal from './renderLinkExternal';
-import renderUnDropDown from './renderUnDropDown';
-import renderUnLangSwitch from './renderUnLangSwitch';
-import renderUnImg from './renderUnImg';
-import renderUnImgGallery from './renderUnImgGallery';
-import renderUnImgSlides from './renderUnImgSlides';
-import renderImg from './renderImg';
+import renderUnHeaderBanner from './renderUnHeaderBanner.js';
+import renderUnFooter from './renderUnFooter.js';
+import renderUnLayFlex from './renderUnLayFlex.js';
+import renderUnPosts from './renderUnPosts.js';
+import renderSVG from './renderSVG.js';
+import renderUnDrawer from './renderUnDrawer.js';
+import renderUnMapLeaflet from './renderUnMapLeaflet.js';
+import renderUnRT from './renderUnRT.js';
+import renderUnContactData from './renderUnContact.js';
+import renderUnNav from './renderUnNav.js';
+import renderLinkInternal from './renderLinkInternal.js';
+import renderLinkExternal from './renderLinkExternal.js';
+import renderUnDropDown from './renderUnDropDown.js';
+import renderUnLangSwitch from './renderUnLangSwitch.js';
+import renderUnImg from './renderUnImg.js';
+import renderUnImgGallery from './renderUnImgGallery.js';
+import renderUnImgSlides from './renderUnImgSlides.js';
+import renderImg from './renderImg.js';
 
-export default function iterateBlocks(doc, blocks = [], locale = '', context) {
-	// called for each page that is to be rendered
-
-	context.slug = (doc.slug === '') ? '/' : doc.slug
-	context.title = doc.title
-	context.origin = context.site.paths.web.origin[context.mode]
-	context.origin = (context.origin.endsWith('/')) ? context.origin.slice(0, -1) : context.origin // cut off trailing '/'
-	context.theme = context.site?.domainShort ?? ''
-	context.pathWebImgs = '/assets/imgs'
-	context.pathWebPosts = '/assets/posts'
-	context.pathWebDocs = '/assets/docs'
-	context.pathFSLib = `${context.site.paths.fs.admin.resources}/assets/lib`
-	context.locale ??= locale
-
-	const site = context.site
-	const pages = context.pages.docs
-	const images = context.images.docs
-	const documents = context.documents.docs
-	const slug = context.slug
-	const origin = context.origin
-	const user = context.user
-	const theme = context.theme
-	const title = context.title
-	const mode = context.mode
-	const pathWebImgs = context.pathWebImgs
-	const pathWebPosts = context.pathWebPosts
-	const pathWebAssets = '/assets'
-	const pathWebDocs = context.pathWebDocs
-	const pathFSLib = context.pathFSLib
-
-	/* checks */
-	if (!context.documents || context.documents?.length === 0) {
-		log('empty array: "documents"', user, __filename, 5)
-	}
-	if (!context.images || context.images?.length === 0) {
-		log('empty array: "images"', user, __filename, 5)
-	}
-	if (!context.pages || context.pages?.length === 0) {
-		log('empty array: "pages"', user, __filename, 5)
-	}
-
-	context.imgFiles = []
-	context.docFiles = []
-	context.libPathsWeb = new Set()
-	
-	let html
-	
-	html = render(blocks); // action!
-	
-	html = html.replace(/\s+/g, " ").trim()
-	// html = html.replace(/[\n\r\s]+/g, " ").trim()
-	const imgFiles = context.imgFiles
-	const docFiles = context.docFiles
-	let libPathsWeb = context.libPathsWeb
-	libPathsWeb = Array.from(libPathsWeb)
-	return { html, imgFiles, docFiles, libPathsWeb }
-
-	// --- render
-	function render(blocks = {}, parentType = '', context = {}) {
-
+export default function iterateBlocks(blocks = [], meta = {}, context = {}) {
+	/*
+		Tasks:
+			- Iterate and switch through blocks
+			- Call html render function for each block
+			- Populate context
+		Arguments:
+			- blocks
+			- context
+			- context.posts
+			- context.pages
+			- context.user
+			- meta.theme
+			- meta.slug
+			- meta.locale
+	*/
+	try {
 		if (!Array.isArray(blocks)) {
 			blocks = [blocks];
 		}
+		let html = blocks.map((block) => {
 
-		try {
-			let html = blocks.map((block) => {
+			log(`render(): ${block.blockType}`, context.user, __filename, 7)
 
-				log(`render(): ${block.blockType}`, user, __filename, 7)
+			switch (block.blockType) {
 
-				switch (block.blockType) {
+				// --- HEADER ---
+				case 'header-banner':
+					return renderUnHeaderBanner(block, meta, context);
 
-					// --- HEADER ---
-					case 'header-banner':
-						return renderUnHeaderBanner(block);
+				// --- FOOTER ---
+				case 'footer-default':
+					return renderUnFooter(block, meta, context);
 
-					// --- FOOTER ---
-					case 'footer-default':
-						return renderUnFooter(block);
+				// --- LAYOUT ---
+				case 'columns-flex':
+					return renderUnLayFlex(block, meta, context);
 
-					// --- LAYOUT ---
-					case 'columns-flex':
-						return renderUnLayFlex(block);
+				// --- POSTS ---
+				case 'include-posts-flex':
+					context.libPathsWeb.add('/assets/custom-elements/un-posts-lit.js')
+					return renderUnPosts(block, meta, context);
 
-					// --- POSTS ---
-					case 'include-posts-flex':
-						return renderUnPosts(block);
+				// --- OTHER ---
+				case 'svg':
+					return renderSVG(block, meta, context);
+				case 'drawer':
+					return renderUnDrawer(block, meta, context);
+				case 'map-leaflet':
+					context.libPathsWeb.add('/assets/lib/leaflet-1.9.4.css')
+					context.libPathsWeb.add('/assets/lib/leaflet-1.9.4.js')
+					context.libPathsWeb.add('/assets/custom-elements/un-map-leaflet.js')
+					return renderUnMapLeaflet(block, meta, context);
 
-					// --- OTHER ---
-					case 'svg':
-						return renderSVG(block);
-					case 'drawer':
-						return renderUnDrawer(block);
-					case 'map-leaflet':
-						return renderUnMapLeaflet(block);
+				// --- TEXT ---
+				case 'rich-text':
+					return renderUnRT(block, meta, context);
+				//case 'text':
+				//case 'textarea':
+					//return renderUnST(block)
+				//case 'contact-data':
+					//return renderUnContactData(block, theme, slug);
 
-					// --- TEXT ---
-					case 'rich-text':
-						return renderUnRT(block);
-					//case 'text':
-					//case 'textarea':
-						return renderUnST(block)
-					case 'contact-data':
-						return renderUnContactData(block);
+				// --- NAVS ---
+				case 'nav':
+					return renderUnNav(block, meta, context);
+				//case 'nav-split':
+					//return renderUnNavSplit(block);
+				//case 'menu-aside':
+					//return renderUnMenuAside(block, theme, slug);
+				case 'link-internal':
+					return renderLinkInternal(block, meta, context)
+				case 'link-external':
+					return renderLinkExternal(block, meta, context);
+				case 'menu-drop-down':
+					return renderUnDropDown(block, meta, context);
+				case 'lang-switch':
+					return renderUnLangSwitch(block, meta, context);
 
-					// --- NAVS ---
-					case 'nav':
-						return renderUnNav(block);
-					//case 'nav-split':
-						return renderUnNavSplit(block);
-					//case 'menu-aside':
-						return renderUnMenuAside(block);
-					case 'link-internal':
-						return renderLinkInternal(block)
-					case 'link-external':
-						return renderLinkExternal(block, parentType, context);
-					case 'menu-drop-down':
-						return renderUnDropDown(block);
-					case 'lang-switch':
-						return renderUnLangSwitch(block);
-
-					// --- IMAGE ---
-					case 'un-img':
-						return renderUnImg(block);
-					case 'img':
-						return renderImg(block);
-					case 'img-slides':
-						return renderUnImgSlides(block);
-					case 'img-gallery':
-						return renderUnImgGallery(block);
+				// --- IMAGE ---
+				case 'un-img':
+					return renderUnImg(block, meta, context);
+				case 'img':
+					return renderImg(block, meta, context);
+				case 'img-slides':
+					return renderUnImgSlides(block, meta, context);
+				case 'img-gallery':
+					return renderUnImgGallery(block, meta, context);
 					//case 'img-background':
-						return renderUnImgBackground(block);
+					//return renderUnImgBackground(block, meta, context);
 
-					// --- DEFAULT ---
-					default:
-						log(`blockType unknown: ${block.blockType}`, site.domainShort, __filename, 3);
-				}
-			})
+				// --- DEFAULT ---
+				default:
+					log(`blockType unknown: ${block.blockType}`, context.site.domainShort, __filename, 3);
+			}
+		})
 
-			html = html.join(' ').replace(/\s+/g, " ")
-			return html
+		html = html.join(' ').replace(/\s+/g, " ").trim()
 
-		} catch (err) {
-			log(err.stack, user, __filename, 3);
-		}
-	}	
+		return html
+
+	} catch (err) {
+		log(err.stack, context.user, __filename, 3);
+	}
 }

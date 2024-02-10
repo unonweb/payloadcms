@@ -1,8 +1,10 @@
-export default function renderUnFooter(block = {}) {
+import iterateBlocks from './iterateBlocks'
+
+export default function renderUnFooter(block, meta, context) {
 	// footer
 	const attributes = [
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
 	].filter(item => item).join(' ')
 
 	const properties = [].join(' ')
@@ -10,7 +12,7 @@ export default function renderUnFooter(block = {}) {
 	let html
 	html = /* html */`
 		<un-footer ${attributes} ${properties}>
-			${render(block.blocks)}
+			${iterateBlocks(block.blocks, meta, context)}
 		</un-footer>
 	`
 

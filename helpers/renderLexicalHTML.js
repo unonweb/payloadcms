@@ -57,7 +57,7 @@ const TEXT_TYPE_TO_FORMAT = {
 const log = require('./customLog.js');
 const renderImageset = require('./renderImageset.js')
 
-module.exports = function renderLexicalHTML(children, context, locale = '') {
+module.exports = function renderLexicalHTML(children, meta, context) {
 	/* 
 		Requires:
 			(for richText internal links)
@@ -69,12 +69,16 @@ module.exports = function renderLexicalHTML(children, context, locale = '') {
 	*/
 
 	try {
+		// context
 		const images = context.images.docs
 		const documents = context.documents.docs
 		const pages = context.pages.docs
 		const user = context.user
-		const pathWebDocs = context.pathWebDocs
-		const pathWebImgs = context.pathWebImgs
+		// meta
+		const locale = meta.locale
+		// static
+		const pathWebDocs = '/assets/docs'
+		const pathWebImgs = '/assets/imgs'
 
 		if (children === undefined) {
 			return
@@ -134,7 +138,7 @@ module.exports = function renderLexicalHTML(children, context, locale = '') {
 			}
 
 			// serialize innerHTML
-			const innerHTML = (node.children) ? renderLexicalHTML(node.children, context, locale) : null;
+			const innerHTML = (node.children) ? renderLexicalHTML(node.children, meta, context) : null;
 
 			// serialize outerHTML
 			let classStr = ''
@@ -172,7 +176,7 @@ module.exports = function renderLexicalHTML(children, context, locale = '') {
 								case 'documents':
 									linkedDoc = documents.find(doc => doc.id === linkedDocID)
 									if (linkedDoc?.filename) {
-										context.docFiles.push(linkedDoc.filename)
+										context.docFiles.add(linkedDoc.filename)
 										href = `${pathWebDocs}/${linkedDoc.filename}`
 									}
 									break
@@ -180,7 +184,7 @@ module.exports = function renderLexicalHTML(children, context, locale = '') {
 								case 'images':
 									linkedDoc = images.find(img => img.id === linkedDocID)
 									if (linkedDoc?.filename) {
-										imgFiles.push(linkedDoc.filename)
+										imgFiles.add(linkedDoc.filename)
 										href = `${pathWebImgs}/${linkedDoc.filename}`
 									}
 									break
@@ -218,7 +222,7 @@ module.exports = function renderLexicalHTML(children, context, locale = '') {
 
 				// --- upload
 				case 'upload':
-					return /* html */`<un-img data-float="left">${renderImageset(node.value.id, context)}</un-img>` // <-- ATT: hard-coded value
+					return /* html */`<un-img data-float="left">${renderImageset(node.value.id, meta, context)}</un-img>` // <-- ATT: hard-coded value
 
 				// --- paragraph
 				case 'paragraph':

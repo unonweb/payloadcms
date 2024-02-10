@@ -1,9 +1,12 @@
-export default function renderUnNav(block = {}) {
-	// blockType: 'menu-bar'
+import iterateBlocks from './iterateBlocks'
+
+export default function renderUnNav(block, meta, context) {
 	
 	const attributes = [
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
+		// meta
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		// block
 		(block.isDropDown) ? `data-dropdown="${block.isDropDown}"` : '',
 		(block.sticky) ? `data-sticky="${block.sticky}"` : '',
 		(block.enableSplit) ? `data-split="${block.enableSplit}"` : '',
@@ -13,7 +16,7 @@ export default function renderUnNav(block = {}) {
 	if (block.blocks) {
 		defaultHTML = /* html */`
 			<ul class="content default">
-				${block.blocks.map((b) => /* html */`<li>${render(b)}</li>`).join(' ')}
+				${block.blocks.map((block) => /* html */`<li>${iterateBlocks(block, meta, context)}</li>`).join(' ')}
 			</ul>
 		`
 	}
@@ -22,7 +25,7 @@ export default function renderUnNav(block = {}) {
 	if (block.enableSplit && block.offset.length > 0) {
 		offsetHTML = /* html */`
 			<ul class="content offset">
-				${block.offset.map((b) => /* html */`<li>${render(b)}</li>`).join(' ')}
+				${block.offset.map((block) => /* html */`<li>${iterateBlocks(block, meta, context)}</li>`).join(' ')}
 			</ul>
 		`
 	}

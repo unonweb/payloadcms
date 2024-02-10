@@ -1,8 +1,10 @@
-export default function renderUnLangSwitch(block = {}) {
+export default function renderUnLangSwitch(block, meta, context) {
 
 	const attributes = [
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
+		// meta
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		// block
 		(block.icon) ? `data-icon="${block.icon}"` : '',
 	].filter(item => item).join(' ')
 

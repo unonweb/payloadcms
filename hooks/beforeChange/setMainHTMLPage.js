@@ -1,5 +1,4 @@
-import hasChanged from '../../helpers/_hasChanged'
-import iterateBlocks from '../../helpers/iterateBlocks'
+import handleBlocks from '../../helpers/handleBlocks'
 import log from '../../helpers/customLog'
 import mailError from '../../helpers/mailError'
 import getCol from '../getCol'
@@ -28,13 +27,13 @@ export default async function setMainHTMLPage({ data, req, operation, originalDo
 		const prevBlocks = (operation === 'update') ? originalDoc.main?.blocks ?? originalDoc.blocks : null
 		context.posts ??= await getCol('posts-flex', user, { depth: 0, locale: req.locale, overrideAccess: true, user: req.user })
 		
-		/* iterate blocks */
-		const { html, imgFiles, docFiles, libPathsWeb } = iterateBlocks(data, blocks, req.locale, context)
+		/* blocks */
+		const mainHTML = handleBlocks(data, blocks, req.locale, context)
 
-		data.html.main = html // update post.html.main	
-		data.assets.imgs = imgFiles // update post.assets.imgs
-		data.assets.docs = docFiles // update post.assets.docs
-		data.assets.head = libPathsWeb // update page.assets.head
+		data.html.main = mainHTML // update post.html.main	
+		data.assets.imgs = Array.from(context.imgFiles) // update post.assets.imgs
+		data.assets.docs = Array.from(context.docFiles) // update post.assets.docs
+		data.assets.head = Array.from(context.libPathsWeb) // update page.assets.head
 
 		return data
 

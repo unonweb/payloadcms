@@ -1,4 +1,4 @@
-export default function renderUnPosts(block = {}) {
+export default function renderUnPosts(block, meta, context) {
 	/*
 		Note:
 			un-posts-lit.js is added dynamically and separately to <head> 
@@ -12,23 +12,21 @@ export default function renderUnPosts(block = {}) {
 				3) Remove/Add import statement for external dep (needs to at the top of the bundle) 
 				4) Remove/Add lit library
 	*/
-	//context.libPathsWeb.add('/assets/lib/lit-3.1.0-all.js') // external dependency
-	context.libPathsWeb.add('/assets/custom-elements/un-posts-lit.js')
-
 	//const includeSummary = block?.meta?.include?.includes('summary')
 	//const includeImage = block?.meta?.include?.includes('image')
 
 	// attributes
 	const attributes = [
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '',
-		(locale) ? `lang="${locale}"` : '',
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.locale) ? `lang="${meta.locale}"` : '',
+		// block attributes
 		(block.type) ? `type="${block.type}"` : '',
 		(block?.ui?.isCollapsible) ? "collapsible" : '', // boolean property
 		(block?.ui?.include) ? `ui-parts="${block.ui.include.join(' ')}"` : '',
 	].join(' ')
 
-	context.posts.docs ??= []
+	posts.docs ??= []
 	const innerHTML = context.posts.docs.filter(post => post.type === block.type).map(post => post.html.main).join(' ')
 
 	let html = /* html */`

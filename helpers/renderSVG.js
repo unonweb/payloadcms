@@ -1,8 +1,8 @@
-export default function renderSVG(block = {}) {
+export default function renderSVG(block, meta, context) {
 		
 	const attributes = [
-		(theme) ? `data-theme="${theme}"` : '',
-		(slug) ? `data-page="${slug}"` : '', 
+		(meta.theme) ? `data-theme="${meta.theme}"` : '',
+		(meta.slug) ? `data-page="${meta.slug}"` : '', 
 	].filter(item => item)
 
 	for (const attribute of block.attributes ?? []) {
