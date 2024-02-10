@@ -1,4 +1,5 @@
 import { isLoggedIn } from '../../access/isLoggedIn.js';
+import { isAdmin } from '../access/isAdmin.js';
 import updateDocsMany from '../../hooks/updateDocsMany.js';
 import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime.js';
 import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext.js';
@@ -30,19 +31,15 @@ export const PostTypes = {
 			de: 'Posts',
 			en: 'Posts'
 		},
-		description: {
-			de: 'Es werden Tags angezeigt, die man selbst erstellt hat. Außerdem Tags, die der Admin erstellt hat.',
-			en: 'Only Tags are shown created by the user himself/herself. Additionally tags created by the admin are shown.'
-		},
 		enableRichTextLink: false,
 		enableRichTextRelationship: false,
 		hidden: ({ user }) => !['unonner'].includes(user.shortName)
 	},
 	access: {
-		create: isLoggedIn,
-		update: hasSiteAccess('site'),
+		create: isAdmin,
+		update: isAdmin,
 		read: hasSiteAccess('site'),
-		delete: hasSiteAccess('site'),
+		delete: isAdmin,
 	},
 	hooks: {
 		// --- beforeOperation
