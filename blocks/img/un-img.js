@@ -22,11 +22,11 @@ export default function createUnImgBlock(options = []) {
 				type: 'upload',
 				name: 'rel',
 				label: {
-					de: ' ',
-					en: ' '
+					de: 'Quelle',
+					en: 'Source'
 				},
 				relationTo: 'images',
-				maxDepth: 1, // return entire image 
+				maxDepth: 1, // return entire image
 				required: true,
 			},
 			// --- img.showOptions
@@ -120,7 +120,7 @@ export default function createUnImgBlock(options = []) {
 							]
 						} : '',
 						// --- filter
-						(options.includes('shape')) ?
+						(options.includes('filter')) ?
 						{
 							type: 'select',
 							name: 'filter',
