@@ -1,4 +1,4 @@
-export default function renderLinkInternal(block, meta, context) {
+module.exports = function renderLinkInternal(block, meta, context) {
 	/*
 		Arguments:
 			- context.pages

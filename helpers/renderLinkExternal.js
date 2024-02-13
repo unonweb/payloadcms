@@ -1,4 +1,4 @@
-export default function renderLinkExternal(block, meta, context) {
+module.exports = function renderLinkExternal(block, meta, context) {
 	// blockType: 'link-external'
 	// NOTES: 
 	// * called by un-menu-bar
