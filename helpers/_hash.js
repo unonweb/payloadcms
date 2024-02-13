@@ -6,3 +6,7 @@ export default function hash(str, max = 1000) {
 	}
 	return Math.round(max * Math.abs(hash) / 2147483648);
 }
+
+function getHash(params) {
+	return crypto.createHash('md5').update(somestring).digest('hex').toString();
+}
