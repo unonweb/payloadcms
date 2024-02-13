@@ -1,15 +1,14 @@
-import { isLoggedIn } from '../../access/isLoggedIn.js';
-import { isAdmin } from '../access/isAdmin.js';
-import updateDocsMany from '../../hooks/updateDocsMany.js';
-import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime.js';
-import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext.js';
-import createPostFields from './createPostFields.js';
-import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext.js';
-import endConsoleTime from '../../hooks/afterOperation/endConsoleTime.js';
-import removeRelations from '../../hooks/afterDelete/rmRelations.js';
-import log from '../../helpers/customLog.js';
-import hasSiteAccess from '../../access/hasSiteAccess.js';
-import isUnique from '../../hooks/validate/isUnique.js';
+import { isAdmin } from '../../access/isAdmin';
+import updateDocsMany from '../../hooks/updateDocsMany';
+import startConsoleTime from '../../hooks/beforeOperation/startConsoleTime';
+import populateContextBeforeVal from '../../hooks/beforeValidate/populateContext';
+import createPostFields from './createPostFields';
+import populateContextBeforeOp from '../../hooks/beforeOperation/populateContext';
+import endConsoleTime from '../../hooks/afterOperation/endConsoleTime';
+import removeRelations from '../../hooks/afterDelete/rmRelations';
+import log from '../../helpers/customLog';
+import hasSiteAccess from '../../access/hasSiteAccess';
+import isUnique from '../../hooks/validate/isUnique';
 
 const SLUG = 'post-types'
 
