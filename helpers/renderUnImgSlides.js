@@ -1,6 +1,6 @@
-import renderImageset from './renderImageset';
+const renderImageset = require('./renderImageset')
 
-export default function renderUnImgSlides(block, meta, context) {
+module.exports = function renderUnImgSlides(block, meta, context) {
 		
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',

@@ -1,4 +1,4 @@
-export default function renderUnMapLeaflet(block, meta, context) {
+module.exports = function renderUnMapLeaflet(block, meta, context) {
 	
 	const attributes = [
 		// meta

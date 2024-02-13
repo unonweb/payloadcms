@@ -1,6 +1,7 @@
-import iterateBlocks from './iterateBlocks'
+module.exports = function renderUnFooter(block, meta, context) {
 
-export default function renderUnFooter(block, meta, context) {
+	const iterateBlocks = require('./iterateBlocks')
+	
 	// footer
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',

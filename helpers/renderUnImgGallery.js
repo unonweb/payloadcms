@@ -1,7 +1,7 @@
-import renderImageset from './renderImageset';
-import log from './customLog';
+const renderImageset = require('./renderImageset')
+const log = require('./customLog');
 
-export default function renderUnImgGallery(block, meta, context) {
+module.exports = function renderUnImgGallery(block, meta, context) {
 	
 	const origin = meta.origin
 	const user = context.user

@@ -1,4 +1,4 @@
-export default function renderUnPosts(block, meta, context) {
+module.exports = function renderUnPosts(block, meta, context) {
 	/*
 		Note:
 			un-posts-lit.js is added dynamically and separately to <head> 
@@ -26,7 +26,6 @@ export default function renderUnPosts(block, meta, context) {
 		(block?.ui?.include) ? `ui-parts="${block.ui.include.join(' ')}"` : '',
 	].join(' ')
 
-	posts.docs ??= []
 	const innerHTML = context.posts.docs.filter(post => post.type === block.type).map(post => post.html.main).join(' ')
 
 	let html = /* html */`

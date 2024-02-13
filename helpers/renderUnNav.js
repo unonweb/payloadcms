@@ -1,6 +1,6 @@
-import iterateBlocks from './iterateBlocks'
+const iterateBlocks = require('./iterateBlocks.js');
 
-export default function renderUnNav(block, meta, context) {
+module.exports = function renderUnNav(block, meta, context) {
 	
 	const attributes = [
 		// meta

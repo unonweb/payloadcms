@@ -1,6 +1,6 @@
-import iterateBlocks from './iterateBlocks';
+const iterateBlocks = require('./iterateBlocks.js');
 
-export default function renderUnDropDown(block, meta, context) {
+module.exports = function renderUnDropDown(block, meta, context) {
 	// block.title
 	// block.subMenu
 	

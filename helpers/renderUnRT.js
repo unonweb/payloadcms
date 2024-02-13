@@ -1,6 +1,6 @@
-import renderLexicalHTML from './renderLexicalHTML';
+const renderLexicalHTML = require('./renderLexicalHTML')
 
-export default function renderUnRT(block, meta, context) {
+module.exports = function renderUnRT(block, meta, context) {
 
 	let html
 

@@ -1,6 +1,6 @@
-import iterateBlocks from './iterateBlocks';
+module.exports = function renderUnLayFlex(block, meta, context) {
 
-export default function renderUnLayFlex(block, meta, context) {
+	const iterateBlocks = require('./iterateBlocks.js')
 
 	const attributes = [
 		// global

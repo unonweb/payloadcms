@@ -1,4 +1,4 @@
-export default function renderUnLangSwitch(block, meta, context) {
+module.exports = function renderUnLangSwitch(block, meta, context) {
 
 	const attributes = [
 		// meta

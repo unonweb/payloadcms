@@ -1,7 +1,11 @@
-import iterateBlocks from './iterateBlocks'
-import renderImageset from './renderImageset'
+const iterateBlocks = require('./iterateBlocks.js');
+const renderImageset = require('./renderImageset')
 
-export default function renderUnDrawer(block, meta, context) {
+module.exports = function renderUnDrawer(block, meta, context) {
+	/*
+		Attention:
+			- renderImageset() does not accept trigger any more
+	*/
 
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',

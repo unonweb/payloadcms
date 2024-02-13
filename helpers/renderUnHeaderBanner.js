@@ -1,6 +1,7 @@
-import iterateBlocks from './iterateBlocks'
+module.exports = function renderUnHeaderBanner(block, meta, context) {
 
-export default function renderUnHeaderBanner(block, meta, context) {
+	const iterateBlocks = require('./iterateBlocks')
+	
 	// blockType: 'header-banner'
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',

@@ -1,4 +1,4 @@
-export default function renderSVG(block, meta, context) {
+module.exports = function renderSVG(block, meta, context) {
 		
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
