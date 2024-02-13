@@ -1,6 +1,6 @@
 import log from './customLog'
 
-export default function renderPageHTML(locale = '', page = {}, user = '', { navHTML = '', headerHTML = '', footerHTML = '' } = {}) {
+export default function renderPageHTML(data = {}, locale = '', docID = '', context, { navHTML = '', headerHTML = '', footerHTML = '' } = {}) {
 	/*
 		Note:
 			Should at least be called if one of the following changes:
@@ -11,22 +11,22 @@ export default function renderPageHTML(locale = '', page = {}, user = '', { navH
 	*/
 	try {
 
-		if (navHTML === '') log(`navHTML is empty for "${page.slug}" with locale "${locale}"`, user, __filename, 5)
-		if (headerHTML === '') log(`headerHTML is empty for "${page.slug}" with locale "${locale}"`, user, __filename, 5)
-		if (!page.html?.main) log(`page.html.main is "${typeof page.html?.main}" for "${page.slug}" with locale "${locale}"`, user, __filename, 5)
-		if (!page.html?.head) throw new Error(`page.html.head is "${page?.html?.head}" for "${page.slug}" with locale "${locale}"`)
+		if (navHTML === '') log(`navHTML is empty for "${data.slug}" with locale "${locale}"`, context.user, __filename, 5)
+		if (headerHTML === '') log(`headerHTML is empty for "${data.slug}" with locale "${locale}"`, context.user, __filename, 5)
+		if (!data.html?.main) log(`page.html.main is "${typeof data.html?.main}" for "${data.slug}" with locale "${locale}"`, context.user, __filename, 5)
+		if (!data.html?.head) throw new Error(`page.html.head is "${data?.html?.head}" for "${data.slug}" with locale "${locale}"`)
 
-		const slug = (page.slug === '') ? '/' : page.slug
+		const slug = (data.slug === '') ? '/' : data.slug
 
 		const pageHTML = /* html */`
 			<!DOCTYPE html>
 			<html lang=${ locale } data-theme="">
-			${ page.html.head }
+			${ data.html.head }
 			<body>
 				${ headerHTML ?? '' }
 				${ navHTML ?? '' }
-				<main data-page="${slug}" lang="${ locale ?? '' }" data-margin="${ page.main?.margin ?? 'medium'}" data-density="${ page.main?.density ?? 'medium'}" data-justify="${ page.main?.justify ?? 'left'}" data-align="${ page.main?.align ?? 'center'}">
-					${ page.html?.main ?? '' }
+				<main data-page="${docID}" lang="${ locale ?? '' }" data-margin="${ data.main?.margin ?? 'medium'}" data-density="${ data.main?.density ?? 'medium'}" data-justify="${ data.main?.justify ?? 'left'}" data-align="${ data.main?.align ?? 'center'}">
+					${ data.html?.main ?? '' }
 				</main>
 				${ footerHTML ?? '' }
 				<div class="deco line" id="line-1" hidden="true" aria-hidden="true"></div>
@@ -46,6 +46,6 @@ export default function renderPageHTML(locale = '', page = {}, user = '', { navH
 		return pageHTML.replace(/\s+/g, " ").trim()
 
 	} catch (error) {
-		log(error.stack, user, __filename, 3)
+		log(error.stack, context.user, __filename, 3)
 	}
 }
