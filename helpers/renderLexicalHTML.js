@@ -1,3 +1,6 @@
+const renderImg = require('./renderImg.js');
+const renderUnImg = require('./renderUnImg.js');
+
 // DOM
 const DOM_ELEMENT_TYPE = 1;
 const DOM_TEXT_TYPE = 3;
@@ -54,9 +57,6 @@ const TEXT_TYPE_TO_FORMAT = {
 	underline: IS_UNDERLINE,
 }
 
-const log = require('./customLog.js');
-const renderImageset = require('./renderImageset.js')
-
 module.exports = function renderLexicalHTML(children, meta, context) {
 	/* 
 		Requires:
@@ -67,8 +67,11 @@ module.exports = function renderLexicalHTML(children, meta, context) {
 		Updates:
 			- context.docFiles
 	*/
-
 	try {
+		// require
+		const log = require('./customLog.js');
+		const iterateBlocks = require('./iterateBlocks.js')
+		const renderImageset = require('./renderImageset.js')
 		// context
 		const images = context.images.docs
 		const documents = context.documents.docs
@@ -89,6 +92,8 @@ module.exports = function renderLexicalHTML(children, meta, context) {
 
 		let html = children.map((node) => {
 
+			log(`render "${node.type}"`, user, __filename)
+			
 			// get classes
 			let classes = [
 				(node.format && typeof node.format === 'string') ? node.format : '',
@@ -143,6 +148,7 @@ module.exports = function renderLexicalHTML(children, meta, context) {
 			// serialize outerHTML
 			let classStr = ''
 			let attributes = []
+			
 			switch (node.type) {
 
 				// --- linebreak
@@ -222,12 +228,17 @@ module.exports = function renderLexicalHTML(children, meta, context) {
 
 				// --- upload
 				case 'upload':
-					return /* html */`<un-img data-float="left">${renderImageset(node.value.id, meta, context)}</un-img>` // <-- ATT: hard-coded value
+					return renderImg({ ...node.fields, rel: node.value.id }, meta, context)
+					//return /* html */`<un-img data-float="left">${renderImageset(node.value.id, meta, context)}</un-img>`
 
 				// --- paragraph
 				case 'paragraph':
 					classStr = (classes.length > 0) ? `class="${classes.join(' ')}"` : ''
 					return /* html */`<p ${classStr}>${innerHTML ? innerHTML : '<br>'}</p>`;
+				
+				// --- block
+				case 'block':
+					return iterateBlocks(node.fields, meta, context)
 
 				// --- default
 				default:
