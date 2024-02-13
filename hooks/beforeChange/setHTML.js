@@ -3,10 +3,12 @@ import mailError from '../../helpers/mailError'
 import getDoc from '../getDoc'
 import renderPageHTML from '../../helpers/renderPageHTML'
 
-export default async function setHTML({ data, req, operation, context }) {
+export default async function setHTML({ data, req, operation, originalDoc, context }) {
 	/*
+		Type:
+			beforeChange collection
 		Called by:
-			- Post
+			- Pages
 			- PostsFlex
 		Requires:
 			- page.html.head
@@ -17,6 +19,7 @@ export default async function setHTML({ data, req, operation, context }) {
 	*/
 	try {
 		const user = req.context.user
+		const docID = originalDoc.id ?? null
 
 		/* save this as own page */
 		if (data.hasOwnPage === undefined || data.hasOwnPage === true) {
@@ -32,7 +35,7 @@ export default async function setHTML({ data, req, operation, context }) {
 			}
 			
 			/* compose html */
-			data.html.page = renderPageHTML(req.locale, data, user, {
+			data.html.page = renderPageHTML(data, req.locale, docID, context, {
 				// pass html or undefined:
 				navHTML: context.nav?.html?.main,
 				headerHTML: context.header?.html?.main,
