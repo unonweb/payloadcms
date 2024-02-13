@@ -25,8 +25,10 @@ const sharpFormatOptions = {
 	}
 }
 
+const SLUG = 'images'
+
 export const Images = {
-	slug: 'images',
+	slug: SLUG,
 	labels: {
 		singular: {
 			de: 'Bild',
