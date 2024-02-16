@@ -15,21 +15,24 @@ module.exports = function renderUnPosts(block, meta, context) {
 	//const includeSummary = block?.meta?.include?.includes('summary')
 	//const includeImage = block?.meta?.include?.includes('image')
 
-	// attributes
-	const attributes = [
-		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
-		(meta.locale) ? `lang="${meta.locale}"` : '',
-		// block attributes
-		(block.type) ? `type="${block.type}"` : '',
-		(block?.ui?.isCollapsible) ? "collapsible" : '', // boolean property
-		(block?.ui?.include) ? `ui-parts="${block.ui.include.join(' ')}"` : '',
-	].join(' ')
+	/* attributes */
+	let attributes = {
+		// meta
+		'data-theme': meta.theme,
+		'data-page': meta.id,
+		'lang': meta.locale,
+		// block
+		'type': block.type,
+		'collapsible': block?.ui?.isCollapsible,
+		'ui-parts': block.ui.include.join(' ') // array
+	}
+
+	const attStr = Object.entries(attributes).filter(entry => entry[1]).map(entry => `${entry[0]}='${entry[1]}'`).reduce((prev, curr) => `${prev} ${curr}`, '')
 
 	const innerHTML = context.posts.docs.filter(post => post.type === block.type).map(post => post.html.main).join(' ')
 
 	let html = /* html */`
-		<un-posts-lit ${attributes}>
+		<un-posts-lit ${attStr}>
 			<noscript>${innerHTML}</noscript>
 		</un-posts-lit>`
 
