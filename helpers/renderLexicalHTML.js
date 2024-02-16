@@ -92,8 +92,8 @@ module.exports = function renderLexicalHTML(children, meta, context) {
 
 		let html = children.map((node) => {
 
-			log(`render "${node.type}"`, user, __filename)
-			
+			log(`render "${node.type}"`, user, __filename, 7)
+
 			// get classes
 			let classes = [
 				(node.format && typeof node.format === 'string') ? node.format : '',
@@ -223,16 +223,18 @@ module.exports = function renderLexicalHTML(children, meta, context) {
 
 				// --- heading
 				case 'heading':
+					if (!innerHTML) return ''
 					classStr = (classes.length > 0) ? `class="${classes.join(' ')}"` : ''
 					return `<${node.tag} ${classStr}>${innerHTML}</${node.tag}>`
 
 				// --- upload
 				case 'upload':
-					return renderImg({ ...node.fields, rel: node.value.id }, meta, context)
+					return renderUnImg({ ...node.fields, rel: node.value.id }, meta, context)
 					//return /* html */`<un-img data-float="left">${renderImageset(node.value.id, meta, context)}</un-img>`
 
 				// --- paragraph
 				case 'paragraph':
+					if (!innerHTML) return ''
 					classStr = (classes.length > 0) ? `class="${classes.join(' ')}"` : ''
 					return /* html */`<p ${classStr}>${innerHTML ? innerHTML : '<br>'}</p>`;
 				
