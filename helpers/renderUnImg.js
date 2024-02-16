@@ -9,31 +9,48 @@ module.exports = function renderUnImg(block, meta, context) {
 			- block.link.rel.value
 			- block.caption
 	*/
-	
+	// context
 	const pages = context.pages.docs
 	const locale = meta.locale
 	const origin = meta.origin
+	// static
+	const pathWebImgs = '/assets/imgs'
+	let href = ''
+	let HTML = ''
+
+	/* attributes */
 
 	let attributes = {
 		// meta
 		'data-theme': meta.theme,
-		'data-page': meta.slug,
+		'data-page': meta.id,
 		// block
-		'data-shape': block.shape,
-		'data-width': block.width, // 25, 33, 50, 66, 75, 100
-		'data-height': block.height, // '120px', '240px', '360px', '480px', '600px', auto
-		'data-filter': block.filter,
-		'data-hover': block.hover?.join(' '),
-		'data-mask': block.mask,
+		'data-shape': block.shape, // select
+		//'data-width': block.width, // select: 25, 33, 50, 66, 75, 100
+		'data-height': block.height, // select: '120px', '240px', '360px', '480px', '600px', auto
+		'data-filter': block.filter, // select
+		'data-hover': block.hover?.join(' '), // select
+		'data-mask': block.mask, // select
+		//'data-align': (block.alignX && block.alignY) ? `${block.alignX} ${block.alignY}` : (block.alignY) ? block.alignY : (block.alignX) ? block.alignX : null,
+		'style': {
+			'--align-self': block.alignSelf, // text
+			'--width': (block.width) ? `${block.width}%` : null, // number
+			'--min-width': (block.minwidth) ? `${block.minwidth}px` : null, // number
+			'--max-width': (block.maxwidth) ? `${block.maxwidth}px` : null, // number
+		}
 	}
 
 	if (block.shape === 'circle') {
 		attributes['data-height'] = 'auto'
 	}
 
-	const attStr = Object.entries(attributes).filter(entry => entry[1]).map(entry => `${entry[0]}='${entry[1]}'`).reduce((prev, curr) => `${prev} ${curr}`)
+	if (attributes.style) {
+		attributes.style = Object.entries(attributes.style).filter(entry => entry[1]).map(entry => `${entry[0]}: ${entry[1]}; `).reduce((prev, curr) => `${prev} ${curr}`, '')		
+	}
 
-	let href
+	const attStr = Object.entries(attributes).filter(entry => entry[1]).map(entry => `${entry[0]}="${entry[1]}"`).reduce((prev, curr) => `${prev} ${curr}`, '')
+
+	/* href */
 
 	if (block.link?.type === 'internal') {
 		const linkedDoc = pages.find(p => p.id === block.link.rel.value)
@@ -45,22 +62,24 @@ module.exports = function renderUnImg(block, meta, context) {
 		href = `${block.link.url}`
 	}
 
-	const innerHTML = (href)
+	/* HTML */
+
+	HTML = (href)
 		? /* html */`<a href="${href}"><un-img ${attStr}>${renderImageset(block.rel, meta, context)}</un-img></a>`
 		: /* html */`<un-img ${attStr}>${renderImageset(block.rel, meta, context)}</un-img>`
 
 	if (block.caption) {
-		html = /* html */`
+		HTML = /* html */`
 		<figure>
-			${innerHTML}
+			${HTML}
 			<figcaption>${block.caption}</figcaption>
 		</figure>
 		`;
 	} else {
-		html = /* html */`${innerHTML}`
+		HTML = /* html */`${HTML}`
 	}
 
-	return html
+	return HTML
 }
 
 function renderUnImgOld(block, meta, context) {
@@ -77,7 +96,7 @@ function renderUnImgOld(block, meta, context) {
 	const attributes = [
 		// meta
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.id) ? `data-page="${meta.id}"` : '',
 		// block
 		(block.size) ? `data-size=${block.size}` : '',
 		(block.shape) ? `data-shape=${block.shape}` : '',
