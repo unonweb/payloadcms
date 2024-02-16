@@ -1,24 +1,20 @@
 export default function CSSObjUpdate(css = {}, selector = '', key = '', val = '') {
 	/*	
-		- returns the updated css obj 
+		Task:
+			Update value of CSS-Obj
+			Return the updated obj 
+		Notes:
+			- A CSS-Obj has the shape css[selector][key] = val
 	*/
 
-	if (typeof css === 'undefined') {
-		css = {}
-	}
 	if (typeof css === 'string') {
 		css = JSON.parse(css)
 	}
 
-	if (css.hasOwnProperty(selector)) {
-		css[selector][key] = val // css[selector][key] already exist - overwrite
-	}
-	else {
-		// create new selector with that key: value
-		css[selector] = {
-			[key]: val
-		}
-	}
-
+	css ??= {}
+	if (!css.hasOwnProperty(selector)) css[selector] = {}
+	
+	css[selector][key] = val
+	
 	return css
 }

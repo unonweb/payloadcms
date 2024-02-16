@@ -1,8 +1,7 @@
 function CSSToJSON(css = '') {
 
 	if (typeof css !== 'string') {
-		console.error("Need a CSS string but given ", typeof css, css);
-		return "Not a valid CSS..!";
+		throw new Error("Need a CSS string but given ", typeof css, css);
 	}
 
 	function _trimSemiColon(text) {

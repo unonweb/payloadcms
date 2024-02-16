@@ -1,6 +1,8 @@
 export default function CSSObjRemoveKey(css = {}, selector = '', key = '') {
 	/*	
-		- returns the updated css obj 
+		Task
+			- Remove a key in a CSS-Obj 
+			- Return the updated obj
 	*/
 
 	if (typeof css === 'undefined') {
