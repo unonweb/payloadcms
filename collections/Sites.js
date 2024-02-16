@@ -39,7 +39,36 @@ const defaultUserCSS = {
 		"--primary-clone": "color-mix(in oklch, var(--primary), white 0.001%)",
 		"--complementary": "color-mix(in oklch longer hue, var(--primary), var(--primary-clone))",
 		"--split-complementary-1": "color-mix(in oklch longer hue, var(--primary) 41.666%, var(--primary-clone))",
-		"--split-complementary-2": "color-mix(in oklch longer hue, var(--primary) 58.333%, var(--primary-clone))"
+		"--split-complementary-2": "color-mix(in oklch longer hue, var(--primary) 58.333%, var(--primary-clone))",
+		"--primary-alpha-95": "color-mix(in oklab, var(--primary), transparent 95%)",
+		"--primary-alpha-85": "color-mix(in oklab, var(--primary), transparent 85%)",
+		"--primary-alpha-75": "color-mix(in oklab, var(--primary), transparent 75%)",
+		"--primary-alpha-50": "color-mix(in oklab, var(--primary), transparent 50%)",
+		"--primary-alpha-25": "color-mix(in oklab, var(--primary), transparent 25%)",
+		"--primary-white-85": "color-mix(in oklab, var(--primary), white 85%)",
+		"--primary-white-75": "color-mix(in oklab, var(--primary), white 75%)",
+		"--primary-white-60": "color-mix(in oklab, var(--primary), white 60%)",
+		"--primary-white-50": "color-mix(in oklab, var(--primary), white 50%)",
+		"--primary-white-40": "color-mix(in oklab, var(--primary), white 40%)",
+		"--primary-white-30": "color-mix(in oklab, var(--primary), white 30%)",
+		"--primary-white-20": "color-mix(in oklab, var(--primary), white 20%)",
+		"--primary-white-10": "color-mix(in oklab, var(--primary), white 10%)",
+		"--primary-white-5": "color-mix(in oklab, var(--primary), white 5%)",
+		"--primary-black-50": "color-mix(in oklab, var(--primary), black 50%)",
+		"--primary-black-25": "color-mix(in oklab, var(--primary), black 25%)",
+		"--primary-black-15": "color-mix(in oklab, var(--primary), black 15%)",
+		"--primary-black-10": "color-mix(in oklab, var(--primary), black 10%)",
+		"--complementary-alpha-95": "color-mix(in oklab, var(--complementary), transparent 95%)",
+		"--complementary-alpha-85": "color-mix(in oklab, var(--complementary), transparent 85%)",
+		"--complementary-alpha-75": "color-mix(in oklab, var(--complementary), transparent 75%)",
+		"--complementary-alpha-50": "color-mix(in oklab, var(--complementary), transparent 50%)",
+		"--complementary-alpha-25": "color-mix(in oklab, var(--complementary), transparent 25%)",
+		"--complementary-white-85": "color-mix(in oklab, var(--complementary), white 85%)",
+		"--complementary-white-75": "color-mix(in oklab, var(--complementary), white 75%)",
+		"--complementary-white-60": "color-mix(in oklab, var(--complementary), white 60%)",
+		"--complementary-white-30": "color-mix(in oklab, var(--complementary), white 30%)",
+		"--complementary-white-10": "color-mix(in oklab, var(--complementary), white 10%)",
+		"--complementary-white-5": "color-mix(in oklab, var(--complementary), white 5%)",
 	}
 }
 
@@ -121,7 +150,7 @@ export const Sites = {
 					Arguments:
 						data holds the current values even if it's set in beforeValidate field hooks
 				*/
-				
+
 				data.assets.imgs = []
 				if (data.background.img_filename) {
 					data.assets.imgs.push(data.background.img_filename)
@@ -140,13 +169,13 @@ export const Sites = {
 					const pathSite = context.pathSite
 
 					/* write font.css */
-					if (doc?.fonts?.css !== previousDoc?.fonts?.css || !await canAccess(`${pathSite}/assets/fonts.css`)) {
-						saveToDisk(`${pathSite}/assets/fonts.css`, doc.fonts.css, user)
+					if (doc?.css?.fonts !== previousDoc?.css?.fonts || !await canAccess(`${pathSite}/assets/fonts.css`)) {
+						saveToDisk(`${pathSite}/assets/fonts.css`, doc.css.fonts, user)
 					}
 
 					/* write user.css */
-					if (JSON.stringify(doc?.css) !== JSON.stringify(previousDoc?.css) || !await canAccess(`${pathSite}/assets/user.css`)) {
-						let userCSS = CSSFromJSON(doc.css)
+					if (JSON.stringify(doc?.css?.user) !== JSON.stringify(previousDoc?.css?.user) || !await canAccess(`${pathSite}/assets/user.css`)) {
+						let userCSS = CSSFromJSON(doc.css.user)
 						await saveToDisk(`${pathSite}/assets/user.css`, userCSS, user)
 					}
 
@@ -315,13 +344,9 @@ export const Sites = {
 												value = []
 												context.fonts ??= {}
 
-												if (data.fonts.body) {
-													context.fonts.body ??= await getRelatedDoc('fonts', data.fonts.body, context.user, { depth: 0 })
-													value.push(context.fonts.body.filename)
-												}
-												if (data.fonts.headings) {
-													context.fonts.headings ??= await getRelatedDoc('fonts', data.fonts.headings, context.user, { depth: 0 })
-													value.push(context.fonts.headings.filename)
+												for (const font of data.fonts ??= []) {
+													context.fonts[font.rel] ??= await getRelatedDoc('fonts', font.rel, context.user, { depth: 0 })
+													value.push(context.fonts[font.rel].filename)
 												}
 
 												return value
@@ -411,7 +436,43 @@ export const Sites = {
 													},
 												},
 											]
-										}
+										},
+										// --- site.paths.web.fonts
+										{
+											type: 'text',
+											name: 'fonts',
+											label: 'site.paths.web.fonts',
+											required: false,
+											admin: {
+												placeholder: '/home/payload/sites/<domain>/assets'
+											},
+											validate: (value, { payload }) => isValidPath(value, payload),
+											defaultValue: 'assets'
+										},
+										// --- site.paths.web.docs
+										{
+											type: 'text',
+											name: 'docs',
+											label: 'site.paths.web.docs',
+											required: false,
+											admin: {
+												placeholder: '/home/payload/sites/<domain>/assets/docs'
+											},
+											validate: (value, { payload }) => isValidPath(value, payload),
+											defaultValue: 'assets/docs'
+										},
+										// --- site.paths.web.imgs
+										{
+											type: 'text',
+											name: 'imgs',
+											label: 'site.paths.web.imgs',
+											required: false,
+											admin: {
+												placeholder: '/home/payload/sites/<domain>/assets/imgs'
+											},
+											validate: (value, { payload }) => isValidPath(value, payload),
+											defaultValue: 'assets/imgs'
+										},
 									]
 								},
 								// --- site.paths.fs
@@ -434,40 +495,6 @@ export const Sites = {
 												readOnly: true,
 												description: 'This value is set afterChange by Admin Global. If changed all path fields are recreated.'
 											},
-										},
-										// --- site.paths.fs.imgs
-										// --- not used any more
-										{
-											type: 'text',
-											name: 'imgs',
-											label: 'site.paths.fs.imgs',
-											required: false,
-											admin: {
-												placeholder: '/home/payload/sites/<domain>/assets/imgs'
-											},
-											validate: (value, { payload }) => isValidPath(value, payload),
-										},
-										// --- site.paths.fs.fonts
-										{
-											type: 'text',
-											name: 'fonts',
-											label: 'site.paths.fs.fonts',
-											required: false,
-											admin: {
-												placeholder: '/home/payload/sites/<domain>/assets'
-											},
-											validate: (value, { payload }) => isValidPath(value, payload),
-										},
-										// --- site.paths.fs.docs
-										{
-											type: 'text',
-											name: 'docs',
-											label: 'site.paths.fs.docs',
-											required: false,
-											admin: {
-												placeholder: '/home/payload/sites/<domain>/assets/docs'
-											},
-											validate: (value, { payload }) => isValidPath(value, payload),
 										},
 										// --- group: admin
 										{
@@ -626,6 +653,52 @@ export const Sites = {
 						},
 						// --- site.fonts
 						{
+							type: 'array',
+							name: 'fonts',
+							maxRows: 2,
+							fields: [
+								{
+									type: 'row',
+									fields: [
+										{
+											type: 'relationship',
+											name: 'rel',
+											relationTo: 'fonts',
+											label: {
+												de: 'Schriftart',
+												en: 'Font'
+											},
+											maxDepth: 0,
+											required: false,
+											admin: {
+												disableBulkEdit: true,
+												width: '50%'
+											},
+											hooks: {
+												beforeValidate: [
+													async ({ operation, context }) => {
+														if (operation === 'create') {
+															return await getRandomDocID('fonts', context.user)
+														}
+													}
+												],
+											}
+										},
+										{
+											type: 'select',
+											name: 'selectors',
+											options: ['body', 'headings', 'h1', 'h2', 'h3', 'h4', 'nav',],
+											hasMany: true,
+											admin: {
+												width: '25%'
+											},
+										}
+									]
+								},
+
+							]
+						},
+						/* {
 							type: 'group',
 							name: 'fonts',
 							fields: [
@@ -677,43 +750,8 @@ export const Sites = {
 										]
 									}
 								},
-								// --- site.fonts.css
-								{
-									type: 'code',
-									name: 'css',
-									label: 'site.fonts.css',
-									localized: false,
-									admin: {
-										condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-										language: 'css',
-										readOnly: true,
-									},
-									hooks: {
-										beforeChange: [
-											async ({ data, context, value, req }) => {
-
-												if (!req.user) return // is undefined when updated by localAPI - even with overrideAccess: false and user: req.user 
-
-												value = ''
-												context.fonts ??= {}
-												let fontFaces = []
-
-												if (data.fonts.body) {
-													context.fonts.body ??= await getRelatedDoc('fonts', data.fonts.body, context.user, { depth: 0 })
-													fontFaces.push(context.fonts.body.face)
-												}
-												if (data.fonts.headings && data.fonts.headings !== data.fonts.body) {
-													context.fonts.headings ??= await getRelatedDoc('fonts', data.fonts.headings, context.user, { depth: 0 })
-													fontFaces.push(context.fonts.headings.face)
-												}
-
-												return createFontCSS(fontFaces, context.fonts.body, context.fonts.headings) // update data.fonts.css
-											}
-										]
-									}
-								},
 							],
-						},
+						}, */
 						// --- site.colors
 						{
 							type: 'group',
@@ -796,7 +834,7 @@ export const Sites = {
 												else {
 													siblingData.img_filename = null
 												}
-												
+
 												context.updatePages = true
 											}
 										]
@@ -813,42 +851,102 @@ export const Sites = {
 
 							]
 						},
-						// --- user.css
+						// --- site.css
 						/* 	- updated by site.colors
 						*/
 						{
-							type: 'json',
+							type: 'group',
 							name: 'css',
-							admin: {
-								condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
-							},
-							defaultValue: defaultUserCSS,
-							hooks: {
-								beforeChange: [
-									({ value, data }) => {
-										/*
-											Task:
-												Update 'user.css'
-											Requires:
-												- data.background.img_filename
-												- data.colors.primary
-												- data.colors.secondary
-										*/
-										// data.background.img
-										if (data.background.img_filename) {
-											value = CSSObjUpdate(value, 'body', 'background-image', `url("/assets/imgs/${data.background.img_filename}")`)
-										}
-										else {
-											value = CSSObjRemoveKey(value, 'body', 'background-image') // update data.css	
-										}
-										
-										// data.colors
-										value = CSSObjUpdate(value, 'html', '--primary', data.colors.primary) // update data.css
-										value = CSSObjUpdate(value, 'html', '--secondary', data.colors.secondary) // update data.css
-										return value
+							fields: [
+								// --- site.css.user
+								{
+									type: 'json',
+									name: 'user',
+									label: 'site.css.user',
+									admin: {
+										condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+									},
+									defaultValue: defaultUserCSS,
+									hooks: {
+										beforeChange: [
+											({ value, data }) => {
+												/*
+													Task:
+														Update field value
+													Requires:
+														- data.background.img_filename
+														- data.colors.primary
+														- data.colors.secondary
+												*/
+												// data.background.img
+												if (data.background.img_filename) {
+													value = CSSObjUpdate(value, 'body', 'background-image', `url("/assets/imgs/${data.background.img_filename}")`)
+												}
+												else {
+													value = CSSObjRemoveKey(value, 'body', 'background-image') // update data.css	
+												}
+
+												// data.colors
+												value = CSSObjUpdate(value, 'html', '--primary', data.colors.primary) // update data.css
+												value = CSSObjUpdate(value, 'html', '--secondary', data.colors.secondary) // update data.css
+												return value
+											}
+										]
 									}
-								]
-							}
+								},
+								// --- site.css.fonts
+								{
+									type: 'code',
+									name: 'fonts',
+									label: 'site.css.fonts',
+									localized: false,
+									admin: {
+										condition: (data, siblingData, { user }) => (user && user?.roles?.includes('admin')) ? true : false,
+										language: 'css',
+										readOnly: true,
+									},
+									hooks: {
+										beforeChange: [
+											async ({ data, context, value, req }) => {
+
+												if (!req.user) return // is undefined when updated by localAPI - even with overrideAccess: false and user: req.user 
+
+												context.fonts ??= {}
+												let fontFaces = ''
+												let fontRules = ''
+
+												for (const font of data.fonts ??= []) {
+
+													/* get and concatenate font-faces */
+													context.fonts[font.rel] ??= await getRelatedDoc('fonts', font.rel, context.user, { depth: 0 })
+													const fontData = context.fonts[font.rel]
+													fontFaces += fontData.face
+
+													/* get and concatenate font-rules */
+													let selectors = []
+													for (const selector of font.selectors ??= []) {
+														switch (selector) {
+															case 'headings':
+																selectors.push('h1', 'h2', 'h3', 'h4')
+																break;
+															case 'nav':
+																selectors.push('[role="navigation"]', 'un-nav')
+																break;
+															default:
+																selectors.push(selector)
+																break;
+														}
+													}
+
+													fontRules += createCSSRule(selectors.join(', '), 'font-family', fontData.familyName)
+												}
+
+												return fontFaces + fontRules
+											}
+										]
+									}
+								},
+							]
 						},
 					]
 				},
@@ -966,7 +1064,7 @@ export const Sites = {
 
 function writeSiteCSS(doc) {
 	let content = ''
-	content += insertCSSRule('html', '--primary', `'${doc.colors.primary}'`)
+	content += createCSSRule('html', '--primary', `'${doc.colors.primary}'`)
 }
 
 function createFontCSS(fontFaces = [], fontBody = {}, fontHeadings = {}) {
@@ -977,13 +1075,16 @@ function createFontCSS(fontFaces = [], fontBody = {}, fontHeadings = {}) {
 		css += fontface
 	}
 
-	css += (fontBody) ? insertCSSRule('body', 'font-family', `'${fontBody.familyName}'`) : ''
-	css += (fontHeadings) ? insertCSSRule('h1, h2, h3, h4, h5', 'font-family', `'${fontHeadings.familyName}'`) : ''
+	css += (fontBody) ? createCSSRule('body', 'font-family', `'${fontBody.familyName}'`) : ''
+	css += (fontHeadings) ? createCSSRule('h1, h2, h3, h4, h5', 'font-family', `'${fontHeadings.familyName}'`) : ''
 
 	return css
 }
 
-function insertCSSRule(selector = '', key = '', value = '') {
+function createCSSRule(selector = '', key = '', value = '') {
+	/*
+		Formats and returns a CSS-String 
+	*/
 	return `${selector} { \n\t${key}: ${value};\n}\n`
 }
 
