@@ -11,7 +11,15 @@ import otherLocaleField from '../fields/otherLocaleField';
 import { deployButtonField } from '../fields/deployButtonField';
 
 /* BLOCKS */
-import createColumnsFlex from '../blocks/layout/lay-flex';
+import createLayoutGridFixed from '../blocks/createLayoutGridFixed';
+
+import createRichTextBlock from '../blocks/rich-text-block';
+import { mapLeafletBlock } from '../blocks/map-leaflet';
+import createUnImgBlock from '../blocks/img/un-img';
+import { imgGalleryBlock } from '../blocks/img/img-gallery';
+import { imgSlidesBlock } from '../blocks/img/img-slideshow';
+import { socialMediaIcons } from '../blocks/social-media-icons';
+import createIncludePostsBlock from '../blocks/include-posts-block';
 
 /* HOOKS & HELPERS */
 import validateIsHome from '../hooks/validate/validateIsHome';
@@ -27,7 +35,7 @@ import getDefaultDocID from '../hooks/beforeValidate/getDefaultDocID';
 import startConsoleTime from '../hooks/beforeOperation/startConsoleTime';
 import populateContextBeforeOp from '../hooks/beforeOperation/populateContext';
 import endConsoleTime from '../hooks/afterOperation/endConsoleTime';
-import setPageMainHTML from '../hooks/beforeChange/setMainHTMLPage/index';
+import setPageMainHTML from '../hooks/beforeChange/setMainHTMLPage';
 import setHeadHTML from '../hooks/beforeChange/setHeadHTML';
 import populateContextBeforeVal from '../hooks/beforeValidate/populateContext';
 import copyAssets from '../hooks/afterChange/copyAssets';
@@ -36,6 +44,21 @@ import savePage from '../hooks/afterChange/savePage';
 import removePrevPage from '../hooks/afterChange/removePrevPage';
 import requestUpdateByID from '../helpers/requestUpdateByID';
 import isUnique from '../hooks/validate/isUnique';
+import createPageTemplateFields from '../fields/createPageTemplateFields';
+import getDoc from '../hooks/getDoc';
+import renderUnLayFlex from '../helpers/renderUnLayFlex';
+import createGroupBlock from '../blocks/layout/group-block';
+import createLexicalField from '../fields/createLexicalField';
+
+const blocksAvailable = [
+	createRichTextBlock(),
+	createUnImgBlock(['caption', 'size', 'link', 'shape', 'filter']),
+	imgGalleryBlock,
+	//imgSlidesBlock,
+	//socialMediaIcons,
+	mapLeafletBlock,
+	createIncludePostsBlock(),
+]
 
 const commonFields = createCommonFields()
 const SLUG = 'pages'
@@ -83,7 +106,36 @@ export const Pages = {
 			async ({ args, operation }) => await populateContextBeforeOp({ args, operation }, ['sites', 'images', 'documents', 'pages']),
 		],
 		beforeValidate: [
-			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req }, ['sites', 'images', 'documents', 'pages'])
+			async ({ data, req, operation, originalDoc }) => await populateContextBeforeVal({ data, req }, ['sites', 'images', 'documents', 'pages']),
+			async ({ data, req, operation, originalDoc, context }) => {
+				/* 
+					single & bulk user action:
+						- data.template === current value
+						- originalDoc.template === previous value
+				*/
+				if (data.layout !== 'template') return
+
+				if (operation === 'create') {
+					const template = await getDoc('page-templates', data.template, context.user, { depth: 0 }) // when doc is created get its shape
+					data.shape = template.shape
+					data.templateName = template.name
+				}
+
+				if (operation === 'update') {
+					if (data.template === null) {
+						return null // if template has been reset
+					}
+					if (data.template !== undefined && data.template !== originalDoc.template) {
+						// if template has been changed
+						const type = await getDoc('page-templates', data.template, context.user, { depth: 0 })
+						data.shape = type.shape
+						data.dateStyle = type.dateStyle
+						data.templateName = type.name
+					}
+				}
+
+				return data
+			}
 		],
 		// --- beforeChange
 		beforeChange: [
@@ -293,7 +345,7 @@ export const Pages = {
 											if (!req.user) return
 											if (operation === 'update' && value === undefined) return // skip bulk ops
 											if (data.isHome) return ''
-											
+
 											if (value) return slugify(value)
 
 											if (!value) {
@@ -361,9 +413,6 @@ export const Pages = {
 										}
 									}
 								],
-								afterChange: [
-									
-								]
 							}
 						},
 						// --- page.html
@@ -373,6 +422,10 @@ export const Pages = {
 						// --- page.assets.docs
 						// --- page.assets.head
 						createAssetsFields('imgs', 'docs', 'head', 'otherURLs'),
+						// --- createdByID
+						// --- createdByName
+						// --- updatedBy
+						...commonFields,
 					]
 				},
 				// --- ELEMENTS [tab-2]
@@ -538,33 +591,79 @@ export const Pages = {
 						de: 'Inhalt',
 						en: 'Content'
 					},
-					description: 'Wähle die Layout-Elemente, die im Hauptteil (<main>) der Seite verwendet werden sollen.',
+					//description: 'Wähle die Layout-Elemente, die im Hauptteil (<main>) der Seite verwendet werden sollen.',
 					fields: [
-						// --- page.main.blocks
-						{
-							type: 'blocks',
-							name: 'blocks',
-							label: 'Layout',
-							labels: {
-								singular: 'Layout',
-								plural: 'Layouts',
-							},
-							blocks: [
-								createColumnsFlex(),
-								//createLayoutTemplate(),
-							],
-							defaultValue: [
-								{
-									blockType: 'columns-flex'
-								}
-							],
-						},
+						// --- page.main.richText
+						createLexicalField(['img-gallery', 'map-leaflet', 'include-posts-flex', 'section', 'svg', 'layout-flex']),
 					]
 				},
 			]
 		},
-		...commonFields,
+		// --- page.shape
+		{
+			type: 'json',
+			name: 'shape',
+			defaultValue: [],
+			admin: {
+				hidden: true,
+				readOnly: true // set by page-template
+			},
+		},
+		// --- page.templateName
+		{
+			type: 'text',
+			name: 'templateName',
+			label: {
+				de: 'Typ',
+				en: 'Type'
+			},
+			localized: false,
+			index: true,
+			admin: {
+				hidden: true,
+				readOnly: true // set by page-template
+			},
+		},
 		// --- SIDEBAR ---
+		// --- page.layout
+		/* {
+			type: 'select',
+			name: 'layout',
+			options: ['blocks', 'template', 'richText'],
+			admin: {
+				position: 'sidebar',
+				width: '50%',
+			}
+		}, */
+		// --- page.template
+		/* {
+			type: 'relationship',
+			relationTo: 'page-templates',
+			name: 'template',
+			label: {
+				de: 'Template',
+				en: 'Template'
+			},
+			hasMany: false,
+			localized: false,
+			maxDepth: 0,
+			admin: {
+				position: 'sidebar',
+				width: '50%',
+				condition: (data, siblingData) => data?.layout === 'template',
+				description: () => (<span>&#10132; Nach Auswahl oder Änderung eines Templates bitte einmal <strong>speichern</strong>!</span>)
+			},
+			hooks: {
+				beforeValidate: [
+					async ({ data, originalDoc, siblingData, value, field, context, collection, req }) => {
+						const fieldValue = value ?? data?.[field.name] ?? originalDoc?.[field.name] ?? null // in bulk operations 'value' is undefined; then if this field is updated 'data' holds the current value
+						if (fieldValue) {
+							return await resetBrokenRelationship(fieldValue, { field, context, collection })
+						}
+					}
+				]
+			},
+		}, */
 		otherLocaleField,
 		deployButtonField,
 		/* {
@@ -608,8 +707,4 @@ export const Pages = {
 			}
 		}, */
 	],
-}
-
-function getHash(params) {
-	return crypto.createHash('md5').update(somestring).digest('hex').toString();
 }

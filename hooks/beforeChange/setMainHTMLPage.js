@@ -40,21 +40,11 @@ export default async function setMainHTMLPage({ data, req, operation, originalDo
 		context.imgFiles = new Set()
 		context.docFiles = new Set()
 		context.libPathsWeb = new Set()
-		context.posts ??= await getCol('posts-flex', user, { depth: 0, locale: req.locale, overrideAccess: true, user: req.user })
+		context.posts ??= await getCol('posts-flex', user, { depth: 0, locale: req.locale, overrideAccess: true, user: req.user }) // <-- IMP!
 
-		/* blocks */
-		if (data.layout === 'blocks') {
-			const blocks = (data?.main.blocks) ? data.main.blocks : data.blocks
-			if (blocks && blocks.length === 0) return
-			const prevBlocks = (operation === 'update') ? originalDoc?.main.blocks ?? originalDoc.main.blocks : null
-			// update post.html.main
-			data.html.main = iterateBlocks(blocks, meta, context)
-		}
-
-		if (data.layout === 'richText') {
-			// update post.html.main
-			data.html.main = renderLexicalHTML(data.main.richText.root.children, meta, context)
-		}
+		// update post.html.main
+		data.html.main = renderLexicalHTML(data.main.richText.root.children, meta, context)
+		
 
 		data.assets.imgs = Array.from(context.imgFiles) // update post.assets.imgs
 		data.assets.docs = Array.from(context.docFiles) // update post.assets.docs
