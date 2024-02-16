@@ -5,7 +5,7 @@ module.exports = function renderUnHeaderBanner(block, meta, context) {
 	// blockType: 'header-banner'
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.id) ? `data-page="${meta.id}"` : '',
 		// block
 		(block.transfx) ? `data-transfx="${block.transfx}"` : '',
 		(block.transtime) ? `data-shape=${block.transtime}` : '',

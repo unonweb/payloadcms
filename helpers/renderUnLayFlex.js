@@ -5,7 +5,7 @@ module.exports = function renderUnLayFlex(block, meta, context) {
 	const attributes = [
 		// global
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.id) ? `data-page="${meta.id}"` : '',
 		// layout
 		(block.layout) ? `data-layout="${block.layout}"` : '',
 		(block.gap) ? `data-gap="${block.gap}%"` : '',

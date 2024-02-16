@@ -5,7 +5,7 @@ module.exports = function renderUnFooter(block, meta, context) {
 	// footer
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.id) ? `data-page="${meta.id}"` : '',
 	].filter(item => item).join(' ')
 
 	const properties = [].join(' ')

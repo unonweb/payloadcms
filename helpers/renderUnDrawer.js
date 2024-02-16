@@ -9,7 +9,7 @@ module.exports = function renderUnDrawer(block, meta, context) {
 
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.id) ? `data-page="${meta.id}"` : '',
 	].filter(item => item).join(' ')
 
 	let html

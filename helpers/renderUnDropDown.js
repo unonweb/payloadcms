@@ -7,7 +7,7 @@ module.exports = function renderUnDropDown(block, meta, context) {
 	const attributes = [
 		// meta
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.id) ? `data-page="${meta.id}"` : '',
 		// block
 		(block.openOn) ? `data-openon="${block.openOn}"` : '',
 		(block.overlay) ? `data-overlay="${block.overlay}"` : '',

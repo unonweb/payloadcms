@@ -4,7 +4,7 @@ module.exports = function renderUnImgSlides(block, meta, context) {
 		
 	const attributes = [
 		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		(meta.id) ? `data-page="${meta.id}"` : '',
 	].join(' ')
 
 	let html = /* html */`	
