@@ -17,6 +17,7 @@ export default function renderPageHTML(data = {}, locale = '', docID = '', conte
 		if (!data.html?.head) throw new Error(`page.html.head is "${data?.html?.head}" for "${data.slug}" with locale "${locale}"`)
 
 		const slug = (data.slug === '') ? '/' : data.slug
+		const theme = context.site.domainShort
 
 		const pageHTML = /* html */`
 			<!DOCTYPE html>
@@ -25,7 +26,7 @@ export default function renderPageHTML(data = {}, locale = '', docID = '', conte
 			<body>
 				${ headerHTML ?? '' }
 				${ navHTML ?? '' }
-				<main data-page="${docID}" lang="${ locale ?? '' }" data-margin="${ data.main?.margin ?? 'medium'}" data-density="${ data.main?.density ?? 'medium'}" data-justify="${ data.main?.justify ?? 'left'}" data-align="${ data.main?.align ?? 'center'}">
+				<main data-theme="${theme}" data-page="${docID}" lang="${ locale ?? '' }" data-margin="${ data.main?.margin ?? 'medium'}" data-density="${ data.main?.density ?? 'medium'}" data-justify="${ data.main?.justify ?? 'left'}" data-align="${ data.main?.align ?? 'center'}">
 					${ data.html?.main ?? '' }
 				</main>
 				${ footerHTML ?? '' }
