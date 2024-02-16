@@ -24,155 +24,140 @@ export default function createIncludePostsBlock() {
 			},
 			// --- showOptions
 			showOptionsField,
+			// --- block.sortBy
 			{
-				type: 'row',
+				type: 'radio',
+				name: 'sortBy',
+				label: {
+					de: 'Sortierung',
+					en: 'Order',
+				},
 				admin: {
 					condition: (data, siblingData) => siblingData.showOptions
 				},
-				fields: [
-					// --- block.sortBy
+				options: [
 					{
-						type: 'radio',
-						name: 'sortBy',
+						value: 'date',
 						label: {
-							de: 'Sortierung',
-							en: 'Order',
-						},
-						options: [
-							{
-								value: 'date',
-								label: {
-									en: 'Date',
-									de: 'Datum'
-								}
-							},
-							{
-								value: 'tags',
-								label: {
-									en: 'Tags',
-									de: 'Tags'
-								}
-							},
-						],
-						defaultValue: 'date',
+							en: 'Date',
+							de: 'Datum'
+						}
 					},
-				]
+					{
+						value: 'tags',
+						label: {
+							en: 'Tags',
+							de: 'Tags'
+						}
+					},
+				],
+				defaultValue: 'date',
 			},
+			// --- block.ui
 			{
-				type: 'collapsible',
+				type: 'group',
+				name: 'ui',
 				label: {
 					de: 'Benutzeroberfläche',
 					en: 'User Interface'
 				},
 				admin: {
-					initCollapsed: true,
-					condition: (data, siblingData) => siblingData.showOptions
+					hideGutter: true,
+					condition: (data, siblingData) => siblingData.showOptions,
 				},
 				fields: [
-					// --- block.ui
+					// --- block.ui.isCollapsible
 					{
-						type: 'group',
-						name: 'ui',
-						label: ' ',
-						admin: {
-							hideGutter: true,
-							className: 'hide-group-label'
+						type: 'checkbox',
+						name: 'isCollapsible',
+						label: {
+							de: 'Zusammenklappbar',
+							en: 'Collapsible'
 						},
-						fields: [
-							// --- block.ui.isCollapsible
+						defaultValue: false,
+					},
+					// --- block.ui.initState
+					{
+						type: 'radio',
+						name: 'initState',
+						label: {
+							de: 'Ausgangszustand',
+							en: 'Initial State'
+						},
+						admin: {
+							condition: (data, siblingData) => siblingData.isCollapsible
+						},
+						options: [
 							{
-								type: 'checkbox',
-								name: 'isCollapsible',
+								value: 'collapsed',
 								label: {
-									de: 'Zusammenklappbar',
-									en: 'Collapsible'
-								},
-								defaultValue: false,
+									de: 'Zusammengeklappt',
+									en: 'Collapsed'
+								}
 							},
-							// --- block.ui.initState
 							{
-								type: 'radio',
-								name: 'initState',
+								value: 'expanded',
 								label: {
-									de: 'Ausgangszustand',
-									en: 'Initial State'
-								},
-								admin: {
-									condition: (data, siblingData) => siblingData.isCollapsible
-								},
-								options: [
-									{
-										value: 'collapsed',
-										label: {
-											de: 'Zusammengeklappt',
-											en: 'Collapsed'
-										}
-									},
-									{
-										value: 'expanded',
-										label: {
-											de: 'Auseinandergeklappt',
-											en: 'Expanded'
-										}
-									},
-								],
-								defaultValue: 'collapsed',
+									de: 'Auseinandergeklappt',
+									en: 'Expanded'
+								}
 							},
-							// --- block.ui.include
+						],
+						defaultValue: 'collapsed',
+					},
+					// --- block.ui.include
+					{
+						type: 'select',
+						name: 'include',
+						label: {
+							de: 'Welche Bedienelemente sollen angezeigt werden?',
+							en: 'Which settings affecting all posts should be shown to the user?'
+						},
+						hasMany: true,
+						admin: {
+							isClearable: true,
+						},
+						options: [
 							{
-								type: 'select',
-								name: 'include',
+								value: 'tags',
 								label: {
-									de: 'Welche Bedienelemente sollen angezeigt werden?',
-									en: 'Which settings affecting all posts should be shown to the user?'
-								},
-								hasMany: true,
-								admin: {
-									isClearable: true,
-								},
-								options: [
-									{
-										value: 'tags',
-										label: {
-											de: 'Filter nach Tags',
-											en: 'Filter by tags'
-										}
-									},
-									{
-										value: 'sortorder',
-										label: {
-											de: 'Sortierung',
-											en: 'Sort Order'
-										}
-									},
-									{
-										value: 'searchbar',
-										label: {
-											de: 'Suchleiste',
-											en: 'Searchbar'
-										}
-									},
-									{
-										value: 'toc',
-										label: {
-											de: 'Inhaltsverzeichnis',
-											en: 'Table of Contents'
-										}
-									},
-									{
-										value: 'backToTopButton',
-										label: {
-											de: 'Back-to-Top Button',
-											en: 'Back-to-Top Button'
-										}
-									},
-								],
-								defaultValue: [],
+									de: 'Filter nach Tags',
+									en: 'Filter by tags'
+								}
 							},
-						]
+							{
+								value: 'sortorder',
+								label: {
+									de: 'Sortierung',
+									en: 'Sort Order'
+								}
+							},
+							{
+								value: 'searchbar',
+								label: {
+									de: 'Suchleiste',
+									en: 'Searchbar'
+								}
+							},
+							{
+								value: 'toc',
+								label: {
+									de: 'Inhaltsverzeichnis',
+									en: 'Table of Contents'
+								}
+							},
+							{
+								value: 'backToTopButton',
+								label: {
+									de: 'Back-to-Top Button',
+									en: 'Back-to-Top Button'
+								}
+							},
+						],
+						defaultValue: [],
 					},
 				]
-			}
+			},
 		]
 	}
 
