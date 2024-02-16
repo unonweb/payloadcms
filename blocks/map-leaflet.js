@@ -1,16 +1,20 @@
+import { widthField } from '../fields/width-field';
+
 export const mapLeafletBlock = {
 	slug: 'map-leaflet',
 	labels: {
 		singular: {
-			en: 'Map (Leaflet)',
-			de: 'Karte (Leaflet)'
+			en: 'Map',
+			de: 'Karte'
 		},
 		plural: {
-			en: 'Maps (Leaflet)',
-			de: 'Karten (Leaflet)'
+			en: 'Maps',
+			de: 'Karten'
 		}
 	},
 	fields: [
+		// leaflet.width
+		//widthField,
 		// --- leaflet.coords
 		{
 			type: 'point',
@@ -20,71 +24,43 @@ export const mapLeafletBlock = {
 				en: 'Coordinates'
 			},
 		},
-		/* {
+		{
 			type: 'row',
 			fields: [
-				// --- leaflet.lat
+				// --- leaflet.pin
 				{
-					type: 'number',
-					name: 'lat',
+					type: 'select',
+					name: 'pin',
 					label: {
-						en: 'Latitude',
-						de: 'Längengrad'
+						en: 'Add a pin to the map',
+						de: 'Pin hinzufügen'
 					},
-					required: true,
-					defaultValue: 48,
 					admin: {
-						width: '50%',
+						isClearable: true
 					},
+					options: [
+						{
+							value: 'div',
+							label: {
+								de: 'Popup',
+								en: 'Popup'
+							}
+						}
+					]
 				},
-				// --- leaflet.lon
+				// --- leaflet.pintext
 				{
-					type: 'number',
-					name: 'lon',
+					type: 'text',
+					name: 'pintext',
 					label: {
-						en: 'Longitude',
-						de: 'Breitengrad'
+						en: 'Popup-Text',
+						de: 'Popup-Text'
 					},
-					required: true,
-					defaultValue: 9,
 					admin: {
-						width: '50%',
+						condition: (_, siblingData) => siblingData?.pin,
 					},
-				},
-			]
-		}, */
-		// --- leaflet.pin
-		{
-			type: 'select',
-			name: 'pin',
-			label: {
-				en: 'Add a pin to the map',
-				de: 'Pin hinzufügen'
-			},
-			admin: {
-				isClearable: true
-			},
-			options: [
-				{
-					value: 'div',
-					label: {
-						de: 'Popup',
-						en: 'Popup'
-					}
 				}
 			]
 		},
-		// --- leaflet.pintext
-		{
-			type: 'text',
-			name: 'pintext',
-			label: {
-				en: 'Popup-Text',
-				de: 'Popup-Text'
-			},
-			admin: {
-				condition: (_, siblingData) => siblingData?.pin,
-			},
-		}
 	],
 }
