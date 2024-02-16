@@ -21,7 +21,10 @@ module.exports = function renderImageset(img, meta, context, attributes = {}) {
 		}
 
 		/* attributes */
-		attributes.page ??= meta.id
+		
+		// custom
+		//attributes['data-page'] ??= meta.id
+		// built-in
 		attributes.sizes ??= '100vw'
 		attributes.loading ??= 'eager'
 		attributes.alt = img.alt
