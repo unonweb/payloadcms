@@ -25,6 +25,7 @@ import { _FontFamilies } from './collections/assets/_FontFamilies.js';
 import { Tags } from './collections/Tags.js';
 import { PostsFlex } from './collections/dynamic/PostsFlex.js';
 import { PostTypes } from './collections/dynamic/PostTypes.js';
+import { PageTemplates } from './collections/PageTemplates.js';
 
 //const mockModulePath = path.resolve(__dirname, 'mocks/emptyObject.js')
 //const mockModulePath = '/home/payload/cms/src/mocks/emptyObject.js'
@@ -104,7 +105,8 @@ export default buildConfig({
 	},
 	collections: [
 		/* Pages */
-		Pages, // everything downwards will not be linkable from richText fields
+		Pages,
+		PageTemplates,
 		/* dynamic content */
 		PostsFlex,
 		PostTypes,
@@ -175,6 +177,6 @@ export default buildConfig({
 		window: 9000, // Time in milliseconds to track requests per IP. Defaults to 90000 (15 minutes).
 		max: 500, // Number of requests served from a single IP before limiting. Defaults to 500.
 	},
-	maxDepth: 5,
+	maxDepth: 10,
 	indexSortableFields: true,
 });
