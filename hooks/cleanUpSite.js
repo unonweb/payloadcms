@@ -176,7 +176,7 @@ export default async function cleanUpSite(site = {}, user = '', {
 
 		/* cleanUpFonts */
 		if (cleanUpFonts === true) {
-			const pathFonts = `${pathSiteAssets}/fonts`
+			const pathFonts = `${pathSiteAssets}`
 			const fontsPosList = (site.assets.fonts) ? site.assets.fonts : null
 			if (fontsPosList && await canAccess(pathFonts)) {
 				// rm all font files that are not on the positive list:
