@@ -1,19 +1,22 @@
 module.exports = function renderUnMapLeaflet(block, meta, context) {
 	
-	const attributes = [
+	let attributes = {
 		// meta
-		(meta.theme) ? `data-theme="${meta.theme}"` : '',
-		(meta.slug) ? `data-page="${meta.slug}"` : '',
+		'data-theme': meta.theme,
+		'data-page': meta.id,
 		// block
-		(block.coords[0]) ? `data-lat="${block.coords[0]}"` : '',
-		(block.coords[1]) ? `data-lon="${block.coords[1]}"` : '',
-		(block.pin) ? `data-pin="${block.pin}"` : '',
-		(block.pintext) ? `data-pintext="${block.pintext}"` : '',
+		'data-width': block.width,
+		'data-pintext': block.pintext,
+		'data-pin': block.pin,
+		'data-lat': block.coords[0],
+		'data-lon': block.coords[1],
 
-	].filter(item => item).join(' ')
+	}
+
+	const attStr = Object.entries(attributes).filter(entry => entry[1]).map(entry => `${entry[0]}='${entry[1]}'`).reduce((prev, curr) => `${prev} ${curr}`, '')
 
 	let html = /* html */`
-		<un-map-leaflet ${attributes}></un-map-leaflet>
+		<un-map-leaflet ${attStr}></un-map-leaflet>
 	`
 	return html
 
