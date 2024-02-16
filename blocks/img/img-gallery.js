@@ -4,21 +4,29 @@ export const imgGalleryBlock = {
 	slug: 'img-gallery',
 	labels: {
 		singular: {
-			en: 'Image Gallery',
-			de: 'Bilder Galerie'
+			en: 'Interactive Image Gallery',
+			de: 'Interaktive Bilder Galerie'
 		},
 		plural: {
-			en: 'Image Galleries',
-			de: 'Bilder Galerien'
+			en: 'Interactive Image Galleries',
+			de: 'Interaktive Bilder Galerien'
 		}
 	},
 	fields: [
 		// --- block.showOptions
 		showOptionsField,
+		// --- block.number | block.justify | block.modal | block.onclick
 		{
 			type: 'row',
 			admin: {
-				condition: (data, siblingData) => siblingData.showOptions,
+				condition: (data, siblingData) => {
+					if (data) {
+						let key = Object.keys(data).find(key => key.startsWith('img-gallery'))
+						if (key) {
+							return data[key].showOptions
+						}
+					}
+				},
 			},
 			fields: [
 				// --- block.number
@@ -34,6 +42,7 @@ export const imgGalleryBlock = {
 					max: 8,
 					admin: {
 						width: '25%',
+						//condition: (data, siblingData) => siblingData.showOptions,
 					},
 				},
 				// --- block.justify
@@ -47,6 +56,7 @@ export const imgGalleryBlock = {
 					defaultValue: 'left',
 					admin: {
 						width: '25%',
+						//condition: (data, siblingData) => siblingData.showOptions,
 					},
 					options: [
 						{
@@ -71,15 +81,7 @@ export const imgGalleryBlock = {
 						},
 					],
 				},
-			]
-		},
-		{
-			type: 'row',
-			admin: {
-				condition: (data, siblingData) => siblingData.showOptions,
-			},
-			fields: [
-				// --- onclick
+				// --- block.onclick
 				{
 					type: 'select',
 					name: 'onclick',
@@ -88,7 +90,8 @@ export const imgGalleryBlock = {
 						de: 'Was passiert wenn ein Bild anbeklickt wird?'
 					},
 					admin: {
-						width: '25%',
+						width: '50%',
+						//condition: (data, siblingData) => siblingData.showOptions,
 					},
 					options: [
 						{
@@ -100,7 +103,7 @@ export const imgGalleryBlock = {
 						},
 					],
 				},
-				// --- onclick
+				// --- block.modal
 				{
 					type: 'select',
 					name: 'modal',
@@ -110,6 +113,7 @@ export const imgGalleryBlock = {
 					},
 					admin: {
 						width: '25%',
+						//condition: (data, siblingData) => siblingData.showOptions,
 					},
 					options: [
 						{
@@ -123,7 +127,6 @@ export const imgGalleryBlock = {
 				},
 			]
 		},
-		// --- block.images
 		{
 			type: 'array',
 			name: 'images',
@@ -142,10 +145,10 @@ export const imgGalleryBlock = {
 				}
 			},
 			admin: {
-				description: {
+				/* description: {
 					de: 'Präsentation der Bilder nebeneinander.',
 					en: 'Presentation of images side by side.'
-				},
+				}, */
 				initCollapsed: true,
 			},
 			fields: [
@@ -163,7 +166,7 @@ export const imgGalleryBlock = {
 				},
 				// --- block.img.showOptions
 				showOptionsField,
-				// --- img.caption
+				// --- block.img.caption
 				{
 					type: 'text',
 					name: 'caption',
@@ -175,88 +178,6 @@ export const imgGalleryBlock = {
 						condition: (data, siblingData) => siblingData.showOptions,
 					}
 				},
-				// --- block.img.link
-				{
-					type: 'group',
-					name: 'link',
-					label: ' ',
-					admin: {
-						hideGutter: true,
-						className: 'hide-group-label',
-						condition: (data, siblingData) => siblingData.showOptions,
-					},
-					fields: [
-						// --- block.img.link.type
-						{
-							type: 'radio',
-							name: 'type',
-							label: {
-								de: 'Typ',
-								en: 'Type'
-							},
-							options: [
-								{
-									label: {
-										de: 'Kein Link',
-										en: 'No Link'
-									},
-									value: 'none',
-								},
-								{
-									label: {
-										de: 'Interner Link',
-										en: 'Internal Link'
-									},
-									value: 'internal',
-								},
-								{
-									label: {
-										en: 'Custom URL',
-										de: 'URL Eingabe'
-									},
-									value: 'custom',
-								},
-							],
-							defaultValue: 'none',
-							admin: {
-								layout: 'horizontal',
-							},
-						},
-						// --- row
-						{
-							type: 'row',
-							fields: [
-								// ---  block.img.link.slug
-								{
-									type: 'relationship',
-									name: 'rel',
-									label: {
-										de: 'Verlinktes Dokument',
-										en: 'Linked Document'
-									},
-									relationTo: ['pages', 'posts-flex'],
-									required: true,
-									maxDepth: 2,
-									admin: {
-										width: '50%',
-										condition: (data, siblingData) => siblingData?.type === 'internal',
-									},
-								},
-								// ---  block.img.link.url
-								{
-									type: 'text',
-									name: 'url',
-									label: 'Custom URL',
-									required: true,
-									admin: {
-										condition: (data, siblingData) => siblingData?.type === 'custom',
-									},
-								},
-							],
-						}
-					]
-				},
-
 			],
 		}
 		/* {
