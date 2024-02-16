@@ -1,23 +1,27 @@
-const log = require('./customLog.js');
-const renderUnHeaderBanner = require('./renderUnHeaderBanner.js');
-const renderUnFooter = require('./renderUnFooter.js');
-const renderUnLayFlex = require('./renderUnLayFlex.js');
-const renderUnPosts = require('./renderUnPosts.js');
-const renderSVG = require('./renderSVG.js');
-const renderUnDrawer = require('./renderUnDrawer.js');
-const renderUnMapLeaflet = require('./renderUnMapLeaflet.js');
-const renderUnRT = require('./renderUnRT.js');
-const renderUnContactData = require('./renderUnContact.js');
-const renderUnNav = require('./renderUnNav.js');
-const renderLinkInternal = require('./renderLinkInternal.js');
-const renderLinkExternal = require('./renderLinkExternal.js');
-const renderUnDropDown = require('./renderUnDropDown.js');
-const renderUnLangSwitch = require('./renderUnLangSwitch.js');
-const renderUnImg = require('./renderUnImg.js');
-const renderUnImgGallery = require('./renderUnImgGallery.js');
-const renderUnImgSlides = require('./renderUnImgSlides.js');
-const renderImg = require('./renderImg.js');
-const renderSection = require('./renderSection.js');
+const log = require('./customLog');
+const renderUnHeaderBanner = require('./renderUnHeaderBanner');
+const renderUnFooter = require('./renderUnFooter');
+const renderUnLayFlex = require('./renderUnLayFlex');
+const renderUnPosts = require('./renderUnPosts');
+const renderSVG = require('./renderSVG');
+const renderUnDrawer = require('./renderUnDrawer');
+const renderUnMapLeaflet = require('./renderUnMapLeaflet');
+const renderUnRT = require('./renderUnRT');
+const renderUnContactData = require('./renderUnContact');
+const renderUnNav = require('./renderUnNav');
+const renderLinkInternal = require('./renderLinkInternal');
+const renderLinkExternal = require('./renderLinkExternal');
+const renderUnDropDown = require('./renderUnDropDown');
+const renderUnLangSwitch = require('./renderUnLangSwitch');
+const renderUnImg = require('./renderUnImg');
+const renderUnImgGallery = require('./renderUnImgGallery');
+const renderUnImgSlides = require('./renderUnImgSlides');
+const renderImg = require('./renderImg');
+const renderSection = require('./renderSection');
+const renderLayoutGridFixed = require('./renderLayoutGridFixed');
+const renderGridColumn = require('./renderGridColumn');
+const renderLayoutGridFlex = require('./renderLayoutGridFlex');
+const renderLayoutFlex = require('./renderLayoutFlex');
 
 module.exports = function iterateBlocks(blocks = [], meta = {}, context = {}) {
 	/*
@@ -41,7 +45,7 @@ module.exports = function iterateBlocks(blocks = [], meta = {}, context = {}) {
 		}
 		let html = blocks.map((block) => {
 
-			log(`render "${block.blockType}"`, context.user, __filename, 6)
+			log(`render "${block.blockType}"`, context.user, __filename, 7)
 
 			switch (block.blockType) {
 
@@ -54,8 +58,14 @@ module.exports = function iterateBlocks(blocks = [], meta = {}, context = {}) {
 					return renderUnFooter(block, meta, context);
 
 				// --- LAYOUT ---
-				case 'columns-flex':
-					return renderUnLayFlex(block, meta, context);
+				case 'layout-flex':
+					return renderLayoutFlex(block, meta, context)
+				//case 'layout-grid-column':
+					//return renderGridColumn(block, meta, context)
+				case 'layout-grid-fixed':
+					return renderLayoutGridFixed(block, meta, context)
+				case 'layout-grid-flex':
+					return renderLayoutGridFlex(block, meta, context)
 				case 'section':
 					return renderSection(block, meta, context);
 
