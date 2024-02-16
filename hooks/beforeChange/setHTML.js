@@ -19,7 +19,7 @@ export default async function setHTML({ data, req, operation, originalDoc, conte
 	*/
 	try {
 		const user = req.context.user
-		const docID = originalDoc.id ?? null
+		const docID = originalDoc?.id ?? null
 
 		/* save this as own page */
 		if (data.hasOwnPage === undefined || data.hasOwnPage === true) {
