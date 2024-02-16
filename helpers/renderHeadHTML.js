@@ -63,7 +63,7 @@ export default async function renderHeadHTML(data, context) {
 				
 				<!--- ALWAYS --->
 				${insertAssetsAlways(pathsLibFilesCSS)}
-				${(mode === 'prod') ? await insertAssetsProd(fsPathSite, pathsLibFilesJS) : ''}
+				${(mode === 'prod') ? await insertAssetsProd(fsPathSite, pathsLibFilesJS, context.user) : ''}
 				${(mode === 'dev') ? await insertAssetsDev(fsPathSite) : ''}
 
 			</head>`
@@ -155,7 +155,7 @@ function insertTagStyleLinkByPath(paths = []) {
 	return paths.map(path => /* html */`<link rel="stylesheet" type="text/css" href="${path}">`).join(' ')
 }
 
-async function insertAssetsProd(fsPathSite = '', pathsLibFilesJS = []) {
+async function insertAssetsProd(fsPathSite = '', pathsLibFilesJS = [], user = '') {
 
 	const fsPathCElements = `${fsPathSite}/assets/custom-elements`
 	const fsPathAssets = `${fsPathSite}/assets`
@@ -163,13 +163,13 @@ async function insertAssetsProd(fsPathSite = '', pathsLibFilesJS = []) {
 	// check local fs asset paths
 	if (!await canAccess(`${fsPathCElements}/bundle-celements.js`)) log(`Cant't access "${fsPathCElements}/bundle-celements.js"`, user, __filename, 3)
 	if (!await canAccess(`${fsPathCElements}/bundle-celements.css`)) log(`Cant't access "${fsPathCElements}/bundle-celements.css"`, user, __filename, 3)
-	if (!await canAccess(`${fsPathAssets}/site.css`)) log(`Cant't access "${fsPathAssets}/site.css"`, user, __filename, 3)
+	if (!await canAccess(`${fsPathAssets}/bundle.css`)) log(`Cant't access "${fsPathAssets}/bundle.css"`, user, __filename, 3)
 
 	const html = /* html */`
 		<!--- PROD ASSETS --->
-		<link href="/assets/site.css" rel="stylesheet" type="text/css">
 		<style>${await readFile(`${fsPathSite}/assets/user.css`, 'utf-8')}</style>
 		<style>${await readFile(`${fsPathSite}/assets/fonts.css`, 'utf-8')}</style>
+		<link href="/assets/bundle.css" rel="stylesheet" type="text/css">
 		<script src="/assets/custom-elements/bundle-celements.js" type="module"></script>
 		<link href="/assets/custom-elements/bundle-celements.css" rel="stylesheet" type="text/css">
 		${insertTagScriptByPath(pathsLibFilesJS)}
@@ -192,9 +192,13 @@ async function insertAssetsDev(fsPathSite) {
 	const html = /* html */`
 	
 		<!--- DEV ASSETS --->
+		<link rel="stylesheet" type="text/css" href="/assets/posts.css">
 		<link rel="stylesheet" type="text/css" href="/assets/site.css">
 		<link rel="stylesheet" type="text/css" href="/assets/user.css">
 		<link rel="stylesheet" type="text/css" href="/assets/fonts.css">
+		<link rel="stylesheet" type="text/css" href="/assets/fonts_dev.css">
+		<link rel="stylesheet" type="text/css" href="/assets/main.css">
+		<!-- <script src="/assets/main.js" type="module"> -->
 		${insertTagScriptByName(cElementFilesJS, '/assets/custom-elements')}
 		${insertTagStyleLinkByName(cElementFilesCSS, '/assets/custom-elements')}
 	`
