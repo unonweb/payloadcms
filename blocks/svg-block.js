@@ -15,7 +15,8 @@ export default function createSVGBlock() {
 				localized: false,
 				admin: {
 					language: 'html',
-				}
+				},
+				validate: (val, { data, operation }) => (val && val.startsWith('<svg') && val.endsWith('</svg>')) ? true : 'SVG code not valid'
 			},
 			{
 				type: 'array',
